@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 from ewt.scraper import EWTScraper
+=======
+from EWTScraper import EWTScraper
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
 import logging
 
 class FantasyProsNFLScraper(EWTScraper):
@@ -31,7 +35,11 @@ class FantasyProsNFLScraper(EWTScraper):
             logging.debug(headers)
             return tmp_fname
 
+<<<<<<< HEAD
     def get_season_rankings(self, fname=None):
+=======
+    def get_projections(self, fname=None):
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
         '''
         Download csv file and save to specified or temporary location if no fname parameter
         :param fname (str): specified location to save file

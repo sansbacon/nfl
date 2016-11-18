@@ -14,7 +14,11 @@ class NFLGame(object):
     '''
     Usage:
         logging.basicConfig(level=logging.DEBUG)
+<<<<<<< HEAD
         ng = NFLGame(db='nfl', user='postgres', password='cft091146')
+=======
+        ng = NFLGame(db='nfl', user=USER, password=PWD)
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
         logging.debug(ng._gamedict.keys())
         logging.debug(len(ng.all_games()))
         logging.debug(ng.match_one_game(2015, 'CHI', 'GB'))
@@ -139,4 +143,8 @@ class NFLGame(object):
         return [v for k,v in self._gamedict.iteritems() if team in k and str(season) in k]
 
 if __name__ == '__main__':
+<<<<<<< HEAD
     pass
+=======
+    pass
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb

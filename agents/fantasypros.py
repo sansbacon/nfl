@@ -157,8 +157,4 @@ class FantasyProsNFLAgent(object):
             return list(itertools.chain.from_iterable(players)), flex_players
 
 if __name__ == '__main__':
-    # pass
-    #import pickle
-    logging.basicConfig(level=logging.ERROR)
-    a = FantasyProsNFLAgent()
-    players, flex_players = a.weekly_rankings(season=2016, week=3)
+    pass

@@ -116,6 +116,10 @@ def update_rw_xref(nflp, fn):
             nflp.insert_dicts([v], 'player_xref')
 
 if __name__ == '__main__':
+<<<<<<< HEAD
     from nfl.db.nflpg import NFLPostgres
     nflp = NFLPostgres(database='nfl', user='postgres', password='cft091146')
     update_rw_xref(nflp, '/home/sansbacon/rw.html')
+=======
+    pass
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb

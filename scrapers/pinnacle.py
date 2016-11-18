@@ -4,7 +4,11 @@ Gets daily odds xml feed from pinnacle sports
 http://xml.pinnaclesports.com/pinnaclefeed.aspx?sporttype=Football&sportsubtype=nfl
 '''
 
+<<<<<<< HEAD
 from ewt.scraper import EWTScraper
+=======
+from EWTScraper import EWTScraper
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
 import logging
 
 class PinnacleNFLScraper(EWTScraper):

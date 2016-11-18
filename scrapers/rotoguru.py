@@ -6,7 +6,11 @@ RotoguruNFLScraper
 import logging
 import re
 
+<<<<<<< HEAD
 from ewt.scraper import EWTScraper
+=======
+from EWTScraper import EWTScraper
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
 
 
 class RotoguruNFLScraper(EWTScraper):

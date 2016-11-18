@@ -20,7 +20,11 @@ class FantasyLabsNFLScraper(EWTScraper):
     def __init__(self,**kwargs):
 
         '''
+<<<<<<< HEAD
         EWTScraper parameters: 'dldir', 'expire_time', 'headers', 'keyprefix', 'mc', 'use_cache'
+=======
+        NFLScraper parameters: 'dldir', 'expire_time', 'headers', 'keyprefix', 'mc', 'use_cache'
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
         '''
 
         # see http://stackoverflow.com/questions/8134444
@@ -32,7 +36,11 @@ class FantasyLabsNFLScraper(EWTScraper):
             self.model_urls = kwargs['models']
         else:
             self.model_urls = {
+<<<<<<< HEAD
                 'default': 'http://www.fantasylabs.com/api/playermodel/1/{}/?modelId=47139',
+=======
+                'default': 'http://www.fantasylabs.com/api/playermodel/1/10_19_2016/?modelId=47139',
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
                 'bales': 'http://www.fantasylabs.com/api/playermodel/1/{0}/?modelId=170627',
                 'csuram': 'http://www.fantasylabs.com/api/playermodel/1/{0}/?modelId=193726',
                 'tournament': 'http://www.fantasylabs.com/api/playermodel/1/{0}/?modelId=193746',
@@ -122,12 +130,18 @@ class FantasyLabsNFLScraper(EWTScraper):
         Gets json for model, default to Bales model
         Stats in most models the same, main difference is the ranking based on weights of factors present in all models
 
+<<<<<<< HEAD
         Arguments:
             model_day (str): in mm_dd_yyyy format
             model_name (str): uses default if not specified
 
         Returns:
             content (str): is json string
+=======
+	Arguments:
+	    model_day(str): in %m_%d_%Y format
+            model_name(str): default, bales, jennings, cash, tournament, etc.
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
 
         Usage:
             bales_model_json = s.model()
@@ -135,17 +149,30 @@ class FantasyLabsNFLScraper(EWTScraper):
 
         '''
 
+<<<<<<< HEAD
         content = None
+=======
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
         url = self.model_urls.get(model_name, None)
 
         if not url:
             logging.error('could not find url for {0} model'.format(model_name))
+<<<<<<< HEAD
             url = self.model_urls.get('default')
 
         # have to add today's date in mm_dd_yyyy format to URL
         content = self.get(url.format(model_day))
 
         if not content:
+=======
+            content = None
+
+        else:
+            # have to add today's date in mm_dd_yyyy format to URL
+            content = self.get(url.format(model_day))
+
+    	if not content:
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
             logging.error('could not get content from url: {0}'.format(url))
 
         return content
@@ -168,5 +195,12 @@ class FantasyLabsNFLScraper(EWTScraper):
 
         return contents
 
+<<<<<<< HEAD
+=======
+    def thisweek(self):
+        return datetime.strftime(datetime.today(),'%m_%d_%Y')
+
+
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
 if __name__ == "__main__":
     pass

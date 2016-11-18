@@ -9,13 +9,21 @@ from __future__ import unicode_literals
 
 import logging
 
+<<<<<<< HEAD
 from nfl.db import nflpg
+=======
+from nfl.db import nflpg.NFLPostgres
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
 
 class NFLPlayerXRef(object):
 
     def __init__(self, database, user, password):
     
+<<<<<<< HEAD
         self.nflp = nflpg.NFLPostgres(database, user, password)
+=======
+        self.nflp = NFLPostgres(database, user, password)
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
         
     def draftkings(self):
         '''

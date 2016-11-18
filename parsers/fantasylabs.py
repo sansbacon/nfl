@@ -14,6 +14,7 @@ class FantasyLabsNFLParser():
         p = FantasyLabsNFLParser()
 
         # games
+<<<<<<< HEAD
             games_json = s.games()
             games = p.games(games_json)
         
@@ -47,12 +48,25 @@ class FantasyLabsNFLParser():
                 WHERE s.source_player_id = sq.site_player_id AND s.season = {season} AND s.week = {week} AND s.player_id is null;
            "
            nflp.update(q.format(season, week))
+=======
+        games_json = s.games()
+        games = p.games(games_json)
+        
+        # models
+        model_json = s.model()
+        players = p.model(model_json)
+
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
     '''
 
     def __init__(self,**kwargs):
         '''
 
         '''
+<<<<<<< HEAD
+=======
+
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
         logging.getLogger(__name__).addHandler(logging.NullHandler())
                         
 
@@ -116,7 +130,11 @@ class FantasyLabsNFLParser():
             logging.error('could not parse json')
 
         if parsed:
+<<<<<<< HEAD
             for playerdict in parsed.get('PlayerModels'):
+=======
+            for playerdict in parsed.get('PlayerModels', []):
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
                 player = {}
 
                 for k,v in playerdict.items():
@@ -151,6 +169,7 @@ class FantasyLabsNFLParser():
             players = site_players
         
         return players
+<<<<<<< HEAD
 
     def dk_salaries(self, content, season, week, db=True):
         '''
@@ -184,5 +203,8 @@ class FantasyLabsNFLParser():
 
         return salaries
 
+=======
+        
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
 if __name__ == "__main__":
     pass

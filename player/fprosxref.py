@@ -1,6 +1,10 @@
 '''
 fprosxref.py
+<<<<<<< HEAD
 cross-reference fantasypros ids with nfl.player table ids
+=======
+cross-reference ffanalytics ids with nfl.player table ids
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
 
 Usage:
     import logging
@@ -101,6 +105,7 @@ def update_fpros_xref(nflp, fn):
     #    nflp.insert_dicts([v], 'player_xref')
 
 if __name__ == '__main__':
+<<<<<<< HEAD
     import logging
     import os
     import pandas as pd
@@ -109,3 +114,6 @@ if __name__ == '__main__':
     from nfl.db.nflpg import NFLPostgres
     nflp = NFLPostgres(database='nfl', user='postgres', password='cft091146')
     update_fpros_xref(nflp, '/home/sansbacon/fpros-players.json')
+=======
+    pass
+>>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
