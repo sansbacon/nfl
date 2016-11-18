@@ -1,0 +1,103 @@
+import logging
+import time
+
+from bs4 import BeautifulSoup
+import requests
+
+# Weekly predictions:
+# https://www.fantasypros.com/nfl/rankings/qb.php?export=xls
+
+import re
+
+def weekly_rankings_html(content):
+    players = []
+    soup = BeautifulSoup(content, 'lxml')
+    t = soup.find('table', id='data')
+    headers = ['rank', 'site_player_id', 'site_player_name', 'team', 'best', 'worst', 'ave', 'stdev']
+    for tr in t.findAll('tr'):
+        vals = []
+        td = tr.find('td')
+        if not td:
+            next
+        elif td.text and re.match(r'[A-Z]+', td.text):
+            next
+        else:
+            tds = tr.findAll('td')
+            rank = tds[0].text
+            a = tr.find('a')
+            if a:
+                cl = a.get('class', None)
+                if cl: site_player_id = a['class'].split('-')[-1]
+                else: site_player_id = None
+                ppn = a.get('pf-player-name', None)
+                if ppn: site_player_name = ppn
+                else: site_player_name = a.text
+                matchup = tr.find('small')
+                if matchup:
+                    match = re.match(r'\(([A-Z]+)\)', matchup.text)
+                    if match:
+                        team = match.group(1)
+                    else:
+                        team = matchup.text.strip().split(' ')[0].replace('(','').replace(')','')            
+                else:
+                    team = matchup.text
+                
+                print(rank, site_player_id, site_player_name, team)
+                
+            '''
+            
+def weekly_rankings(season, week, positions, polite=True):
+    cj = browsercookie.chrome()
+    ua = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36'}
+    players = []
+    headers = ['rank', 'player_name', 'team', 'matchup', 'best_rank', 'worst_rank', 'avg_rank', 'std_dev']
+    base_url = 'https://www.fantasypros.com/nfl/rankings/FantasyPros_{}_Week_{}_{}_Rankings.xls'
+    
+    for pos in ['QB', 'RB']: #, 'WR', 'TE', 'DST']:
+        # url same except for position code
+        logging.debug('getting ' + base_url.format(pos))
+        
+        r = requests.get(base_url.format(season, week, pos), cookies=cj, headers=ua) 
+        logging.debug(r.headers)
+        logging.debug(r.history)
+        
+        # skip intro and header rows
+        #lines = r.content.split('\n')[5:] 
+
+        # filter blank line
+        #players += [dict(zip(headers, [c.strip() for c in l.split('\t')])) for l in lines if len(l) > 10]
+        
+        if polite: time.sleep(1)
+        
+    return players
+
+    
+# fantasyfootballnerd
+ 
+base_rankings_url = 'http://www.fantasyfootballnerd.com/service/weekly-rankings/json/8x3g9y245w6a/QB/2/1/'
+base_projections_url = 'http://www.fantasyfootballnerd.com/service/weekly-projections/json/8x3g9y245w6a/QB/1/'
+
+
+# rotowire
+# http://www.rotowire.com/football/weekly-projections.htm
+
+# need to add post data
+base_url = 'http://www.rotowire.com/football/weekly-projections.htm'
+
+def weekly_projections(f):
+    '''
+    Arguments:
+        content(f): is a handle to a csv file
+    '''
+    players = []
+    
+    headers = ['first_name', 'last_name', 'team', 'pos', 'opp', 'spread', 'total', 
+                'pass_cmp', 'pass_yds', 'pass_td', 'pass_int', 'rush_att', 'rush_yds', 'rush_td',
+                'rec_rec', 'rec_yds', 'rec_td', 'fpts_ppr']
+                
+    return [dict(zip(headers, [y.strip() for y in x.split('\t')])) for x in f]
+        
+
+# fftoday
+# http://www.fftoday.com/rankings/playerproj.php?PosID=10
+
