@@ -1,22 +1,9 @@
 # -*- coding: utf-8 -*-
-
-<<<<<<< HEAD
-import itertools
 import logging
-=======
-import csv
-from itertools import islice
-import logging
-import os
->>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
 import re
 
 from bs4 import BeautifulSoup
 
-<<<<<<< HEAD
-
-=======
->>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
 class FantasyProsNFLParser(object):
     '''
     used to parse Fantasy Pros projections and ADP pages
@@ -29,7 +16,6 @@ class FantasyProsNFLParser(object):
         else:
           self.logger = logging.getLogger(__name__)
 
-<<<<<<< HEAD
     def _wr_flex(self, t, season, week, position='flex'):
         '''
         Different table structure for flex vs. positional rankings
@@ -107,13 +93,12 @@ class FantasyProsNFLParser(object):
 
         '''
         players = []
-=======
+
     def weekly_rankings(self, content, season, week, position):
         players = []
         content = content.replace("\xc2\xa0", "")
         soup = BeautifulSoup(content, 'lxml')
         t = soup.find('table', id='data')
->>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
         headers = ['weekly_rank', 'site_player_id', 'site_player_name', 'team', 'best', 'worst', 'avg', 'stdev']
         for tr in t.findAll('tr'):
             td = tr.find('td')
@@ -164,7 +149,6 @@ class FantasyProsNFLParser(object):
 
         return players
 
-<<<<<<< HEAD
     def weekly_rankings(self, content, season, week, position):
         '''
         TODO: need to write parsing routine for flex rankings page
@@ -189,7 +173,47 @@ class FantasyProsNFLParser(object):
         else:
             return self._wr_no_flex(t, season, week, position)
 
-=======
->>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
+    '''
+        def weekly_rankings_html(content):
+            players = []
+            soup = BeautifulSoup(content, 'lxml')
+            t = soup.find('table', id='data')
+            headers = ['rank', 'site_player_id', 'site_player_name', 'team', 'best', 'worst', 'ave', 'stdev']
+            for tr in t.findAll('tr'):
+                vals = []
+                td = tr.find('td')
+                if not td:
+                    next
+                elif td.text and re.match(r'[A-Z]+', td.text):
+                    next
+                else:
+                    tds = tr.findAll('td')
+                    rank = tds[0].text
+                    a = tr.find('a')
+                    if a:
+                        cl = a.get('class', None)
+                        if cl:
+                            site_player_id = a['class'].split('-')[-1]
+                        else:
+                            site_player_id = None
+                        ppn = a.get('pf-player-name', None)
+                        if ppn:
+                            site_player_name = ppn
+                        else:
+                            site_player_name = a.text
+                        matchup = tr.find('small')
+                        if matchup:
+                            match = re.match(r'\(([A-Z]+)\)', matchup.text)
+                            if match:
+                                team = match.group(1)
+                            else:
+                                team = matchup.text.strip().split(' ')[0].replace('(', '').replace(')', '')
+                        else:
+                            team = matchup.text
+
+                        print(rank, site_player_id, site_player_name, team)
+
+    '''
+
 if __name__ == "__main__":
     pass

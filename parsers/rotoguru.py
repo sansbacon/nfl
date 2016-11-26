@@ -1,5 +1,4 @@
 import copy
-import json
 import logging
 
 from bs4 import BeautifulSoup
@@ -54,6 +53,8 @@ class RotoguruNFLParser():
 	    Returns dict, key is team_season, value is team
         '''
 
+        pass
+        '''
         soup = BeautifulSoup(content, 'lxml')   
         teams = {}
     
@@ -116,8 +117,9 @@ class RotoguruNFLParser():
             teams[k] = {**teams[k], **team}
             
         return teams
+        '''
 
-    def _split(pre):
+    def _split(self, pre):
         vals = []
         rows = pre.splitlines()
         headers = rows.pop(0).split(';')
@@ -127,11 +129,11 @@ class RotoguruNFLParser():
 
         return vals
         
-    def parse(content):
+    def parse(self, content):
         soup = BeautifulSoup(content, 'lxml')
         for pre in soup.findAll('pre'):
             if 'Week;Year' in pre.text:
-                return _split(pre.text)
+                return self._split(pre.text)
             else:
                 raise Exception('no pre in content')
         

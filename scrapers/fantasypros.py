@@ -1,14 +1,11 @@
-<<<<<<< HEAD
-from ewt.scraper import EWTScraper
-=======
-from EWTScraper import EWTScraper
->>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
 import logging
+
+from ewt.scraper import EWTScraper
+
 
 class FantasyProsNFLScraper(EWTScraper):
 
     '''
-    Downloads csv (with .xls extension) from fantasypros.com
     '''
     def __init__(self, **kwargs):
         
@@ -35,11 +32,10 @@ class FantasyProsNFLScraper(EWTScraper):
             logging.debug(headers)
             return tmp_fname
 
-<<<<<<< HEAD
     def get_season_rankings(self, fname=None):
-=======
+        pass
+
     def get_projections(self, fname=None):
->>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
         '''
         Download csv file and save to specified or temporary location if no fname parameter
         :param fname (str): specified location to save file
@@ -56,6 +52,7 @@ class FantasyProsNFLScraper(EWTScraper):
             return tmp_fname
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    s = FantasyProsNFLScraper()
-    logging.debug(s)
+    pass
+    #logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    #s = FantasyProsNFLScraper()
+    #logging.debug(s)

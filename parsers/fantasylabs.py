@@ -14,59 +14,12 @@ class FantasyLabsNFLParser():
         p = FantasyLabsNFLParser()
 
         # games
-<<<<<<< HEAD
-            games_json = s.games()
-            games = p.games(games_json)
-        
-        # models
-            model_json = s.model()
-            players = p.model(model_json)
-
-        # weekly
-            from nfl.parsers import fantasylabs
-            from nfl.db import nflpg
-
-            logging.basicConfig(level=logging.DEBUG)
-            fn = '/home/sansbacon/9_14_2016.json'
-            with open(fn, 'r') as infile:
-                content = infile.read()
-
-            p = fantasylabs.FantasyLabsNFLParser()
-            players = p.dk_salaries(content, 2016, 2)
-            nflp = nflpg.NFLPostgres(user='postgres', password='cft091146', database='nfl')
-            nflp.insert_dicts(players, 'salaries')
-
-                ## step five: update player_id
-            q = "
-                update salaries s
-                set player_id = sq.player_id
-                from (
-                    SELECT player_id, site_player_id
-                    FROM player_xref
-                    WHERE site = '{site}'
-                ) sq
-                WHERE s.source_player_id = sq.site_player_id AND s.season = {season} AND s.week = {week} AND s.player_id is null;
-           "
-           nflp.update(q.format(season, week))
-=======
-        games_json = s.games()
-        games = p.games(games_json)
-        
-        # models
-        model_json = s.model()
-        players = p.model(model_json)
-
->>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
     '''
 
     def __init__(self,**kwargs):
         '''
 
         '''
-<<<<<<< HEAD
-=======
-
->>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
         logging.getLogger(__name__).addHandler(logging.NullHandler())
                         
 
@@ -123,38 +76,38 @@ class FantasyLabsNFLParser():
         omit_properties = ['IsLocked']
         omit_other = ['ErrorList', 'LineupCount', 'CurrentExposure', 'ExposureProbability', 'IsExposureLocked', 'Positions', 'PositionCount', 'Exposure', 'IsLiked', 'IsExcluded']
 
-        try:
-            parsed = json.loads(content)
+        if isinstance(content, basestring):
+            try:
+                parsed = json.loads(content)
 
-        except:
-            logging.error('could not parse json')
+            except:
+                logging.error('could not parse json')
+                return None
 
-        if parsed:
-<<<<<<< HEAD
-            for playerdict in parsed.get('PlayerModels'):
-=======
-            for playerdict in parsed.get('PlayerModels', []):
->>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
-                player = {}
+        elif isinstance(content, dict):
+            parsed = content
 
-                for k,v in playerdict.items():
+        for playerdict in parsed.get('PlayerModels', []):
+            player = {}
 
-                    if k == 'Properties':
+            for k,v in playerdict.items():
 
-                        for k2,v2 in v.items():
+                if k == 'Properties':
 
-                            if not k2 in omit_properties:
-                                player[k2] = v2
+                    for k2,v2 in v.items():
 
-                    elif not k in omit_other:
-                        player[k] = v
+                        if not k2 in omit_properties:
+                            player[k2] = v2
 
-                # test if already have this player
-                # use list where 0 index is DK, 1 FD, 2 Yahoo
-                pid = player.get('PlayerId', None)
-                pid_players = players.get(pid, [])
-                pid_players.append(player)
-                players[pid] = pid_players
+                elif not k in omit_other:
+                    player[k] = v
+
+            # test if already have this player
+            # use list where 0 index is DK, 1 FD, 2 Yahoo
+            pid = player.get('PlayerId', None)
+            pid_players = players.get(pid, [])
+            pid_players.append(player)
+            players[pid] = pid_players
 
         if site:
             site_players = []
@@ -169,7 +122,6 @@ class FantasyLabsNFLParser():
             players = site_players
         
         return players
-<<<<<<< HEAD
 
     def dk_salaries(self, content, season, week, db=True):
         '''
@@ -203,8 +155,6 @@ class FantasyLabsNFLParser():
 
         return salaries
 
-=======
-        
->>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
+
 if __name__ == "__main__":
     pass
