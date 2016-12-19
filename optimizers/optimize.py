@@ -4,6 +4,7 @@
 # this solution is almost wholly based off
 # https://github.com/swanson/degenerate
 
+import csv
 from random import uniform, choice
 
 from ortools.linear_solver import pywraplp
@@ -46,8 +47,8 @@ def load_players(players, projection_formula=None, team_exclude=[], player_exclu
             proj = (choice(projections) * .3) + (choice(ceilings) * .6) + (choice(floors) * .1)
         elif projection_formula == 'tourncash':
             proj = (choice(projections) * .4) + (choice(ceilings) * .3) + (choice(floors) * .3)
-	elif ',' in projection_formula:
-	    avg, ceiling, floor = projection_formula.split(',')
+        elif ',' in projection_formula:
+            avg, ceiling, floor = projection_formula.split(',')
             proj = (choice(projections) * avg) + (choice(ceilings) * ceiling) + (choice(floors) * floor)
         else:
             proj = choice(projections)
@@ -57,14 +58,14 @@ def load_players(players, projection_formula=None, team_exclude=[], player_exclu
         elif player_name in player_exclude:
             continue
         else:
-            all_players.append(Player(proj=proj, oppos=oppos, code=code, pos=pos, name=player_name, cost=p.get('Salary'), team=team))
+            all_players.append(Player(proj=proj, matchup=p.get('Opposing_TeamFB'), opps_team=oppos, code=code, pos=pos, name=player_name, cost=p.get('Salary'), team=team))
 
     return all_players
 
 '''
 handle or-tools logic
 '''
-def run_solver(all_players, depth, min_teams=None, stack_wr=None, stack_te=None):
+def run_solver(all_players, depth, min_teams=2, stack_wr=None, stack_te=None):
     solver = pywraplp.Solver('FD', pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
 
     '''
@@ -111,8 +112,10 @@ def run_solver(all_players, depth, min_teams=None, stack_wr=None, stack_te=None)
     '''
     Add min number of different teams players must be drafted from constraint (draftkings == 2)
     '''
+    #team_names = set([o.team for o in all_players])
+
+    '''
     if min_teams:
-        team_names = set([o.team for o in all_players])
         teams = []
         for team in team_names:
             teams.append(solver.IntVar(0, 1, team))
@@ -123,11 +126,15 @@ def run_solver(all_players, depth, min_teams=None, stack_wr=None, stack_te=None)
             solver.Add(teams[idx] <= solver.Sum(players_by_team))
 
     '''
+
+    '''
     Add Defence cant play against any offense's player team constraint
     '''
-    o_players = filter(lambda x: x.pos in ['QB', 'WR', 'RB', 'TE'], all_players)
-    teams_obj = filter(lambda x: x.pos == 'DST', all_players)
-    teams = set([o.team for o in teams_obj])
+    #o_players = filter(lambda x: x.pos in ['QB', 'WR', 'RB', 'TE'], all_players)
+    #teams_obj = filter(lambda x: x.pos == 'DST', all_players)
+    #teams = set([o.team for o in teams_obj])
+
+    '''
     for opps_team in team_names:
         if opps_team in teams:
             ids, players_by_opps_team = zip(
@@ -137,6 +144,7 @@ def run_solver(all_players, depth, min_teams=None, stack_wr=None, stack_te=None)
                 *filter(lambda (x, _): x.pos == 'DST' and x.team in opps_team, zip(all_players, variables)))
             for player in players_by_opps_team:
                 solver.Add(player <= 1 - defense[0])
+    '''
 
     '''
     Add remove previous solutions constraint and loop to generate X rosters
@@ -161,26 +169,11 @@ def run_solver(all_players, depth, min_teams=None, stack_wr=None, stack_te=None)
 
     return rosters
 
-'''
-Main Loop
-'''
+def write_bulk_import_csv(rosters, fn):
+    with open(fn, 'wb') as csvfile:
+        writer = csv.writer(csvfile,delimiter=',',quotechar='"',quoting=csv.QUOTE_NONNUMERIC)
+        for roster in rosters:
+            writer.writerow([x.name for x in roster.sorted_players()])
+
 if __name__ == "__main__":
-    import json
-
-    from nfl.parsers.fantasylabs import FantasyLabsNFLParser
-    from optimize import load_players, run_solver
-
-    with open('/home/sansbacon/fl_model_11-16-2016_524658.json', 'r') as infile:
-        content = json.load(infile)
-
-    rosters = []
-    p = FantasyLabsNFLParser()
-    players = p.model(content, site='dk')
-    player_exclude = ['Jarvis Landry', 'Jordan Matthews', 'Tennessee Defense', 'Alex Smith']
-    for x in range(1,11):
-        all_players = load_players(players, projection_formula='tourncash',
-                                   player_exclude=player_exclude,
-                                   team_exclude=['CAR', 'OAK', 'NO', 'HOU'])
-        rosters.append(run_solver(all_players, depth=1, stack_wr=True, stack_te=True, min_teams=4))
-
-    print rosters
+    pass

@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import pprint
 
 import pandas as pd
 import xlrd
 
-from NFLProjectionsParser import NFLProjectionsParser
-import NameMatcher
 
-class FootballOutsidersNFLParser(NFLProjectionsParser):
+class FootballOutsidersNFLParser2(object):
 
     '''
     Parses xls file of fantasy projections from footballoutsiders.com into player dictionaries

@@ -1,0 +1,24 @@
+[{'language': 'en', 'isPremium': False, 'shortText': 'Summary', 'href': 'http://www.espn.com/nfl/game?gameId=400874532', 'isExternal': False, 'rel': ['summary', 'desktop', 'event'], 'text': 'Summary'}, {'language': 'en-US', 'isPremium': False, 'shortText': 'Box Score', 'href': 'http://www.espn.com/nfl/boxscore?gameId=400874532', 'isExternal': False, 'rel': ['boxscore', 'desktop', 'event'], 'text': 'Box Score'}, {'language': 'en', 'isPremium': False, 'shortText': 'Highlights', 'href': 'http://www.espn.com/nfl/video?gameId=400874532', 'isExternal': False, 'rel': ['highlights', 'desktop'], 'text': 'Highlights'}, {'language': 'en-US', 'isPremium': False, 'shortText': 'Play-by-Play', 'href': 'http://www.espn.com/nfl/playbyplay?gameId=400874532', 'isExternal': False, 'rel': ['pbp', 'desktop', 'event'], 'text': 'Play-by-Play'}, {'language': 'en-US', 'isPremium': False, 'shortText': 'Conversation', 'href': 'http://www.espn.com/nfl/conversation?gameId=400874532', 'isExternal': False, 'rel': ['conversation', 'desktop', 'event'], 'text': 'Conversation'}, {'language': 'en', 'isPremium': False, 'shortText': 'Recap', 'href': 'http://www.espn.com/nfl/recap?gameId=400874532', 'isExternal': False, 'rel': ['recap', 'desktop', 'event'], 'text': 'Recap'}]
+
+import re
+
+from bs4 import BeautifulSoup
+import requests
+
+links = []
+
+url = 'http://www.espn.com/nfl/scoreboard/_/year/{year}/seasontype/2/week/{week}'
+
+# figure out weeks and years from seasons library
+
+for s in soup.find_all('script'):
+    if 'scoreboardData' in s.text:
+        sb = s.text
+
+if sb:        
+	pattern = re.compile(r'({.*?});', re.MULTILINE | re.DOTALL)
+	match = re.search(pattern, sb)
+	data = json.loads(match.group(1))
+
+	for event in data.get('events'):
+		links.append(event['links'][1]['href'])

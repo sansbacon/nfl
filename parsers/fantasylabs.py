@@ -55,7 +55,7 @@ class FantasyLabsNFLParser():
             
         return games
 
-    def model(self, content, site=None):
+    def model(self, content, site):
         '''
         Parses json associated with model (player stats / projections)
         The model has 3 dicts for each player: DraftKings, FanDuel, Yahoo
@@ -64,11 +64,6 @@ class FantasyLabsNFLParser():
         Usage:
             model = p.model(model_json)
             model = p.model(model_json, site='dk')
-            model = p.model(model_json, site='fd')
-            model = p.model(model_json, site='yahoo')
-            model = p.model(model_json, omit_properties=[])
-            model = p.model(model_json, omit_other=[])
-
         '''
 
         players = {}
@@ -76,6 +71,7 @@ class FantasyLabsNFLParser():
         omit_properties = ['IsLocked']
         omit_other = ['ErrorList', 'LineupCount', 'CurrentExposure', 'ExposureProbability', 'IsExposureLocked', 'Positions', 'PositionCount', 'Exposure', 'IsLiked', 'IsExcluded']
 
+        # can process json string or dict
         if isinstance(content, basestring):
             try:
                 parsed = json.loads(content)
@@ -87,6 +83,7 @@ class FantasyLabsNFLParser():
         elif isinstance(content, dict):
             parsed = content
 
+        # models have nested dict in 'Properties'
         for playerdict in parsed.get('PlayerModels', []):
             player = {}
 
@@ -96,7 +93,25 @@ class FantasyLabsNFLParser():
 
                     for k2,v2 in v.items():
 
-                        if not k2 in omit_properties:
+                        # trying to get integers for ownership %
+                        if k2 == 'p_own':
+                            try:
+                                minown, maxown = v2.split('-')
+                                player['p_own_min'] = minown
+                                player['p_own_max'] = maxown
+
+                            except:
+                                try:
+                                    minown = float(v2)
+                                    maxown = float(v2)
+                                    player['p_own_min'] = minown
+                                    player['p_own_max'] = maxown
+
+                                except:
+                                    pass
+                            player['p_own'] = v2
+
+                        elif not k2 in omit_properties:
                             player[k2] = v2
 
                 elif not k in omit_other:
@@ -104,6 +119,7 @@ class FantasyLabsNFLParser():
 
             # test if already have this player
             # use list where 0 index is DK, 1 FD, 2 Yahoo
+            # TODO: not sure this is actually working
             pid = player.get('PlayerId', None)
             pid_players = players.get(pid, [])
             pid_players.append(player)
@@ -116,11 +132,11 @@ class FantasyLabsNFLParser():
 
             for pid, player in players.items():
                 for p in player:
-                    if p.get('SourceId', None) == site_ids.get(site, None):
+                    if p.get('SourceId', 1) == site_ids.get(site, 2):
                         site_players.append(p)
 
-            players = site_players
-        
+            players = {p['Player_Name']:p for p in site_players if p.has_key('Player_Name')}.values()
+
         return players
 
     def dk_salaries(self, content, season, week, db=True):
@@ -144,17 +160,16 @@ class FantasyLabsNFLParser():
         if db:
             fixed = []
             for salary in salaries:
-                fx = {'source': 'fantasylabs', 'dfs_site': site, 'season': season, 'week': week}
+                fx = {'source': 'fantasylabs', 'dfs_site': site, 'season_year': season, 'week': week}
                 fx['source_player_id'] = salary.get('PlayerId')
-                fx['player'] = salary.get('Player_Name')
+                fx['source_player_name'] = salary.get('Player_Name')
                 fx['salary'] = salary.get('Salary')
                 fx['team'] = salary.get('Team')
-                fx['pos'] = salary.get('Position')
+                fx['dfs_position'] = salary.get('Position')
                 fixed.append(fx)
             salaries = fixed
 
         return salaries
-
 
 if __name__ == "__main__":
     pass

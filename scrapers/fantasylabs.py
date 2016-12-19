@@ -1,18 +1,26 @@
 from datetime import datetime
 import logging
 
+try:
+    import browsercookie
+except:
+    pass
+
 from ewt.scraper import EWTScraper
 
 
 class FantasyLabsNFLScraper(EWTScraper):
     '''
     FantasyLabsNFLScraper
+    If you don't have a subscription, you can access the information freely-available on the website
+    If you have a subscription, the scraper can use your firefox cookies and access protected content
+    You cannot access protected content if you (a) have not logged in (b) have firefox open
 
     Usage:
 
         s = FantasyLabsNFLScraper()
         content = s.today()
-        model = s.model()
+        model = s.model('11_30_2016', 'levitan')
         models = s.models(start_date='09_04_2015', end_date='11_15_2015')    
         
     '''
@@ -20,29 +28,38 @@ class FantasyLabsNFLScraper(EWTScraper):
     def __init__(self,**kwargs):
 
         '''
-        EWTScraper parameters: 'dldir', 'expire_time', 'headers', 'keyprefix', 'mc', 'use_cache'
-        NFLScraper parameters: 'dldir', 'expire_time', 'headers', 'keyprefix', 'mc', 'use_cache'
         '''
 
         # see http://stackoverflow.com/questions/8134444
         EWTScraper.__init__(self, **kwargs)
 
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+        self.headers = {'Referer': 'http://www.fantasylabs.com/nfl/player-models/',
+                   'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0'}
+
+        # default will create a cookie jar using python 2 cookielib
+        try:
+            self.cj = browsercookie.firefox()
+        except:
+            pass
 
         if 'model_urls' in kwargs:
             self.model_urls = kwargs['models']
         else:
             self.model_urls = {
-                'default': 'http://www.fantasylabs.com/api/playermodel/1/{}/?modelId=47139',
-                'levitan': 'http://www.fantasylabs.com/api/playermodel/1/{0}/?modelId=524658',
-                'bales': 'http://www.fantasylabs.com/api/playermodel/1/{0}/?modelId=170627',
-                'csuram': 'http://www.fantasylabs.com/api/playermodel/1/{0}/?modelId=193726',
-                'tournament': 'http://www.fantasylabs.com/api/playermodel/1/{0}/?modelId=193746',
-                'cash': 'http://www.fantasylabs.com/api/playermodel/1/{0}/?modelId=193745'
+                'default': 'http://www.fantasylabs.com/api/playermodel/1/{model_date}/?modelId=47139',
+                'levitan': 'http://www.fantasylabs.com/api/playermodel/1/{model_date}/?modelId=524658',
+                'bales': 'http://www.fantasylabs.com/api/playermodel/1/{model_date}/?modelId=170627',
+                'csuram': 'http://www.fantasylabs.com/api/playermodel/1/{model_date}/?modelId=193726',
+                'tournament': 'http://www.fantasylabs.com/api/playermodel/1/{model_date}/?modelId=193746',
+                'cash': 'http://www.fantasylabs.com/api/playermodel/1/{model_date}/?modelId=193745'
             }
+
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
 
     def _date_list(self, d1, d2):
         '''
+        TODO: this should be abstracted away using nfldates library
         Takes two dates or datestrings and returns a list of days
 
         Usage:
@@ -149,7 +166,7 @@ class FantasyLabsNFLScraper(EWTScraper):
             url = self.model_urls.get('default')
 
         # have to add today's date in mm_dd_yyyy format to URL
-        content = self.get(url.format(model_day))
+        content = self.get(url.format(model_date=model_day))
 
     	if not content:
             logging.error('could not get content from url: {0}'.format(url))

@@ -1,11 +1,9 @@
-import pprint
-import re
+import logging
 
-from bs4 import BeautifulSoup
-import requests
-import requests_cache
+from ewt.scraper import EWTScraper
 
-class FootballOutsidersNFLScraper:
+
+class FootballOutsidersNFLScraper(EWTScraper):
 
     def dvoa_table(self, table):
 
@@ -59,17 +57,23 @@ class FootballOutsidersNFLScraper:
 
         return teams
 
+    def snap_counts(self, year, week):
+        url = 'http://www.footballoutsiders.com/stats/snapcounts'
+        payload = {'team': 'ALL', 'week': week, 'pos': 'ALL', 'year': year, 'Submit': 'Submit'}
+        return self.post(url, payload)
+
 if __name__ == '__main__':    
-    s = FootballOutsidersNFLScraper()
-    requests_cache.install_cache('footballoutsiders_cache')
-    url = 'http://www.footballoutsiders.com/stats/teamdef'
-    r = requests.get(url)
-    soup = BeautifulSoup(r.text)
+    pass
+    #s = FootballOutsidersNFLScraper()
+    #requests_cache.install_cache('footballoutsiders_cache')
+    #url = 'http://www.footballoutsiders.com/stats/teamdef'
+    #r = requests.get(url)
+    #soup = BeautifulSoup(r.text)
 
     # t1 is the main stats table, t2 is the passing stats table
-    tables = soup.findAll('table', {'class': 'stats', 'cellpadding': '3'})
-    teams1 = s.dvoa_table(tables[0])
-    teams2 = s.passing_table(tables[1])
-    teams = teams1.copy()
-    teams.update(teams2)
-    pprint.pprint(teams)
+    #tables = soup.findAll('table', {'class': 'stats', 'cellpadding': '3'})
+    #teams1 = s.dvoa_table(tables[0])
+    #teams2 = s.passing_table(tables[1])
+    #teams = teams1.copy()
+    #teams.update(teams2)
+    #pprint.pprint(teams)

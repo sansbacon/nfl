@@ -1,4 +1,5 @@
 import logging
+import pprint
 
 from ewt.scraper import EWTScraper
 
@@ -77,7 +78,7 @@ class FFNerdNFLScraper(EWTScraper):
         logging.debug('urls: %s' % pprint.pformat(urls))
         return urls
 
-    def get_projections(self):
+    def season_projections(self):
         """
         Gets rankings and projections, can assemble together with parser
         :return projections(dictionary): keys are positions, values are lists of player dictionaries
@@ -102,6 +103,13 @@ class FFNerdNFLScraper(EWTScraper):
             else:
                 pass
 
+        return projections, rankings
+
+    def weekly_projections(self, week, positions = ['QB', 'RB', 'WR', 'TE', 'DEF']):
+        proj_url = 'http://www.fantasyfootballnerd.com/service/weekly-projections/{format}/{api_key}/{pos}/{week}/'
+        projections = {pos: self.get(proj_url.format(format='json', api_key=self.api_key, pos=pos, week=week)) for pos in positions}
+        rank_url = 'http://www.fantasyfootballnerd.com/service/weekly-rankings/{format}/8x3g9y245w6a/{pos}/{week}/1'
+        rankings = {pos: self.get(rank_url.format(format='json', api_key=self.api_key, pos=pos, week=week)) for pos in positions}
         return projections, rankings
 
 if __name__ == "__main__":

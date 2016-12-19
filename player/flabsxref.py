@@ -92,14 +92,14 @@ def update_flabs_xref(nflp, players):
         nflp.insert_dicts([v], 'player_xref')
         
 if __name__ == '__main__':
-
-    logging.basicConfig(level=logging.ERROR)
-    from nfl.parsers import fantasylabs
-    from nfl.db.nflpg import NFLPostgres
-    nflp = NFLPostgres(database='nfl', user='postgres', password='cft091146')
-    p = fantasylabs.FantasyLabsNFLParser()
-    fn = '/home/sansbacon/9_14_2016.json'
-    with open (fn, 'r') as infile:
-        content = infile.read()
-    players = p.dk_salaries(content=content, season=2016, week=2)
-    update_flabs_xref(nflp, players)
+    pass
+    #logging.basicConfig(level=logging.ERROR)
+    #from nfl.parsers import fantasylabs
+    #from nfl.db.nflpg import NFLPostgres
+    #nflp = NFLPostgres()
+    #p = fantasylabs.FantasyLabsNFLParser()
+    #fn = '/home/sansbacon/9_14_2016.json'
+    #with open (fn, 'r') as infile:
+    #    content = infile.read()
+    #players = p.dk_salaries(content=content, season=2016, week=2)
+    #update_flabs_xref(nflp, players)
