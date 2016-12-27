@@ -11,7 +11,7 @@ from ortools.linear_solver import pywraplp
 
 from orm import Player, Roster
 from constants import *
-
+from nfl.projections import alter_projection
 
 '''
 Load Salary and Prediction data from csv's
@@ -32,26 +32,7 @@ def load_players(players, projection_formula=None, team_exclude=[], player_exclu
         team = str(p.get('Team'))
         player_name = str(p.get('Player_Name'))
         code = str('{}_{}'.format(player_name, pos))
-
-        mean_projection = p.get('AvgPts', 0)
-        ceiling = p.get('Ceiling', 0)
-        floor = p.get('Floor', 0)
-
-        projections = [mean_projection + round(mean_projection * uniform(-.05,.05), 2)]
-        ceilings = [ceiling + round(ceiling * uniform(-.05,.05), 3)]
-        floors = [floor + round(floor * uniform(-.05,.05), 3)]
-
-        if projection_formula == 'cash':
-            proj = (choice(projections) * .5) + (choice(ceilings) * .15) + (choice(floors) * .35)
-        elif projection_formula == 'tournament':
-            proj = (choice(projections) * .3) + (choice(ceilings) * .6) + (choice(floors) * .1)
-        elif projection_formula == 'tourncash':
-            proj = (choice(projections) * .4) + (choice(ceilings) * .3) + (choice(floors) * .3)
-        elif ',' in projection_formula:
-            avg, ceiling, floor = projection_formula.split(',')
-            proj = (choice(projections) * avg) + (choice(ceilings) * ceiling) + (choice(floors) * floor)
-        else:
-            proj = choice(projections)
+        proj = alter_projection(p, keys=['AvgPts', 'Ceiling', 'Floor'], projection_formula=projection_formula, randomize=True)
 
         if team in team_exclude:
             continue

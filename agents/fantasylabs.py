@@ -1,5 +1,7 @@
+import csv
 from itertools import chain
 import logging
+import os
 from random import choice, uniform
 import time
 
@@ -10,14 +12,21 @@ from nfl.scrapers.fantasylabs import FantasyLabsNFLScraper
 from nfl.parsers.fantasylabs import FantasyLabsNFLParser
 from nfl.optimizers.optimize import load_players, run_solver
 from nfl.optimizers.orm import Player
+from nfl.projections import alter_projection
 
 
 class FantasyLabsNFLAgent(object):
 
-    def __init__(self):
+    def __init__(self, cache_name):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         self._p = FantasyLabsNFLParser()
-        self._s = FantasyLabsNFLScraper(cj=browsercookie.firefox(), cache_name='nfl-flabs-agent')
+
+        if cache_name:
+            self.cache_name = cache_name
+        else:
+            self.cache_name = os.path.join(os.path.expanduser("~"), '.rcache', cache_name)
+
+        self._s = FantasyLabsNFLScraper(cj=browsercookie.firefox(), cache_name=self.cache_name)
 
     def _genalg_players(self, players, projection_formula, team_exclude=[], player_exclude=[],
                            randomize_projections=True, ownership_penalty=False):
@@ -308,6 +317,38 @@ class FantasyLabsNFLAgent(object):
                               and mp.get('Player_Name') != nm]
 
         return ps
+
+    def r_pipeline(self, model_date, fn=None, model_name='levitan', site='dk', projection_formula='cash', randomize=True):
+        '''
+        Takes fantasylabs projections, creates list / csv file for R analysis and optimizer
+        Args:
+            model_date:
+            model_name:
+            site:
+
+        Returns:
+            projections(list): of player dict
+        '''
+
+        cols = ['Player_Name', 'Team', 'Position', 'Salary', 'AvgPts']
+        headers = ['player', 'team', 'position', 'salary', 'fppg']
+        transform = dict(zip(cols, headers))
+
+        projections = []
+        for p in self.model(model_date, model_name, site):
+            player = {transform[k]: v for k, v in p.iteritems() if k in cols}
+            if player.get('position') == 'D':
+                player['position'] = 'DST'
+            player['fppg'] = alter_projection(p, ['AvgPts', 'Ceiling', 'Floor'], projection_formula, randomize)
+            projections.append(player)
+
+        if fn:
+            with open(fn, 'wb') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=headers)
+                writer.writeheader()
+                writer.writerows(projections)
+
+        return projections
 
     def salaries(self, seasons):
         '''
