@@ -1,10 +1,14 @@
 from __future__ import print_function
 
+import csv
 import json
 import logging
 import os
 import re
+import StringIO
 import time
+
+import pandas as pd
 
 import browsercookie
 import requests
@@ -13,7 +17,7 @@ import requests_cache
 
 class DraftKingsNFLAgent(object):
 
-    def __init__(self, cache_name):
+    def __init__(self, cache_name=None):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
         self.s = requests.Session()
@@ -23,7 +27,7 @@ class DraftKingsNFLAgent(object):
         if cache_name:
             requests_cache.install_cache(cache_name)
         else:
-            requests_cache.install_cache(os.path.join(os.path.expanduser("~"), '.rcache', cache_name))
+            requests_cache.install_cache(os.path.join(os.path.expanduser("~"), '.rcache', 'dk-nfl-cache'))
 
 
     def _parse_contests(self, contests):
@@ -89,6 +93,21 @@ class DraftKingsNFLAgent(object):
             wanted = ['fn', 'ln', 'htabbr', 'htid', 'pcode', 'pid', 'pn', 'pts', 's']
             return [{k: v for k, v in p.iteritems() if k in wanted} for p in json.loads(r.content)['data'][str(id_list[1])]]
 
+        else:
+            return None
+
+    def salaries(self):
+        url = 'https://www.draftkings.com/lobby#/NFL/0/All'
+        r = self.s.get(url)
+        match = re.search(r'var packagedContests = (.*?);', r.content)
+        if match:
+            contest = json.loads(match.group(1))[0]
+            dgid = contest.get('dg')
+            curl = 'https://www.draftkings.com/lineup/getavailableplayerscsv?contestTypeId=21&draftGroupId={}'
+            r = self.s.get(curl.format(dgid))
+            f = StringIO.StringIO(r.content)
+            dfr = pd.read_csv(f)
+            return dfr.T.to_dict().values()
         else:
             return None
 
