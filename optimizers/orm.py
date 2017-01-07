@@ -41,7 +41,7 @@ class Roster:
 		return s
 
 class Player:
-	def __init__(self, pos, name, cost, matchup=None, team=None, opps_team=None, risk=0, proj=0, code='aa', marked=None):
+	def __init__(self, pos, name, cost, locked=0, excluded=0, matchup=None, team=None, opps_team=None, risk=0, proj=0, code='aa', marked=0):
 		self.pos = pos
 		self.name = name
 		self.code = code
@@ -54,8 +54,19 @@ class Player:
 		self.proj = proj
 		self.marked = marked
 		self.cost_ranking = 0
+		self.locked = locked
+		self.excluded = excluded
 
-	def __repr__(self):
+	def __iter__(self):
+		yield 'pos', self.pos
+		yield 'name', self.name
+		yield 'code', self.code
+		yield 'team', self.team
+		yield 'cost', self.cost
+		yield 'proj', self.proj
+		yield 'excluded', self.excluded
+
+def __repr__(self):
 		return "{0: <2} {1: <20} {2} {3} (${4}, {5})".format(self.pos, \
 									self.name, \
 									self.team, \

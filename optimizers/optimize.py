@@ -158,3 +158,68 @@ def write_bulk_import_csv(rosters, fn):
 
 if __name__ == "__main__":
     pass
+
+    '''
+    from __future__ import print_function
+    import random
+
+    from pulp import *
+    from nfl.optimizers.orm import Player
+
+    from nfl.agents.fantasylabs import FantasyLabsNFLAgent as nfla
+
+    a = nfla('/home/sansbacon/.rcache/fantasylabs-nfl')
+    players = a.model('1_4_2017', 'levitan', 'dk')
+
+    wanted = ['Player_Name', 'Team', 'Position', 'Salary', 'AvgPts']
+
+    pool = [{k:v for k,v in p.iteritems() if k in wanted} for p in players]
+    ps = [Player(proj=p['AvgPts'], pos=p['Position'], name=p['Player_Name'], cost=p['Salary'], team=p['Team'], marked=0) for p in pool]
+
+    # exclude some players
+    for i in [random.randint(0,len(ps)-1) for j in xrange(int(len(ps)*.25))]:
+    	ps[i].excluded = 1
+
+    # lock some players
+    for i in random.sample(xrange(len(ps)), 4):
+    	ps[i].locked = 1
+    	print(ps[i])
+
+    print('\n\n')
+
+    x = LpVariable.dicts('table', ps, lowBound=0, upBound=1, cat=LpInteger)
+
+    prob = LpProblem('DFS', LpMaximize)
+
+    # objective function: maximize projected points
+    prob += sum([p.proj * x[p] for p in ps])
+
+    # salary cap constraint
+    prob += sum([p.cost * x[p] for p in ps]) <= 50000
+
+    # roster size constraint
+    prob += sum([x[p] for p in ps]) == 9
+
+    # positional constraints
+    prob += sum([x[p] for p in ps if p.pos == 'QB']) == 1
+    prob += sum([x[p] for p in ps if p.pos == 'RB']) >= 2
+    prob += sum([x[p] for p in ps if p.pos == 'WR']) >= 3
+    prob += sum([x[p] for p in ps if p.pos == 'TE']) >= 1
+    prob += sum([x[p] for p in ps if p.pos == 'D']) == 1
+    prob += sum([x[p] for p in ps if p.pos == 'WR']) <= 4
+    prob += sum([x[p] for p in ps if p.pos == 'RB']) <= 3
+    prob += sum([x[p] for p in ps if p.pos == 'TE']) <= 2
+    prob += sum([x[p] for p in ps if p.pos == 'TE']) <= 2
+
+    # player excludes
+    prob += sum([p.marked * x[p] for p in ps]) == 0
+
+    # player locks
+    prob += sum([p.locked * x[p] for p in ps]) == sum(p.locked for p in ps)
+
+
+    prob.solve()
+    for p in ps:
+    	if x[p].value() == 1.0:
+    		print(p)
+    '''

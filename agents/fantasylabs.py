@@ -1,12 +1,8 @@
 import csv
-from itertools import chain
 import logging
 import os
 from random import choice, uniform
 import time
-
-import browsercookie
-import pandas as pd
 
 from nfl.scrapers.fantasylabs import FantasyLabsNFLScraper
 from nfl.parsers.fantasylabs import FantasyLabsNFLParser
@@ -17,16 +13,10 @@ from nfl.projections import alter_projection
 
 class FantasyLabsNFLAgent(object):
 
-    def __init__(self, cache_name):
+    def __init__(self, cache_name, cj):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         self._p = FantasyLabsNFLParser()
-
-        if cache_name:
-            self.cache_name = cache_name
-        else:
-            self.cache_name = os.path.join(os.path.expanduser("~"), '.rcache', cache_name)
-
-        self._s = FantasyLabsNFLScraper(cj=browsercookie.firefox(), cache_name=self.cache_name)
+        self._s = FantasyLabsNFLScraper(cj=cj, cache_name=cache_name)
 
     def _genalg_players(self, players, projection_formula, team_exclude=[], player_exclude=[],
                            randomize_projections=True, ownership_penalty=False):
@@ -256,7 +246,7 @@ class FantasyLabsNFLAgent(object):
                     logging.debug(seasons[season], seasons[season][week])
 
 
-    def optimize(self, players, n=5, projection_formula='cash', player_exclude=[], team_exclude=[], randomize_projections=True, ownership_penalty=False):
+    def optimize(self, players, i=2, n=5, projection_formula='cash', player_exclude=[], team_exclude=[], randomize_projections=True, ownership_penalty=False):
         '''
         Returns list of n lineups
 
@@ -270,7 +260,7 @@ class FantasyLabsNFLAgent(object):
         Returns:
             lineups
         '''
-
+        results = []
         if player_exclude:
             if isinstance(player_exclude, basestring):
                 player_exclude = [l.strip() for l in open(player_exclude, 'r').readlines()]
@@ -279,9 +269,16 @@ class FantasyLabsNFLAgent(object):
             if isinstance(team_exclude, basestring):
                 team_exclude = [l.strip() for l in open(team_exclude, 'r').readlines()]
 
-        return [run_solver(self._optimizer_players(players, projection_formula=projection_formula,
-                                       player_exclude=player_exclude,
-                                       team_exclude=team_exclude), depth=1) for x in range(0,n)]
+        for x in xrange(0, i):
+            for idx,lineup in enumerate(run_solver(self._optimizer_players(players, projection_formula=projection_formula,
+                                player_exclude=player_exclude, team_exclude=team_exclude), depth=n)):
+                for l in lineup:
+                    ps = dict(l)
+                    ps['iteration'] = i
+                    ps['iteration_id'] = n
+                    results.append(ps)
+
+        return results
 
     def pivots(self, players, sal_av=300, proj_av=.10, thresholds={'QB': 16, 'RB': 12, 'WR': 12, 'TE': 8, 'DST': 6}):
         '''
@@ -366,20 +363,7 @@ class FantasyLabsNFLAgent(object):
                 players.append(self._p.dk_salaries(model, season, week))
                 time.sleep(1)
 
-        return list(chain.from_iterable(players))
-
-    def to_df(self, players, sort_key='AvgPoints', ascending=False):
-        '''
-        Takes list of player dict, returns pandas dataframe sorted by projection
-        Args:
-            players:
-
-        Returns:
-            df:
-        '''
-        df = pd.DataFrame(players)
-        # do some more stuff here
-        return df
+        return [item for sublist in players for item in sublist]
 
 if __name__ == '__main__':
     pass
