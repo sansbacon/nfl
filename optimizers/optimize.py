@@ -5,11 +5,10 @@
 # https://github.com/swanson/degenerate
 
 import csv
-from random import uniform, choice
 
 from ortools.linear_solver import pywraplp
 
-from orm import Player, Roster
+from orm import *
 from constants import *
 from nfl.projections import alter_projection
 
@@ -39,7 +38,7 @@ def load_players(players, projection_formula=None, team_exclude=[], player_exclu
         elif player_name in player_exclude:
             continue
         else:
-            all_players.append(Player(proj=proj, matchup=p.get('Opposing_TeamFB'), opps_team=oppos, code=code, pos=pos, name=player_name, cost=p.get('Salary'), team=team))
+            all_players.append(ORToolsPlayer(proj=proj, matchup=p.get('Opposing_TeamFB'), opps_team=oppos, code=code, pos=pos, name=player_name, cost=p.get('Salary'), team=team))
 
     return all_players
 
@@ -138,13 +137,11 @@ def run_solver(all_players, depth, min_teams=2, stack_wr=None, stack_te=None):
             solver.Add(solver.Sum(players_not_from_roster)+solver.Sum(1-x for x in players_from_roster)>=9)
         solution = solver.Solve()
         if solution == solver.OPTIMAL:
-            roster = Roster()
+            roster = ORToolsRoster()
             for i, player in enumerate(all_players):
                 if variables[i].solution_value() == 1:
                     roster.add_player(player)
             rosters.append(roster)
-            #print "Optimal roster: %s" % x
-            #print roster
         else:
             raise Exception('No solution error')
 

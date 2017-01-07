@@ -1,17 +1,36 @@
+from __future__ import print_function
+
 import csv
 import logging
-import os
 from random import choice, uniform
 import time
 
 from nfl.scrapers.fantasylabs import FantasyLabsNFLScraper
 from nfl.parsers.fantasylabs import FantasyLabsNFLParser
-from nfl.optimizers.optimize import load_players, run_solver
-from nfl.optimizers.orm import Player
+from nfl.optimizers.optimize import run_solver
+from nfl.optimizers.orm import ORToolsPlayer
 from nfl.projections import alter_projection
 
 
 class FantasyLabsNFLAgent(object):
+    '''
+
+    Usage:
+        # to access paid stats, you will need a cookie library
+        import browsercookie
+
+        # uses cache to reduce API calls
+        a = FantasyLabsNFLAgent(cache_name='/home/sansbacon/.rcache/fantasylabs-nfl2', cj=browsercookie.firefox())
+
+        # get list of players with projections
+        players = a.model('1_4_2017', 'levitan', 'dk')
+
+        # optimize
+        for l in a.optimize(players=players, projection_formula='cash'):
+            print ('Iteration {}-{}'.format(l['iteration_id'], l['team_id']))
+            print(l['players'])
+    '''
+
 
     def __init__(self, cache_name, cj):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -89,9 +108,10 @@ class FantasyLabsNFLAgent(object):
             elif player_name in player_exclude:
                 continue
             else:
-                all_players.append(
-                    Player(proj=proj, matchup=p.get('Opposing_TeamFB'), opps_team=oppos, code=code, pos=pos,
-                           name=player_name, cost=p.get('Salary'), team=team))
+                p = ORToolsPlayer(proj=proj, matchup=p.get('Opposing_TeamFB'), opps_team=oppos, code=code, pos=pos,
+                           name=player_name, cost=p.get('Salary'), team=team)
+                print(p)
+                all_players.append(p)
 
         return all_players
 
@@ -246,16 +266,23 @@ class FantasyLabsNFLAgent(object):
                     logging.debug(seasons[season], seasons[season][week])
 
 
-    def optimize(self, players, i=2, n=5, projection_formula='cash', player_exclude=[], team_exclude=[], randomize_projections=True, ownership_penalty=False):
+    def optimize(self, players, projection_formula, i=2, n=5,
+                 player_exclude=[], team_exclude=[],
+                 randomize_projections=True, ownership_penalty=False):
         '''
-        Returns list of n lineups
+        Returns list of n lineups per i iteration
+        If you want 20 lineups, you could make i=20 and n=1 or i=4 and n=5
+        All of the n in each i will use the same projections, the i groups use different ones
 
         Args:
             players(list): list of player dict
             n(int): number of lineups
+            i(int): number of iterations
             projection_formula(str): can be specific name or comma-separated values of weights
             player_exclude: can be list or filename
             team_exclude: can be list or filename
+            randomize_projections(bool): add some random noise
+            ownership_penalty(bool): adjust projections based on ownership
 
         Returns:
             lineups
@@ -270,14 +297,18 @@ class FantasyLabsNFLAgent(object):
                 team_exclude = [l.strip() for l in open(team_exclude, 'r').readlines()]
 
         for x in xrange(0, i):
-            for idx,lineup in enumerate(run_solver(self._optimizer_players(players, projection_formula=projection_formula,
-                                player_exclude=player_exclude, team_exclude=team_exclude), depth=n)):
-                for l in lineup:
-                    ps = dict(l)
-                    ps['iteration'] = i
-                    ps['iteration_id'] = n
-                    results.append(ps)
+            # put the players in the right place
+            p = self._optimizer_players(players, projection_formula=projection_formula,
+                       player_exclude=player_exclude, team_exclude=team_exclude, randomize_projections=True)
 
+            # n is number of teams per iteration (teams run with the same projections)
+            for idx, l in enumerate(run_solver(p, depth=n)):
+                ps = dict(l)
+                ps['iteration_id'] = x
+                ps['team_id'] = idx
+                results.append(ps)
+
+        # iteration_id, team_id, players
         return results
 
     def pivots(self, players, sal_av=300, proj_av=.10, thresholds={'QB': 16, 'RB': 12, 'WR': 12, 'TE': 8, 'DST': 6}):

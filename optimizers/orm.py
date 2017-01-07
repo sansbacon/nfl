@@ -1,75 +1,82 @@
-class Roster:
-	POSITION_ORDER = {
-		"QB": 0,
-		"RB": 1,
-		"WR": 2,
-		"TE": 3,
-		"DST": 4
-	}
+class ORToolsRoster:
+    POSITION_ORDER = {
+        "QB": 0,
+        "RB": 1,
+        "WR": 2,
+        "TE": 3,
+        "DST": 4
+    }
 
-	def __init__(self):
-		self.players = []
+    def __init__(self):
+        self.players = []
+        self.iteration_id = None
+        self.team_id = None
 
-	def add_player(self, player):
-		self.players.append(player)
+    def __iter__(self):
+        yield 'players', self.players
+        yield 'iteration_id', self.iteration_id
+        yield 'team_id', self.team_id
 
-	def spent(self):
-		return sum(map(lambda x: x.cost, self.players))
+    def add_player(self, player):
+        self.players.append(player)
 
-	def projected(self):
-		return sum(map(lambda x: x.proj, self.players))
+    def spent(self):
+        return sum(map(lambda x: x.cost, self.players))
 
-	def position_order(self, player):
-		return self.POSITION_ORDER[player.pos]
+    def projected(self):
+        return sum(map(lambda x: x.proj, self.players))
 
-	def sorted_players(self):
-		sortedp = sorted(self.players, key=self.position_order)
-		rbs = filter(lambda x: x.pos=='RB', self.players )
-		wrs = filter(lambda x: x.pos=='WR', self.players )
+    def position_order(self, player):
+        return self.POSITION_ORDER[player.pos]
 
-		if (len(rbs)>2):
-			sortedp.insert(7,sortedp.pop(3))
-		elif (len(wrs)>3):
-			sortedp.insert(7,sortedp.pop(6))
+    def sorted_players(self):
+        sortedp = sorted(self.players, key=self.position_order)
+        rbs = filter(lambda x: x.pos=='RB', self.players )
+        wrs = filter(lambda x: x.pos=='WR', self.players )
 
-		return sortedp
+        if (len(rbs)>2):
+            sortedp.insert(7,sortedp.pop(3))
+        elif (len(wrs)>3):
+            sortedp.insert(7,sortedp.pop(6))
 
-	def __repr__(self):
-		s = '\n'.join(str(x) for x in self.sorted_players())
-		s += "\nProjected Score: %s" % self.projected()
-		s += "\tCost: $%s\n" % self.spent()
-		return s
+        return sortedp
 
-class Player:
-	def __init__(self, pos, name, cost, locked=0, excluded=0, matchup=None, team=None, opps_team=None, risk=0, proj=0, code='aa', marked=0):
-		self.pos = pos
-		self.name = name
-		self.code = code
-		self.dropoff = 0
-		self.team = team
-		self.matchup = matchup
-		self.opps_team = opps_team
-		self.cost = int(cost)
-		self.risk = risk
-		self.proj = proj
-		self.marked = marked
-		self.cost_ranking = 0
-		self.locked = locked
-		self.excluded = excluded
+    def __repr__(self):
+        s = '\n'.join(str(x) for x in self.sorted_players())
+        s += "\nProjected Score: %s" % self.projected()
+        s += "\tCost: $%s\n" % self.spent()
+        return s
 
-	def __iter__(self):
-		yield 'pos', self.pos
-		yield 'name', self.name
-		yield 'code', self.code
-		yield 'team', self.team
-		yield 'cost', self.cost
-		yield 'proj', self.proj
-		yield 'excluded', self.excluded
+class ORToolsPlayer:
+    def __init__(self, pos, name, cost, locked=0, excluded=0, matchup=None, team=None, opps_team=None, risk=0, proj=0, code='aa', marked=0):
+        self.pos = pos
+        self.name = name
+        self.code = code
+        self.dropoff = 0
+        self.team = team
+        self.matchup = matchup
+        self.opps_team = opps_team
+        self.cost = int(cost)
+        self.risk = risk
+        self.proj = proj
+        self.marked = marked
+        self.cost_ranking = 0
+        self.locked = locked
+        self.excluded = excluded
 
-def __repr__(self):
-		return "{0: <2} {1: <20} {2} {3} (${4}, {5})".format(self.pos, \
-									self.name, \
-									self.team, \
-									self.matchup, \
-									self.cost, \
-									self.proj)
+    def __iter__(self):
+        yield 'pos', self.pos
+        yield 'name', self.name
+        yield 'code', self.code
+        yield 'team', self.team
+        yield 'cost', self.cost
+        yield 'proj', self.proj
+        yield 'excluded', self.excluded
+
+    def __repr__(self):
+        return "{0: <2} {1: <20} {2} {3} (${4}, {5})".format(self.pos, \
+                                    self.name, \
+                                    self.team, \
+                                    self.matchup, \
+                                    self.cost, \
+                                    self.proj)
