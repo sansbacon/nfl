@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
-# A huge thanks to swanson
 # this solution is almost wholly based off
-# https://github.com/swanson/degenerate
+# https://github.com/swanson/degenerate and mrnitrate's fork
 
 import csv
 
 from ortools.linear_solver import pywraplp
+from pulp import *
 
 from orm import *
 from constants import *
@@ -15,7 +15,7 @@ from nfl.projections import alter_projection
 '''
 Load Salary and Prediction data from csv's
 '''
-def load_players(players, projection_formula=None, team_exclude=[], player_exclude=[], random=True):
+def load_players(players, projection_site, projection_formula, team_exclude=[], player_exclude=[], random=True):
     '''
     Takes list of player dicts, returns list of Player objects
     :param players(list): of player dict
@@ -23,34 +23,84 @@ def load_players(players, projection_formula=None, team_exclude=[], player_exclu
     '''
     all_players = []
 
-    for p in players:
-        oppos = str(p.get('Opposing_TeamFB', '').replace('@', ''))
-        pos = str(p.get('Position'))
-        if pos == 'D':
-            pos = str('DST')
-        team = str(p.get('Team'))
-        player_name = str(p.get('Player_Name'))
-        code = str('{}_{}'.format(player_name, pos))
-        proj = alter_projection(p, keys=['AvgPts', 'Ceiling', 'Floor'], projection_formula=projection_formula, randomize=True)
+    if projection_site == 'dk':
+        for p in players:
+            oppos = str(p.get('Opposing_TeamFB', '').replace('@', ''))
+            pos = str(p.get('Position'))
+            if pos == 'D':
+                pos = str('DST')
+            team = str(p.get('Team'))
+            player_name = str(p.get('Player_Name'))
+            code = str('{}_{}'.format(player_name, pos))
+            proj = alter_projection(p, keys=['AvgPts', 'Ceiling', 'Floor'], projection_formula=projection_formula, randomize=True)
 
-        if team in team_exclude:
-            continue
-        elif player_name in player_exclude:
-            continue
-        else:
-            all_players.append(ORToolsPlayer(proj=proj, matchup=p.get('Opposing_TeamFB'), opps_team=oppos, code=code, pos=pos, name=player_name, cost=p.get('Salary'), team=team))
+            if team in team_exclude:
+                continue
+            elif player_name in player_exclude:
+                continue
+            else:
+                all_players.append(ORToolsPlayer(proj=proj, matchup=p.get('Opposing_TeamFB'), opps_team=oppos, code=code, pos=pos, name=player_name, cost=p.get('Salary'), team=team))
 
     return all_players
 
-'''
-handle or-tools logic
-'''
+def pulp_optimizer(all_players):
+    '''
+    Right now assumes players are from fantasylabs
+    Based on https://github.com/sansbacon/pydfs-lineup-optimizer
+    '''
+    
+    wanted = ['Player_Name', 'Team', 'Position', 'Salary', 'AvgPts']
+
+    pool = [{k:v for k,v in p.items() if k in wanted} for p in all_players]
+    players = [ORToolsPlayer(proj=p['AvgPts'], pos=p['Position'], name=p['Player_Name'], cost=p['Salary'], team=p['Team'], marked=0) for p in pool]
+
+    x = LpVariable.dicts('table', players, lowBound=0, upBound=1, cat=LpInteger)
+    prob = LpProblem('DFS', LpMaximize)
+
+    # objective function: maximize projected points
+    prob += sum([p.proj * x[p] for p in players])
+
+    # salary cap constraint
+    prob += sum([p.cost * x[p] for p in players]) <= 50000
+
+    # roster size constraint
+    prob += sum([x[p] for p in players]) == 9
+
+    # positional constraints
+    prob += sum([x[p] for p in players if p.pos == 'QB']) == 1
+    prob += sum([x[p] for p in players if p.pos == 'RB']) >= 2
+    prob += sum([x[p] for p in players if p.pos == 'WR']) >= 3
+    prob += sum([x[p] for p in players if p.pos == 'TE']) >= 1
+    prob += sum([x[p] for p in players if p.pos == 'D']) == 1
+    prob += sum([x[p] for p in players if p.pos == 'WR']) <= 4
+    prob += sum([x[p] for p in players if p.pos == 'RB']) <= 3
+    prob += sum([x[p] for p in players if p.pos == 'TE']) <= 2
+    prob += sum([x[p] for p in players if p.pos == 'TE']) <= 2
+
+    # player excludes
+    prob += sum([p.marked * x[p] for p in players]) == 0
+
+    # player locks
+    prob += sum([p.locked * x[p] for p in players]) == sum(p.locked for p in players)
+
+    # solve and print
+    prob.solve()
+    roster = ORToolsRoster()
+    for p in players:
+        if x[p].value() == 1.0:
+            roster.add_player(p)
+
+    return roster
+
 def run_solver(all_players, depth, min_teams=2, stack_wr=None, stack_te=None):
+    '''
+    Arguments:
+
+    Returns:
+        rosters(list): of Rosters
+    '''
     solver = pywraplp.Solver('FD', pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
 
-    '''
-    Setup Binary Player variables
-    '''
     variables = []
     for player in all_players:
         variables.append(solver.IntVar(0, 1, player.code))
@@ -62,6 +112,7 @@ def run_solver(all_players, depth, min_teams=2, stack_wr=None, stack_te=None):
     objective.SetMaximization()
     for i, player in enumerate(all_players):
         objective.SetCoefficient(variables[i], player.proj)
+
     '''
     Add Salary Cap Constraint
     '''
@@ -88,43 +139,6 @@ def run_solver(all_players, depth, min_teams=2, stack_wr=None, stack_te=None):
             solver.Add(solver.Sum(players_by_pos) == limit+flex_te)
         else :
             solver.Add(solver.Sum(players_by_pos) == limit)
-
-    '''
-    Add min number of different teams players must be drafted from constraint (draftkings == 2)
-    '''
-    #team_names = set([o.team for o in all_players])
-
-    '''
-    if min_teams:
-        teams = []
-        for team in team_names:
-            teams.append(solver.IntVar(0, 1, team))
-        solver.Add(solver.Sum(teams) >= min_teams)
-
-        for idx, team in enumerate(team_names):
-            ids, players_by_team = zip(*filter(lambda (x, _): x.team in team, zip(all_players, variables)))
-            solver.Add(teams[idx] <= solver.Sum(players_by_team))
-
-    '''
-
-    '''
-    Add Defence cant play against any offense's player team constraint
-    '''
-    #o_players = filter(lambda x: x.pos in ['QB', 'WR', 'RB', 'TE'], all_players)
-    #teams_obj = filter(lambda x: x.pos == 'DST', all_players)
-    #teams = set([o.team for o in teams_obj])
-
-    '''
-    for opps_team in team_names:
-        if opps_team in teams:
-            ids, players_by_opps_team = zip(
-                *filter(lambda (x, _): x.pos in ['QB', 'WR', 'RB', 'TE'] and x.opps_team in opps_team,
-                        zip(all_players, variables)))
-            idxs, defense = zip(
-                *filter(lambda (x, _): x.pos == 'DST' and x.team in opps_team, zip(all_players, variables)))
-            for player in players_by_opps_team:
-                solver.Add(player <= 1 - defense[0])
-    '''
 
     '''
     Add remove previous solutions constraint and loop to generate X rosters
@@ -155,68 +169,3 @@ def write_bulk_import_csv(rosters, fn):
 
 if __name__ == "__main__":
     pass
-
-    '''
-    from __future__ import print_function
-    import random
-
-    from pulp import *
-    from nfl.optimizers.orm import Player
-
-    from nfl.agents.fantasylabs import FantasyLabsNFLAgent as nfla
-
-    a = nfla('/home/sansbacon/.rcache/fantasylabs-nfl')
-    players = a.model('1_4_2017', 'levitan', 'dk')
-
-    wanted = ['Player_Name', 'Team', 'Position', 'Salary', 'AvgPts']
-
-    pool = [{k:v for k,v in p.iteritems() if k in wanted} for p in players]
-    ps = [Player(proj=p['AvgPts'], pos=p['Position'], name=p['Player_Name'], cost=p['Salary'], team=p['Team'], marked=0) for p in pool]
-
-    # exclude some players
-    for i in [random.randint(0,len(ps)-1) for j in xrange(int(len(ps)*.25))]:
-    	ps[i].excluded = 1
-
-    # lock some players
-    for i in random.sample(xrange(len(ps)), 4):
-    	ps[i].locked = 1
-    	print(ps[i])
-
-    print('\n\n')
-
-    x = LpVariable.dicts('table', ps, lowBound=0, upBound=1, cat=LpInteger)
-
-    prob = LpProblem('DFS', LpMaximize)
-
-    # objective function: maximize projected points
-    prob += sum([p.proj * x[p] for p in ps])
-
-    # salary cap constraint
-    prob += sum([p.cost * x[p] for p in ps]) <= 50000
-
-    # roster size constraint
-    prob += sum([x[p] for p in ps]) == 9
-
-    # positional constraints
-    prob += sum([x[p] for p in ps if p.pos == 'QB']) == 1
-    prob += sum([x[p] for p in ps if p.pos == 'RB']) >= 2
-    prob += sum([x[p] for p in ps if p.pos == 'WR']) >= 3
-    prob += sum([x[p] for p in ps if p.pos == 'TE']) >= 1
-    prob += sum([x[p] for p in ps if p.pos == 'D']) == 1
-    prob += sum([x[p] for p in ps if p.pos == 'WR']) <= 4
-    prob += sum([x[p] for p in ps if p.pos == 'RB']) <= 3
-    prob += sum([x[p] for p in ps if p.pos == 'TE']) <= 2
-    prob += sum([x[p] for p in ps if p.pos == 'TE']) <= 2
-
-    # player excludes
-    prob += sum([p.marked * x[p] for p in ps]) == 0
-
-    # player locks
-    prob += sum([p.locked * x[p] for p in ps]) == sum(p.locked for p in ps)
-
-
-    prob.solve()
-    for p in ps:
-    	if x[p].value() == 1.0:
-    		print(p)
-    '''

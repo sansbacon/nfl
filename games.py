@@ -136,7 +136,7 @@ class NFLGame(object):
         '''
         if not self._games:
             self._load_games()
-        return [v for k,v in self._gamedict.iteritems() if team in k and str(season) in k]
+        return [v for k,v in self._gamedict.items() if team in k and str(season) in k]
 
 if __name__ == '__main__':
     pass

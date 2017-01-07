@@ -86,7 +86,7 @@ if __name__ == '__main__':
     import pickle
     fo_players = []
     with open('/home/sansbacon/snapcounts.pkl', 'rb') as infile:
-        fo_players = [{k: str(v).strip() for k,v in p.iteritems()} for p in pickle.load(infile)]
+        fo_players = [{k: str(v).strip() for k,v in p.items()} for p in pickle.load(infile)]
 
     from nfl.db.nflpg import NFLPostgres
     nflp = NFLPostgres()

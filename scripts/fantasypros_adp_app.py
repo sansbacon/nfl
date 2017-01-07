@@ -69,7 +69,7 @@ if __name__ == '__main__':
         print 'Pick %d' % pick
         print "------------------------"
 
-        for position, players_at_position in players.iteritems():
+        for position, players_at_position in players.items():
             header = '%s: ' % position
 
             # get lower and upper bounds, confine to zero and rounds * teams

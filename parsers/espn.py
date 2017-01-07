@@ -138,7 +138,7 @@ class ESPNNFLParser(object):
         '''
         rosters = []
 
-        for t, c in rosters.iteritems():
+        for t, c in rosters.items():
 
             rosters += self.team_roster(t, c)
         return rosters

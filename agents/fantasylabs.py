@@ -110,7 +110,6 @@ class FantasyLabsNFLAgent(object):
             else:
                 p = ORToolsPlayer(proj=proj, matchup=p.get('Opposing_TeamFB'), opps_team=oppos, code=code, pos=pos,
                            name=player_name, cost=p.get('Salary'), team=team)
-                print(p)
                 all_players.append(p)
 
         return all_players
@@ -287,7 +286,9 @@ class FantasyLabsNFLAgent(object):
         Returns:
             lineups
         '''
-        results = []
+        results = {}
+
+        # can use textfiles for excludes
         if player_exclude:
             if isinstance(player_exclude, basestring):
                 player_exclude = [l.strip() for l in open(player_exclude, 'r').readlines()]
@@ -296,17 +297,16 @@ class FantasyLabsNFLAgent(object):
             if isinstance(team_exclude, basestring):
                 team_exclude = [l.strip() for l in open(team_exclude, 'r').readlines()]
 
+        # loop through iteration groups
         for x in xrange(0, i):
-            # put the players in the right place
+            # put the players in the right format for optimizer
             p = self._optimizer_players(players, projection_formula=projection_formula,
                        player_exclude=player_exclude, team_exclude=team_exclude, randomize_projections=True)
 
             # n is number of teams per iteration (teams run with the same projections)
-            for idx, l in enumerate(run_solver(p, depth=n)):
-                ps = dict(l)
-                ps['iteration_id'] = x
-                ps['team_id'] = idx
-                results.append(ps)
+            for idx, roster in enumerate(run_solver(p, depth=n)):
+                roster_id = '{}-{}'.format(x, idx)
+                results[roster_id] = roster
 
         # iteration_id, team_id, players
         return results
@@ -364,7 +364,7 @@ class FantasyLabsNFLAgent(object):
 
         projections = []
         for p in self.model(model_date, model_name, site):
-            player = {transform[k]: v for k, v in p.iteritems() if k in cols}
+            player = {transform[k]: v for k, v in p.items() if k in cols}
             if player.get('position') == 'D':
                 player['position'] = 'DST'
             player['fppg'] = alter_projection(p, ['AvgPts', 'Ceiling', 'Floor'], projection_formula, randomize)
@@ -388,8 +388,8 @@ class FantasyLabsNFLAgent(object):
             players(list): of player dict
         '''
         players = []
-        for season, weeks in seasons.iteritems():
-            for week, datestr in weeks.iteritems():
+        for season, weeks in seasons.items():
+            for week, datestr in weeks.items():
                 model = self._s.model(datestr)
                 players.append(self._p.dk_salaries(model, season, week))
                 time.sleep(1)

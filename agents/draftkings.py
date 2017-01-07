@@ -44,7 +44,7 @@ class DraftKingsNFLAgent(object):
         wanted = ['ContestId', 'CreatorUserId', 'DraftGroupId', 'IsDirectChallenge', 'LineupId', 'MaxNumberPlayers', 'PlayerPoints', 'Sport',
                   'TimeRemaining', 'TimeRemainingOpp', 'TotalPointsOpp', 'UserContestId', 'UsernameOpp']
 
-        return [{k:v for k,v in c.iteritems() if k in wanted} for c in contests]
+        return [{k:v for k,v in c.items() if k in wanted} for c in contests]
 
     def live_contests(self):
         '''
@@ -91,7 +91,7 @@ class DraftKingsNFLAgent(object):
             r = self.s.post('https://www.draftkings.com/contest/getusercontestplayers', data=payload)
             r.raise_for_status()
             wanted = ['fn', 'ln', 'htabbr', 'htid', 'pcode', 'pid', 'pn', 'pts', 's']
-            return [{k: v for k, v in p.iteritems() if k in wanted} for p in json.loads(r.content)['data'][str(id_list[1])]]
+            return [{k: v for k, v in p.items() if k in wanted} for p in json.loads(r.content)['data'][str(id_list[1])]]
 
         else:
             return None

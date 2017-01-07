@@ -118,7 +118,7 @@ class GenAlg(object):
     @jit
     def GetTeamPointTotal(self, team):
         total_points = 0
-        for pos, players in team.iteritems():
+        for pos, players in team.items():
             for player in players:
                 total_points += player.points
         return total_points
@@ -126,7 +126,7 @@ class GenAlg(object):
     @jit
     def GetTeamSalary(self, team):
         total_salary = 0
-        for pos, players in team.iteritems():
+        for pos, players in team.items():
             for player in players:
                 total_salary += player.salary
         return total_salary
