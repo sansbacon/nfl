@@ -73,7 +73,18 @@ class DraftKingsNFLAgent(object):
         '''
         return [c for c in self.live_contests() if c.get('MaxNumberPlayers') == 2]
 
-    def contest_lineup(self, contest_id, user_contest_id, draft_group_id):
+    def contest_lineups(self, contest_id, user_contest_id, draft_group_id):
+        '''
+        Gets list of all lineups for a single DK contest
+        Args:
+            contest_id:
+            user_contest_id:
+            draft_group_id:
+
+        Returns:
+            lineups(list): of lineup dictionaries, keys are my_lineup(bool), players(list), and uc(int)
+        '''
+        lineups = []
         url = 'https://www.draftkings.com/contest/gamecenter/{}?uc={}'.format(contest_id, user_contest_id)
         r = self.s.get(url)
         r.raise_for_status()
@@ -83,15 +94,38 @@ class DraftKingsNFLAgent(object):
         # {"uc":623263592,"u":1679292,"un":"Meth","t":"(1/1)","r":2,"pmr":102,"pts":132.96}]
         # need to get 'uc' to create idList parameter below
         match = re.search(r'var teams = (.*?);', r.content)
+
         if match:
-            id_list = [t['uc'] for t in json.loads(match.group(1))]
+            # contest data has the fields you need to get the lineups - not the actual lineups
+            contest_data = json.loads(match.group(1))
+            id_list = [t['uc'] for t in contest_data]
 
             # have to send POST to get lineup data (page HTML is just a stub filled in with AJAX)
             payload = {"idList":id_list,"reqTs":int(time.time()),"contestId":contest_id,"draftGroupId":draft_group_id}
             r = self.s.post('https://www.draftkings.com/contest/getusercontestplayers', data=payload)
             r.raise_for_status()
+
+            # these are the relevant fields
+            # fn = first name, ln = last name, htabbr = home team abbreviation (e.g. Sea), htid = home team id (e.g. 361)
+            # pcode = player code (e.g. 28887), pid = player id (e.g. 568874) NOTE: not sure what difference is
+            # pn = position name, pts = fantasy points, s= salary
+            # will have --, 0, or -1 as value if player is not yet locked (on opposing team)
             wanted = ['fn', 'ln', 'htabbr', 'htid', 'pcode', 'pid', 'pn', 'pts', 's']
-            return [{k: v for k, v in p.items() if k in wanted} for p in json.loads(r.content)['data'][str(id_list[1])]]
+
+            # want to distinguish my team vs others
+            # the response is a nested dict, I want 'data' which uses the user_contest_id as its keys
+            # the lineup that is mine will match the user_contest_id parameter for this method
+            for ucid, team_lineup in json.loads(r.content)['data'].items():
+                lup = {'players': [{k: v for k, v in player.items() if k in wanted} for player in team_lineup]}
+
+                # is this my team?
+                lup['my_lineup'] = False
+                lup['uc'] = ucid
+                if str(ucid) == user_contest_id:
+                    lup['my_lineup'] = True
+                lineups.append(lup)
+
+            return lineups
 
         else:
             return None
@@ -112,4 +146,11 @@ class DraftKingsNFLAgent(object):
             return None
 
 if __name__ == '__main__':
-    pass
+    from pprint import pprint as pp
+    logging.basicConfig(level=logging.DEBUG)
+    a = DraftKingsNFLAgent()
+    for contest in a.live_hth():
+        lineups = a.contest_lineups(contest['ContestId'], contest['UserContestId'], contest['DraftGroupId'])
+        print(contest['ContestId'])
+        pp(lineups)
+        print('\n\n')

@@ -5,18 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="38634580-e7e6-4233-875c-345a3b468268" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/flabs_agent_test.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/todo/gogenalg.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/agents/draftkings.py" afterPath="$PROJECT_DIR$/agents/draftkings.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/agents/fantasylabs.py" afterPath="$PROJECT_DIR$/agents/fantasylabs.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/games.py" afterPath="$PROJECT_DIR$/games.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/optimizers/genalg.py" afterPath="$PROJECT_DIR$/optimizers/genalg.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/optimizers/genalg2.py" afterPath="$PROJECT_DIR$/optimizers/genalg2.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/optimizers/optimize.py" afterPath="$PROJECT_DIR$/optimizers/optimize.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/parsers/espn.py" afterPath="$PROJECT_DIR$/parsers/espn.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/player/foxref.py" afterPath="$PROJECT_DIR$/player/foxref.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scripts/fantasypros_adp_app.py" afterPath="$PROJECT_DIR$/scripts/fantasypros_adp_app.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scripts/ffcalculator_adp_app.py" afterPath="$PROJECT_DIR$/scripts/ffcalculator_adp_app.py" />
     </list>
     <ignored path="nfl.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -35,7 +26,7 @@
     <favorites_list name="nfl" />
   </component>
   <component name="FileEditorManager">
-    <leaf />
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -84,7 +75,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/../aws-lambda-nba-stats/nba/scrapers/rotoguru_nba.py" />
         <option value="$PROJECT_DIR$/../aws-lambda-nba-stats/nba/scripts/espn-nba-players.py" />
         <option value="$PROJECT_DIR$/../ipynb/RotoGrinders NBA API.ipynb" />
         <option value="$PROJECT_DIR$/scrapers/fantasydata.py" />
@@ -124,7 +114,6 @@
         <option value="$PROJECT_DIR$/../nba/agents/fantasylabs.py" />
         <option value="$PROJECT_DIR$/../nba/agents/agent.py" />
         <option value="$PROJECT_DIR$/optimizers/orm.py" />
-        <option value="$PROJECT_DIR$/agents/draftkings.py" />
         <option value="$PROJECT_DIR$/games.py" />
         <option value="$PROJECT_DIR$/optimizers/genalg.py" />
         <option value="$PROJECT_DIR$/optimizers/genalg2.py" />
@@ -135,6 +124,8 @@
         <option value="$PROJECT_DIR$/optimizers/optimize.py" />
         <option value="$PROJECT_DIR$/agents/fantasylabs.py" />
         <option value="$PROJECT_DIR$/tests/flabs_agent_test.py" />
+        <option value="$PROJECT_DIR$/todo/gogenalg.py" />
+        <option value="$PROJECT_DIR$/agents/draftkings.py" />
       </list>
     </option>
   </component>
@@ -159,7 +150,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -260,6 +250,7 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
       <pane id="Scratches" />
     </panes>
   </component>
@@ -276,29 +267,7 @@
       <recent name="$PROJECT_DIR$/parsers" />
     </key>
   </component>
-  <component name="RunManager" selected="Python tests.Unittests in flabs_agent_test">
-    <configuration default="false" name="Unittests in TestGenalg2" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="nfl" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/genalg2_test.py" />
-      <option name="CLASS_NAME" value="TestGenalg2" />
-      <option name="METHOD_NAME" value="" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_CLASS" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PUREUNITTEST" value="true" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="Python.draftkings">
     <configuration default="false" name="settings" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -370,6 +339,23 @@
       <option name="PUREUNITTEST" value="true" />
       <option name="PARAMS" value="" />
       <option name="USE_PARAM" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="draftkings" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="/usr/bin/python2.7" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/agents" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="nfl" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/agents/draftkings.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
     </configuration>
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
@@ -507,19 +493,19 @@
       <method />
     </configuration>
     <list size="5">
-      <item index="0" class="java.lang.String" itemvalue="Python tests.Unittests in TestGenalg2" />
-      <item index="1" class="java.lang.String" itemvalue="Python.settings" />
-      <item index="2" class="java.lang.String" itemvalue="Python.lineup_optimizer" />
-      <item index="3" class="java.lang.String" itemvalue="Python.fantasylabs" />
-      <item index="4" class="java.lang.String" itemvalue="Python tests.Unittests in flabs_agent_test" />
+      <item index="0" class="java.lang.String" itemvalue="Python.settings" />
+      <item index="1" class="java.lang.String" itemvalue="Python.lineup_optimizer" />
+      <item index="2" class="java.lang.String" itemvalue="Python.fantasylabs" />
+      <item index="3" class="java.lang.String" itemvalue="Python tests.Unittests in flabs_agent_test" />
+      <item index="4" class="java.lang.String" itemvalue="Python.draftkings" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python tests.Unittests in flabs_agent_test" />
-        <item index="1" class="java.lang.String" itemvalue="Python.fantasylabs" />
-        <item index="2" class="java.lang.String" itemvalue="Python.lineup_optimizer" />
-        <item index="3" class="java.lang.String" itemvalue="Python.settings" />
-        <item index="4" class="java.lang.String" itemvalue="Python tests.Unittests in TestGenalg2" />
+        <item index="0" class="java.lang.String" itemvalue="Python.draftkings" />
+        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittests in flabs_agent_test" />
+        <item index="2" class="java.lang.String" itemvalue="Python.fantasylabs" />
+        <item index="3" class="java.lang.String" itemvalue="Python.lineup_optimizer" />
+        <item index="4" class="java.lang.String" itemvalue="Python.settings" />
       </list>
     </recent_temporary>
   </component>
@@ -635,13 +621,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/scrapers/numberfire.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="38">
-          <caret line="2" column="0" lean-forward="false" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/scrapers/pinnacle.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="114">
@@ -884,31 +863,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/agents/draftkings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="203">
-          <caret line="93" column="40" lean-forward="false" selection-start-line="93" selection-start-column="40" selection-end-line="93" selection-end-column="40" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/games.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="345">
           <caret line="138" column="44" lean-forward="false" selection-start-line="138" selection-start-column="44" selection-end-line="138" selection-end-column="44" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/optimizers/genalg.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="203">
-          <caret line="137" column="33" lean-forward="false" selection-start-line="137" selection-start-column="33" selection-end-line="137" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/optimizers/genalg2.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="203">
-          <caret line="128" column="33" lean-forward="false" selection-start-line="128" selection-start-column="33" selection-end-line="128" selection-end-column="33" />
         </state>
       </provider>
     </entry>
@@ -951,9 +909,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="825">
           <caret line="33" column="12" lean-forward="true" selection-start-line="33" selection-start-column="12" selection-end-line="33" selection-end-column="12" />
-          <folding>
-            <element signature="e#25#39#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -961,9 +916,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="244">
           <caret line="24" column="23" lean-forward="false" selection-start-line="24" selection-start-column="23" selection-end-line="24" selection-end-column="23" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -971,9 +923,44 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="319">
           <caret line="399" column="8" lean-forward="false" selection-start-line="399" selection-start-column="8" selection-end-line="399" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/agents/draftkings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1220">
+          <caret line="94" column="59" lean-forward="true" selection-start-line="94" selection-start-column="59" selection-end-line="94" selection-end-column="59" />
           <folding>
             <element signature="e#0#37#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/todo/gogenalg.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="812">
+          <caret line="337" column="21" lean-forward="false" selection-start-line="337" selection-start-column="21" selection-end-line="337" selection-end-column="21" />
+          <folding>
+            <element signature="e#0#14#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/optimizers/genalg2.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="25">
+          <caret line="5" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="398" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#14#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/optimizers/genalg.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="25">
+          <caret line="137" column="33" lean-forward="false" selection-start-line="137" selection-start-column="33" selection-end-line="137" selection-end-column="33" />
+          <folding />
         </state>
       </provider>
     </entry>
