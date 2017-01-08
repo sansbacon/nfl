@@ -1,9 +1,9 @@
 from __future__ import print_function
 
-import csv
 import json
 import logging
 import os
+from pprint import pformat as pf
 import re
 import StringIO
 import time
@@ -13,6 +13,7 @@ import pandas as pd
 import browsercookie
 import requests
 import requests_cache
+import tabulate
 
 
 class DraftKingsNFLAgent(object):
@@ -82,9 +83,9 @@ class DraftKingsNFLAgent(object):
             draft_group_id:
 
         Returns:
-            lineups(list): of lineup dictionaries, keys are my_lineup(bool), players(list), and uc(int)
+            lineups(dict):
+
         '''
-        lineups = []
         url = 'https://www.draftkings.com/contest/gamecenter/{}?uc={}'.format(contest_id, user_contest_id)
         r = self.s.get(url)
         r.raise_for_status()
@@ -98,10 +99,10 @@ class DraftKingsNFLAgent(object):
         if match:
             # contest data has the fields you need to get the lineups - not the actual lineups
             contest_data = json.loads(match.group(1))
-            id_list = [t['uc'] for t in contest_data]
+            lineups = {int(t['uc']): {'un': t['un'], 'uc': int(t['uc']), 'pmr': t['pmr'], 'pts': t['pts']} for t in contest_data}
 
             # have to send POST to get lineup data (page HTML is just a stub filled in with AJAX)
-            payload = {"idList":id_list,"reqTs":int(time.time()),"contestId":contest_id,"draftGroupId":draft_group_id}
+            payload = {"idList":[uc for uc in lineups],"reqTs":int(time.time()),"contestId":contest_id,"draftGroupId":draft_group_id}
             r = self.s.post('https://www.draftkings.com/contest/getusercontestplayers', data=payload)
             r.raise_for_status()
 
@@ -110,25 +111,60 @@ class DraftKingsNFLAgent(object):
             # pcode = player code (e.g. 28887), pid = player id (e.g. 568874) NOTE: not sure what difference is
             # pn = position name, pts = fantasy points, s= salary
             # will have --, 0, or -1 as value if player is not yet locked (on opposing team)
-            wanted = ['fn', 'ln', 'htabbr', 'htid', 'pcode', 'pid', 'pn', 'pts', 's']
+            wanted = ['fn', 'ln', 'htabbr', 'htid', 'pcode', 'pid', 'pd', 'pn', 'pts', 's', 'tr', 'ytp']
 
             # want to distinguish my team vs others
             # the response is a nested dict, I want 'data' which uses the user_contest_id as its keys
             # the lineup that is mine will match the user_contest_id parameter for this method
-            for ucid, team_lineup in json.loads(r.content)['data'].items():
-                lup = {'players': [{k: v for k, v in player.items() if k in wanted} for player in team_lineup]}
+            for ucid, team in json.loads(r.content)['data'].items():
+                logging.debug('user_contest_id is {} of type {}'.format(user_contest_id, type(user_contest_id)))
+                logging.debug('uc key is {} of type {}'.format(ucid, type(ucid)))
+                logging.debug('user_contest_id equal to uc? {}'.format(int(ucid) == user_contest_id))
 
-                # is this my team?
-                lup['my_lineup'] = False
-                lup['uc'] = ucid
-                if str(ucid) == user_contest_id:
-                    lup['my_lineup'] = True
-                lineups.append(lup)
+                ucid = int(ucid)
+                if ucid == user_contest_id:
+                    lineups[ucid]['my_lineup'] = True
+                else:
+                    lineups[ucid]['my_lineup'] = False
+
+                lineups[ucid]['players'] = [{k: v for k, v in player.items() if k in wanted} for player in team]
 
             return lineups
 
         else:
             return None
+
+    def hth_matchup(self, lineups):
+        '''
+
+        Args:
+            lineups(dict):
+
+        Returns:
+            matchup(str):
+        '''
+        for lup in lineups.values():
+            sal = 50000 - sum([p.get('s') for p in lup['players'] if isinstance(p.get('s'), (int, long))])
+            pts = lup.get('pts')
+            pmr = lup.get('pmr')
+            l = [['{} {}'.format(p.get('fn'), p.get('ln')), p.get('pn'), p.get('s'), p.get('pts')] for p in lup['players']]
+            if lup.get('my_lineup'):
+                mine = l
+                mine.append(['Points Scored', pts])
+                mine.append(['Minutes Remaining', pmr])
+                mine.append(['Salary Remaining', sal])
+            else:
+                opp = l
+                opp.append(['Points Scored', pts])
+                opp.append(['Minutes Remaining', pmr])
+                opp.append(['Salary Remaining', sal])
+
+        return tabulate.tabulate(list(zip(mine, opp)), headers = ['My Team', 'Opp Team'])
+
+        #lines = ['MATCHUP REPORT']
+        #lines.append(", ".join(['{} {}-{}'.format(p.get('fn'), p.get('ln'), p.get('pn')) for p in my_team.get('players')]))
+        #lines.append(", ".join(['{} {}-{}'.format(p.get('fn'), p.get('ln'), p.get('pn')) for p in opp_team.get('players')]))
+        #return '\n\n'.join(lines)
 
     def salaries(self):
         url = 'https://www.draftkings.com/lobby#/NFL/0/All'
@@ -146,11 +182,10 @@ class DraftKingsNFLAgent(object):
             return None
 
 if __name__ == '__main__':
-    from pprint import pprint as pp
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.ERROR)
     a = DraftKingsNFLAgent()
-    for contest in a.live_hth():
+    for contest in a.live_hth()[0:3]:
+        print('CONTEST REPORT: {}'.format(contest['ContestId']))
         lineups = a.contest_lineups(contest['ContestId'], contest['UserContestId'], contest['DraftGroupId'])
-        print(contest['ContestId'])
-        pp(lineups)
+        print(a.hth_matchup(lineups))
         print('\n\n')
