@@ -7,15 +7,15 @@ class ORToolsRoster:
         "DST": 4
     }
 
-    def __init__(self):
+    def __init__(self, iteration_id=None, roster_id=None):
         self.players = []
-        self.iteration_id = None
-        self.team_id = None
+        self.iteration_id = iteration_id
+        self.roster_id = roster_id
 
     def __iter__(self):
         yield 'players', self.players
         yield 'iteration_id', self.iteration_id
-        yield 'team_id', self.team_id
+        yield 'roster_id', self.roster_id
 
     def add_player(self, player):
         self.players.append(player)
@@ -65,13 +65,12 @@ class ORToolsPlayer:
         self.excluded = excluded
 
     def __iter__(self):
-        yield 'pos', self.pos
         yield 'name', self.name
-        yield 'code', self.code
+        yield 'position', self.pos
         yield 'team', self.team
-        yield 'cost', self.cost
-        yield 'proj', self.proj
-        yield 'excluded', self.excluded
+        yield 'opp', self.opps_team
+        yield 'salary', self.cost
+        yield 'fpts', self.proj
 
     def __repr__(self):
         return "{0: <2} {1: <20} {2} {3} (${4}, {5})".format(self.pos, \

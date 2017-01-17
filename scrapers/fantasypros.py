@@ -7,20 +7,23 @@ class FantasyProsNFLScraper(EWTScraper):
 
     '''
     '''
-    def __init__(self, **kwargs):
+    def __init__(self, headers=None, cookies=None, cache_name=None):
         
-        # see http://stackoverflow.com/questions/8134444/python-constructor-of-derived-class
-        EWTScraper.__init__(self, **kwargs)
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-        if 'adp_url' in 'kwargs':
-            self.adp_url = kwargs['adp_url']
+        if not headers:
+            self.headers = {'Referer': 'http://www.fantasylabs.com/nfl/player-models/',
+                        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0'}
         else:
-            self.adp_url = 'http://www.fantasypros.com/nfl/adp/overall.php?export=xls'
+            self.headers = headers
 
-        if 'projection_url' in 'kwargs':
-            self.projection_url = kwargs['projection_url']      
-        else:
-            self.projection_url = 'http://www.fantasypros.com/nfl/rankings/consensus-cheatsheets.php?export=xls'
+        self.cookies = cookies
+        self.cache_name = cache_name
+
+        EWTScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
+
+        self.adp_url = 'http://www.fantasypros.com/nfl/adp/overall.php?export=xls'
+        self.projection_url = 'http://www.fantasypros.com/nfl/rankings/consensus-cheatsheets.php?export=xls'
 
     def get_adp(self, fname=None):
         if not fname:
@@ -53,6 +56,3 @@ class FantasyProsNFLScraper(EWTScraper):
 
 if __name__ == "__main__":
     pass
-    #logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    #s = FantasyProsNFLScraper()
-    #logging.debug(s)

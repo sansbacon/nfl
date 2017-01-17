@@ -31,6 +31,8 @@ t = {
     'New Orleans': 'NO',
     'New York Giants': 'NYG',
     'New York Jets': 'NYJ',
+    'NY Giants': 'NYG',
+    'NY Jets': 'NYJ',
     'Oakland': 'OAK',
     'Philadelphia': 'PHI',
     'Pittsburgh': 'PIT',

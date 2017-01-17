@@ -55,7 +55,7 @@ class FantasyLabsNFLParser():
             
         return games
 
-    def model(self, content, site):
+    def model(self, content, site, season_year=None, week=None):
         '''
         Parses json associated with model (player stats / projections)
         The model has 3 dicts for each player: DraftKings, FanDuel, Yahoo
@@ -86,6 +86,12 @@ class FantasyLabsNFLParser():
         # models have nested dict in 'Properties'
         for playerdict in parsed.get('PlayerModels', []):
             player = {}
+
+            if season_year:
+                player['season_year'] = season_year
+
+            if week:
+                player['week'] = week
 
             for k,v in playerdict.items():
 

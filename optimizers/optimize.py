@@ -92,7 +92,7 @@ def pulp_optimizer(all_players):
 
     return roster
 
-def run_solver(all_players, depth, min_teams=2, stack_wr=None, stack_te=None):
+def run_solver(all_players, depth, iteration_id, min_teams=2, stack_wr=None, stack_te=None):
     '''
     Arguments:
 
@@ -151,7 +151,7 @@ def run_solver(all_players, depth, min_teams=2, stack_wr=None, stack_te=None):
             solver.Add(solver.Sum(players_not_from_roster)+solver.Sum(1-x for x in players_from_roster)>=9)
         solution = solver.Solve()
         if solution == solver.OPTIMAL:
-            roster = ORToolsRoster()
+            roster = ORToolsRoster(iteration_id=iteration_id, roster_id=x)
             for i, player in enumerate(all_players):
                 if variables[i].solution_value() == 1:
                     roster.add_player(player)

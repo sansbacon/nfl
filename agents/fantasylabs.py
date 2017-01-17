@@ -32,10 +32,10 @@ class FantasyLabsNFLAgent(object):
     '''
 
 
-    def __init__(self, cache_name, cj):
+    def __init__(self, cache_name=None, cj=None):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         self._p = FantasyLabsNFLParser()
-        self._s = FantasyLabsNFLScraper(cj=cj, cache_name=cache_name)
+        self._s = FantasyLabsNFLScraper(cookies=cj, cache_name=cache_name)
 
     def _genalg_players(self, players, projection_formula, team_exclude=[], player_exclude=[],
                            randomize_projections=True, ownership_penalty=False):
@@ -346,7 +346,7 @@ class FantasyLabsNFLAgent(object):
 
         return ps
 
-    def r_pipeline(self, model_date, fn=None, model_name='levitan', site='dk', projection_formula='cash', randomize=True):
+    def r_pipeline(self, players=[], model_date=None, fn=None, model_name='levitan', site='dk', projection_formula=None, randomize=False):
         '''
         Takes fantasylabs projections, creates list / csv file for R analysis and optimizer
         Args:
@@ -357,17 +357,27 @@ class FantasyLabsNFLAgent(object):
         Returns:
             projections(list): of player dict
         '''
-
-        cols = ['Player_Name', 'Team', 'Position', 'Salary', 'AvgPts']
-        headers = ['player', 'team', 'position', 'salary', 'fppg']
+        projections = []
+        cols = ['Player_Name', 'Team', 'Position', 'Salary', 'AvgPts', 'Ceiling', 'Floor']
+        headers = ['player', 'team', 'position', 'salary', 'fppg', 'ceiling', 'floor']
         transform = dict(zip(cols, headers))
 
-        projections = []
-        for p in self.model(model_date, model_name, site):
+        # can use agent to get players, if that fails, then throw exception
+        if not players:
+            players = self.model(model_date, model_name, site)
+
+            if not players:
+                raise ValueError('must have projections or specify model_date')
+
+        # correct D -> DST
+        # alter projection using criteria if specify projection formula
+        # leave flexible so can alter projections in R if want to
+        for p in players:
             player = {transform[k]: v for k, v in p.items() if k in cols}
             if player.get('position') == 'D':
                 player['position'] = 'DST'
-            player['fppg'] = alter_projection(p, ['AvgPts', 'Ceiling', 'Floor'], projection_formula, randomize)
+            if projection_formula:
+                player['fppg'] = alter_projection(p, ['AvgPts', 'Ceiling', 'Floor'], projection_formula, randomize)
             projections.append(player)
 
         if fn:
@@ -396,5 +406,58 @@ class FantasyLabsNFLAgent(object):
 
         return [item for sublist in players for item in sublist]
 
+    def study_optimizer(self, players, iterations=5):
+        '''
+        Take actual results and look at optimal lineups from past weeks
+        Args:
+            players(list): of list of player dicts
+
+        Returns:
+            df(DataFrame): optimizer results
+        '''
+
+        week_players = []
+
+        for p in players:
+            oppos = str(p.get('Opposing_TeamFB', '').replace('@', ''))
+            pos = str(p.get('Position'))
+            if pos == 'D': pos = str('DST')
+            team = str(p.get('Team'))
+            player_name = str(p.get('Player_Name'))
+            code = str('{}_{}'.format(player_name, pos))
+
+            week_players.append(ORToolsPlayer(proj=p.get('ActualPoints', 0), matchup=p.get('Opposing_TeamFB'), opps_team=oppos, code=code, pos=pos,
+                                  name=player_name, cost=p.get('Salary'), team=team))
+
+        return run_solver(week_players, depth=iterations, iteration_id=int(time.time()))
+
 if __name__ == '__main__':
-    pass
+    import pickle
+
+    import pandas as pd
+
+    with open('/home/sansbacon/models.pkl', 'rb') as infile:
+        models = pickle.load(infile)
+
+    from nfl.agents.fantasylabs import FantasyLabsNFLAgent as nfla
+    from nfl.parsers.fantasylabs import FantasyLabsNFLParser as nflp
+
+    parser = nflp()
+    agent = nfla(None, None)
+    fixed = []
+    s2016 = models.get(2016)
+
+    for year, data in models.items():
+        for week, content in data.items():
+            players = parser.model(content, site='dk')
+            for roster in agent.study_optimizer(players, 50):
+                for player in roster.sorted_players():
+                    pl = dict(player)
+                    pl['iteration_id'] = roster.iteration_id
+                    pl['roster_id'] = roster.roster_id
+                    pl['season_year'] = year
+                    pl['week'] = week
+                    fixed.append(pl)
+
+    df = pd.DataFrame(fixed)
+    df.to_csv('/home/sansbacon/opt.csv', index=False)
