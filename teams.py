@@ -6,6 +6,7 @@ Different sites use different names for the same NBA teams
 
 import logging
 
+
 t = {
 'city_to_code': {
     'Arizona': 'ARI',
