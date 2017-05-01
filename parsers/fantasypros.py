@@ -4,17 +4,18 @@ import re
 
 from bs4 import BeautifulSoup
 
+
 class FantasyProsNFLParser(object):
     '''
     used to parse Fantasy Pros projections and ADP pages
     '''
 
-    def __init__(self,**kwargs):
+    def __init__(self, **kwargs):
 
         if 'logger' in kwargs:
-          self.logger = kwargs['logger']
+            self.logger = kwargs['logger']
         else:
-          self.logger = logging.getLogger(__name__)
+            self.logger = logging.getLogger(__name__)
 
     def _wr_flex(self, t, season, week, position='flex'):
         '''
@@ -39,15 +40,21 @@ class FantasyProsNFLParser(object):
 
             # rank in td[0]
             td = tr.find('td')
-            if td: rank = td.text
-            else: rank = None
+            if td:
+                rank = td.text
+            else:
+                rank = None
 
             # most pages have 2 links, easiest to parse 2nd link that has no text
-            a = tr.find('a', class_ = 'fp-player-link')
-            if a and a.has_attr('fp-player-name'): site_player_name = a['fp-player-name']
-            else: site_player_name = None
-            if a and a.has_attr('class'):site_player_id = a['class'][-1].split('-')[-1]
-            else: site_player_id = None
+            a = tr.find('a', class_='fp-player-link')
+            if a and a.has_attr('fp-player-name'):
+                site_player_name = a['fp-player-name']
+            else:
+                site_player_name = None
+            if a and a.has_attr('class'):
+                site_player_id = a['class'][-1].split('-')[-1]
+            else:
+                site_player_id = None
 
             if not site_player_name:
                 a = tr.find('a')
@@ -92,8 +99,32 @@ class FantasyProsNFLParser(object):
             players(list): of player dict
 
         '''
-        players = []
+        return [t, season, week, position]
 
+
+    def depth_charts(self, content, team, as_of=None):
+        '''
+        Team depth chart from fantasypros
+        
+        Args:
+            content: HTML string
+            as_of: datestr
+
+        Returns:
+            dc: list of dict
+        '''
+        dc = []
+        soup = BeautifulSoup(content, 'lxml')
+        for tr in soup.find_all('tr', {'class': re.compile(r'mpb')}):
+            p = {'source': 'fantasypros', 'team_code': team, 'as_of': as_of}
+            p['source_player_id'] = tr['class'][0].split('-')[-1]
+            tds = tr.find_all('td')
+            p['source_player_role'] = tds[0].text
+            p['source_player_name'] = tds[1].text
+            dc.append(p)
+        return dc
+
+    '''
     def weekly_rankings(self, content, season, week, position):
         players = []
         content = content.replace("\xc2\xa0", "")
@@ -109,15 +140,21 @@ class FantasyProsNFLParser(object):
 
             # rank in td[0]
             td = tr.find('td')
-            if td: rank = td.text
-            else: rank = None
+            if td:
+                rank = td.text
+            else:
+                rank = None
 
             # most pages have 2 links, easiest to parse 2nd link that has no text
-            a = tr.find('a', class_ = 'fp-player-link')
-            if a and a.has_attr('fp-player-name'): site_player_name = a['fp-player-name']
-            else: site_player_name = None
-            if a and a.has_attr('class'):site_player_id = a['class'][-1].split('-')[-1]
-            else: site_player_id = None
+            a = tr.find('a', class_='fp-player-link')
+            if a and a.has_attr('fp-player-name'):
+                site_player_name = a['fp-player-name']
+            else:
+                site_player_name = None
+            if a and a.has_attr('class'):
+                site_player_id = a['class'][-1].split('-')[-1]
+            else:
+                site_player_id = None
 
             if not site_player_name:
                 a = tr.find('a')
@@ -150,7 +187,6 @@ class FantasyProsNFLParser(object):
         return players
 
     def weekly_rankings(self, content, season, week, position):
-        '''
         TODO: need to write parsing routine for flex rankings page
         TODO: need to adjust for standard, half-ppr, and ppr
               add column to weekly_rankings table and adjust the unique constratint accordingly
@@ -160,9 +196,7 @@ class FantasyProsNFLParser(object):
             week:
             position:
 
-        Returns:
-
-        '''
+        Returns:  
 
         content = content.replace("\xc2\xa0", "")
         soup = BeautifulSoup(content, 'lxml')
@@ -173,7 +207,7 @@ class FantasyProsNFLParser(object):
         else:
             return self._wr_no_flex(t, season, week, position)
 
-    '''
+    
         def weekly_rankings_html(content):
             players = []
             soup = BeautifulSoup(content, 'lxml')
@@ -215,5 +249,16 @@ class FantasyProsNFLParser(object):
 
     '''
 
+
 if __name__ == "__main__":
-    pass
+    #from nfl.scrapers.scraper import FootballScraper
+    #s = FootballScraper(cache_name='fpros')
+
+    import requests
+    from httpcache import CachingHTTPAdapter
+    s = requests.Session()
+    s.mount('http://', CachingHTTPAdapter())
+    r = s.get('https://www.fantasypros.com/nfl/depth-chart/arizona-cardinals.php')
+    parser = FantasyProsNFLParser()
+    print parser.depth_charts(content=r.content, team='ARI', as_of='20170221')
+    #pass
