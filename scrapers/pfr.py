@@ -64,6 +64,21 @@ class PfrNFLScraper(EWTScraper):
 
         return results
 
+
+    def draft(self, season_year):
+        '''
+        Gets entire draft page for single season
+
+        Args:
+            season_year: int 2016, 2017, etc.
+
+        Returns:
+            content: HTML string of that year's draft page
+        '''
+        url = 'http://www.pro-football-reference.com/years/{season_year}/draft.htm'
+        return self.get(url.format(season_year=season_year))
+
+
     def week_positions(self, season, week, positions=['QB', 'RB', 'WR', 'TE'], slp=2):
         '''
         Gets one week of fantasy stats for all positions

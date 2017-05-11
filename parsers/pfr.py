@@ -47,7 +47,45 @@ class PfrNFLParser():
 
         fn = os.path.split(path)[-1]
         return fn[0:4]
-                       
+
+
+    def draft(self, content, season_year):
+        '''
+        Parses page of draft results for single season
+        
+        Args:
+            content: HTML string of draft page
+            season_year: int 2017, 2016, etc.
+
+        Returns:
+            players: list of dict
+        '''
+        players = []
+        soup = BeautifulSoup(content, 'lxml')
+        headers = ['draft_round', 'draft_overall_pick']
+        t = soup.find('table', {'id': 'drafts'})
+        for tr in t.find_all('tr'):
+            p = {'draft_year': season_year, 'source': 'pfr'}
+
+            # removes header rows for each draft round
+            if tr.has_attr('class') and 'thead' in tr['class']:
+                continue
+            else:
+                th = tr.find('th')
+                p[th['data-stat']] = th.text
+            tds = tr.find_all('td')
+            if tds:
+                p[tds[0]['data-stat']] = tds[0].text
+                p[tds[1]['data-stat']] = tds[1].text
+
+                # <td class="left " data-append-csv="RamcRy00" data-stat="player" csk="Ramczyk, Ryan"><a href="/players/R/RamcRy00.htm">Ryan Ramczyk</a></td>
+                p[tds[2]['data-stat']] = tds[2]['csk']
+                p['source_player_id'] = tds[2]['data-append-csv']
+                players.append(p)
+
+        return players
+
+
     def team_season(self, content, season):
         '''
         Takes HTML file of team stats during single season
