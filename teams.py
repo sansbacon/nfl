@@ -40,6 +40,7 @@ t = {
     'San Diego': 'SD',
     'San Francisco': 'SF',
     'Seattle': 'SEA',
+    'St. Louis': 'STL',
     'Tampa Bay': 'TB',
     'Tampa': 'TB',
     'Tennessee': 'TEN',
@@ -76,6 +77,7 @@ t = {
     'San Diego Chargers': 'SD',
     'San Francisco 49ers': 'SF',
     'Seattle Seahawks': 'SEA',
+    'St. Louis Rams': 'STL',
     'Tampa Bay Buccaneers': 'TB',
     'Tennessee Titans': 'TEN',
     'Washington Redskins': 'WAS'

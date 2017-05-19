@@ -3,14 +3,11 @@
 from bs4 import BeautifulSoup
 import logging
 import math
-import pprint
 import re
 import xml.etree.ElementTree as ET
 
-from NFLProjectionsParser import NFLProjectionsParser
 
-
-class FantasyFootballCalculatorParser(NFLProjectionsParser):
+class FantasyFootballCalculatorParser():
     '''
     Parses html of NFL fantasy projections page of fantasycalculator.com into player dictionaries
 
@@ -19,23 +16,37 @@ class FantasyFootballCalculatorParser(NFLProjectionsParser):
         players = p.projections(content)
     '''
 
-    def __init__(self,**kwargs):
+    def __init__(self, positions = None):
         '''
         Args:
             **kwargs: logger (logging.Logger)
         '''
-
-        if 'logger' in kwargs:
-          self.logger = kwargs['logger']
-        else:
-          self.logger = logging.getLogger(__name__)
-
-        if 'positions' in 'kwargs':
-            self.positions = kwargs['positions']
-        else:
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        if not positions:
             self.positions = ['QB', 'RB', 'WR', 'TE']
+        else:
+            self.positions = positions
 
-    def adp (self, content, my_league_size):
+
+    def _to_overall_pick(self, adp, adp_league_size, my_league_size):
+        '''
+        Data is in 2.01 format, so you have to translate those numbers to an overall pick
+        
+        :param adp(str): is in round.pick format
+        :param adp_league_size(int): number of teams in types of draft (8, 10, 12, 14)
+        :return: Dictionary: is overall, round, pick based on your league size
+        '''
+        round, pick = adp.split('.')
+        overall_pick = ((int(round) - 1) * adp_league_size) + int(pick)
+        adjusted_round = math.ceil(overall_pick/float(my_league_size))
+        if adjusted_round == 1:
+            adjusted_pick = overall_pick
+        else:
+            adjusted_pick = overall_pick - ((adjusted_round - 1) * my_league_size)
+        return {'overall_pick': overall_pick, 'round': adjusted_round, 'pick': adjusted_pick}
+
+
+    def adp (self, xml, size):
         '''
         Parses xml and returns list of player dictionaries
         Args:
@@ -43,54 +54,25 @@ class FantasyFootballCalculatorParser(NFLProjectionsParser):
         Returns:
             List of dictionaries if successful, empty list otherwise.
         '''
-
         players = []
-
-        root = ET.fromstring(content)
-
+        root = ET.fromstring(xml)
         adp_league_size = int(root.find('.//teams').text)
-
         for item in root.findall('.//player'):
-
             if item.find('./pos').text.lower() == 'pk':
                 pass
-
             else:
                 player = {}
-
                 for child in item.findall('*'):
                     if child.tag.lower() == 'adp':
-                        fixed = self._fix_adp(child.text, adp_league_size, my_league_size)
+                        fixed = self._to_overall_pick(child.text, adp_league_size, size)
                         player['overall_pick'] = fixed['overall_pick']
                         player['round'] = int(fixed['round'])
                         player['pick'] = int(fixed['pick'])
-
                     else:
                         player[self.fix_header(child.tag.lower())] = child.text
-
                 players.append(player)
-
         return players
 
-    def _fix_adp(self, adp, adp_league_size, my_league_size):
-        '''
-        Data is in R.PP format, so you have to translate those numbers to an overall pick
-        and R.PP format for the size of your league
-        :param adp(str): is in round.pick format
-        :param adp_league_size(int): number of teams in types of draft (8, 10, 12, 14)
-        :return: Dictionary: is overall, round, pick based on your league size
-        '''
-        round, pick = adp.split('.')
-        overall_pick = ((int(round) - 1) * adp_league_size) + int(pick)
-
-        adjusted_round = math.ceil(overall_pick/float(my_league_size))
-
-        if adjusted_round == 1:
-            adjusted_pick = overall_pick
-        else:
-            adjusted_pick = overall_pick - ((adjusted_round - 1) * my_league_size)
-
-        return {'overall_pick': overall_pick, 'round': adjusted_round, 'pick': adjusted_pick}
 
     def fix_header(self, header):
         '''
