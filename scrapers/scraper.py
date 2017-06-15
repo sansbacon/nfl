@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import os
 import time
@@ -7,7 +8,7 @@ import requests
 
 class FootballScraper(object):
 
-    def __init__(self, headers=None, cookies=None, cache_name=None, delay=1, expire_hours=12, as_string=False):
+    def __init__(self, headers=None, cookies=None, cache_name=None, delay=1, expire_hours=168, as_string=False):
         '''
         Base class for common scraping tasks
         Args:
@@ -84,6 +85,33 @@ class FootballScraper(object):
         if self.delay:
             time.sleep(self.delay)
         return r.content.decode(encoding)
+
+
+    def get_filecache(self, url, savedir='/tmp', encoding='utf-8'):
+        '''
+        Uses file-based caching, helpful for debugging because can look at files
+        Args:
+            url:
+            savedir:
+            encoding:
+
+        Returns:
+            content: HTML string
+        '''
+        fn = os.path.join(savedir, '{}.html'.format(hashlib.md5(url).hexdigest()))
+        if os.path.exists(fn):
+            with open(fn, 'rb') as infile:
+                content = infile.read()
+        else:
+            r = self.s.get(url)
+            self.urls.append(r.url)
+            r.raise_for_status()
+            content = r.content.decode(encoding)
+            with open(fn, 'wb') as outfile:
+                outfile.write(content)
+            if self.delay:
+                time.sleep(self.delay)
+        return content
 
 
     def get_json(self, url, payload=None):

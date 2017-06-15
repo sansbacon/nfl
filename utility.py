@@ -20,7 +20,7 @@ def csv_to_dict(fn):
     Returns:
         List of dicts
     '''
-    with open(fn, "rb") as infile:
+    with open(fn, 'r') as infile:
         for row in csv.DictReader(infile, skipinitialspace=True, delimiter=','):
             yield {k: v for k, v in row.items()}
 

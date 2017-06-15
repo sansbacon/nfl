@@ -2,6 +2,8 @@ import logging
 import os
 import subprocess
 
+from six import itervalues
+
 import psycopg2
 import psycopg2.extras
 
@@ -38,11 +40,11 @@ class NFLPostgres(object):
             table_name: string
         '''
         placeholders = ', '.join(['%s'] * len(dict_to_insert))
-        columns = ', '.join(dict_to_insert.keys())
+        columns = ', '.join(list(dict_to_insert.keys()))
         sql = 'INSERT INTO %s ( %s ) VALUES ( %s ) ON CONFLICT DO NOTHING;' % (table_name, columns, placeholders)
         with self.conn.cursor() as cursor:
             try:
-                cursor.execute(sql, dict_to_insert.values())
+                cursor.execute(sql, list(dict_to_insert.values()))
                 self.conn.commit()
             except psycopg2.Error as e:
                 logging.exception('insert_dict failed: {0}'.format(e))
@@ -67,7 +69,7 @@ class NFLPostgres(object):
             self.conn.commit()
 
         except Exception as e:
-            self.logger.exception('update failed: {0}'.format(e.message))
+            logging.exception('update failed: {0}'.format(e.message))
             self.conn.rollback()
 
         finally:
@@ -152,7 +154,7 @@ class NFLPostgres(object):
                     cursor.execute(sql, dict_to_insert.values())
                 self.conn.commit()
             except Exception as e:
-                self.logger.exception('insert_dicts failed: {0}'.format(e))
+                logging.exception('insert_dicts failed: {0}'.format(e))
                 self.conn.rollback()
             finally:
                 cursor.close()
@@ -223,7 +225,7 @@ class NFLPostgres(object):
                 cursor.execute(sql)
                 return cursor.fetchall()
             except Exception as e:
-                self.logger.exception(e.message)
+                logging.exception(e.message)
                 return None
 
 
@@ -244,7 +246,7 @@ class NFLPostgres(object):
                 return [v[0] for v in cursor.fetchall()]
 
             except Exception as e:
-                self.logger.error('sql statement failed: {0}'.format(sql))
+                logging.error('sql statement failed: {0}'.format(sql))
                 return None
 
 
@@ -263,7 +265,7 @@ class NFLPostgres(object):
                 cursor.execute(sql)
                 return cursor.fetchone()[0]
             except Exception as e:
-                self.logger.error('sql statement failed: {0}'.format(sql))
+                logging.error('sql statement failed: {0}'.format(sql))
                 return None
 
 

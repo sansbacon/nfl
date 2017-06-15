@@ -1,7 +1,7 @@
 '''
 teams.py
 Converts various team name formats to others
-Different sites use different names for the same NBA teams
+Different sites use different names for the same NFL teams
 '''
 
 import logging
@@ -83,7 +83,7 @@ t = {
     'Washington Redskins': 'WAS'
 },
 
-'nickname_to_code': {
+'nickname_to_code_2016': {
     'Cardinals': 'ARI',
     'Falcons': 'ATL',
     'Ravens': 'BAL',
@@ -116,17 +116,73 @@ t = {
     'Buccaneers': 'TB',
     'Titans': 'TEN',
     'Redskins': 'WAS'
+},
+
+'nickname_to_code_pre2016': {
+    'Cardinals': 'ARI',
+    'Falcons': 'ATL',
+    'Ravens': 'BAL',
+    'Bills': 'BUF',
+    'Panthers': 'CAR',
+    'Bears': 'CHI',
+    'Bengals': 'CIN',
+    'Browns': 'CLE',
+    'Cowboys': 'DAL',
+    'Broncos': 'DEN',
+    'Lions': 'DET',
+    'Packers': 'GB',
+    'Texans': 'HOU',
+    'Colts': 'IND',
+    'Jaguars': 'JAC',
+    'Chiefs': 'KC',
+    'Rams': 'STL',
+    'Dolphins': 'MIA',
+    'Vikings': 'MIN',
+    'Patriots': 'NE',
+    'Saints': 'NO',
+    'Giants': 'NYG',
+    'Jets': 'NYJ',
+    'Raiders': 'OAK',
+    'Eagles': 'PHI',
+    'Steelers': 'PIT',
+    'Chargers': 'SD',
+    '49ers': 'SF',
+    'Seahawks': 'SEA',
+    'Buccaneers': 'TB',
+    'Titans': 'TEN',
+    'Redskins': 'WAS'
 }
 }
 
 def city_to_code(name):
     return t['city_to_code'].get(name, None)
 
+def football_outsiders_teams():
+    return ['ARI', 'ATL', 'BAL', 'BUF', 'CAR', 'CHI', 'CIN', 'CLE', 'DAL', 'DEN', 'DET', 'GB', 'HOU', 'IND', 'JAC',
+             'KC', 'MIA', 'MIN', 'NE', 'NO', 'NYG', 'NYJ', 'OAK', 'PHI', 'PIT', 'SD', 'SEA', 'SF', 'STL', 'TB', 'TEN',
+             'WAS']
+
 def long_to_code(name):
     return t['long_to_code'].get(name, None)
 
-def nickname_to_code(name):
-    return t['nickname_to_code'].get(name, None)
+def nickname_to_code(name, season_year):
+    '''
+    Converts nickname like steelers to PIT
+    Args:
+        name: steelers, broncos, etc.
+        season_year: 2016, 2015, etc.
+
+    Returns:
+        team_code string PIT, DEN, etc.
+    '''
+    if name[0].isalpha():
+        name = name.title()
+
+    if season_year > 2015:
+        return t['nickname_to_code_2016'].get(name, None)
+    else:
+        return t['nickname_to_code_pre2016'].get(name, None)
+
 
 if __name__ == '__main__':
     pass

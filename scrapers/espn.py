@@ -3,18 +3,18 @@ ESPNNFLScraper
 
 '''
 
-from ewt.scraper import EWTScraper
+from nfl.scrapers.scraper import FootballScraper
 import logging
 
 
-class ESPNNFLScraper(EWTScraper):
+class ESPNNFLScraper(FootballScraper):
     '''
 
     '''
 
     def __init__(self, **kwargs):
         # see http://stackoverflow.com/questions/8134444
-        EWTScraper.__init__(self, **kwargs)
+        FootballScraper.__init__(self, **kwargs)
 
         if 'logger' in kwargs:
             self.logger = kwargs['logger']

@@ -6,8 +6,8 @@ import unittest
 
 import browsercookie
 
-from scrapers.footballoutsiders import FootballOutsidersNFLScraper
-from parsers.fo import FootballOutsidersNFLParser
+from nfl.scrapers.footballoutsiders import FootballOutsidersNFLScraper
+from nfl.parsers.footballoutsiders import FootballOutsidersNFLParser
 
 
 class TestSnapcounts(unittest.TestCase):

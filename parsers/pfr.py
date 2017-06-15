@@ -5,20 +5,15 @@ import re
 
 from bs4 import BeautifulSoup
 
+
 class PfrNFLParser():
     '''
-    PfrNFLParser
-
-    Usage:
-
-
     '''
 
     def __init__(self,**kwargs):
         '''
 
         '''
-
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -86,6 +81,33 @@ class PfrNFLParser():
         return players
 
 
+    def team_plays(self, content):
+        '''
+        Takes HTML of 100 rows of team plays, returns list of team_plays
+
+        Args:
+            content: HTML string
+
+        Returns:
+            teams: list of team dict
+        '''
+        teams = []
+        headers = ['team', 'season_year', 'game_date', 'opp_team', 'week', 'game_number', 'is_win', 'is_ot',
+                   'off_plays', 'def_plays', 'top']
+
+        soup = BeautifulSoup(content, 'lxml')
+        tbl = soup.find('table', {'id': 'results'})
+        if tbl:
+            for tr in tbl.find('tbody').findAll('tr', class_=None):
+                teams.append({td['data-stat']: td.text for td in tr.find_all('td')})
+
+        else:
+            for tbl in soup.find_all('table'):
+                logging.info(tbl.attrs)
+
+        return teams
+
+
     def team_season(self, content, season):
         '''
         Takes HTML file of team stats during single season
@@ -114,6 +136,7 @@ class PfrNFLParser():
             k = team['team'] + "_" + season
             teams[k] = team
 
+        """
         passing = soup.find('table', {'id': 'passing'}).find('tbody')
         for tr in passing.findAll('tr'):
             team = {'season': season}
@@ -154,7 +177,7 @@ class PfrNFLParser():
             teams[k] = {**teams[k], **team}
             
         return teams
-
+        """
 
     def parse_season(self, content, season):
         soup = BeautifulSoup(content)
