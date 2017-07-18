@@ -3,40 +3,24 @@ RotowireNFLScraper
 
 '''
 
-import logging
-import re
-
-<<<<<<< HEAD
-from ewt.scraper import EWTScraper
-=======
-from EWTScraper import EWTScraper
->>>>>>> ace1da00fd9afc9f38280055e9751ec1562994bb
+from nfl.scrapers.scraper import FootballScraper
 
 
-class RotowireNFLScraper(EWTScraper):
+class RotowireNFLScraper(FootballScraper):
     '''
     Usage:
         s = RotoguruNFLScraper()
 
     '''
 
-    def __init__(self, **kwargs):
-        # see http://stackoverflow.com/questions/8134444
-        EWTScraper.__init__(self, **kwargs)
-        self.logger = logging.getLogger(__name__).addHandler(logging.NullHandler())
-
-        if 'polite' in 'kwargs':
-            self.polite = kwargs['polite']
-        else:
-            self.polite = True
-
-    def dfs_week(self, year, week, sites):
+    def dfs_week(self, year, week, site):
         '''
         Gets rotowire page of one week of dfs results
         '''
-        
-        url = 'http://www.rotowire.com/daily/nfl/value-report.php?site=DraftKings'
-        return self.get(url)
+        if site not in ['DraftKings']:
+            raise ValueError('invalid site name {}'.format(site))
+        url = 'http://www.rotowire.com/daily/nfl/value-report.php?site={}'
+        return self.get(url.format(site))
 
 if __name__ == "__main__":
     pass

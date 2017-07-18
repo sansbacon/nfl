@@ -1,10 +1,8 @@
 '''
 ESPNNFLScraper
-
 '''
 
 from nfl.scrapers.scraper import FootballScraper
-import logging
 
 
 class ESPNNFLScraper(FootballScraper):
@@ -12,66 +10,32 @@ class ESPNNFLScraper(FootballScraper):
 
     '''
 
-    def __init__(self, **kwargs):
-        # see http://stackoverflow.com/questions/8134444
-        FootballScraper.__init__(self, **kwargs)
+    def league_roster(self, season, league_id, team_id):
+        '''
+        Gets roster for team in ESPN fantasy league
+        '''
+        url = 'http://games.espn.com/ffl/clubhouse?'
+        params = {'leagueId': league_id,
+                      'teamId': team_id,
+                      'seasonId': season}
+        return self.get(url, payload=params)
 
-        if 'logger' in kwargs:
-            self.logger = kwargs['logger']
-        else:
-            self.logger = logging.getLogger(__name__) \
-                .addHandler(logging.NullHandler())
+    def projections(self, offset):
+        '''
+        Gets ESPN fantasy football projections
+        '''
+        url = 'http://games.espn.go.com/ffl/tools/projections?'
+        params = {'startIndex': offset}
+        return self.get(url, payload=params)
 
-        if 'maxindex' in kwargs:
-            self.maxindex = kwargs['maxindex']
-        else:
-            self.maxindex = 400
-
-        if 'projection_urls' in 'kwargs':
-            self.projection_urls = kwargs['projection_urls']
-        else:
-            base_url = 'http://games.espn.go.com/ffl/tools/projections?'
-            idx = [0, 40, 80, 120, 160, 200, 240, 280, 320, 360]
-            self.projection_urls = ['{}startIndex={}'.format(base_url, x) for x in idx]
-
-    def league_rosters(self, teams=None, league_id=302946, season=2016):
-        rosters = {}
-
-        if not teams:
-            teams = {
-                'Ranjan': 1, 'Allen': 3, 'Gary': 6, 'Fred': 7,
-                'Chad': 8, 'Patrick': 9, 'Lu': 11, 'Eric': 12,
-                'Jared': 14, 'Sarah': 15, 'Emily': 17, 'Pong': 18,
-                'Meredith': 19, 'Paco': 20, 'Michael': 22, 'Jean': 23
-            }
-
-        url = 'http://games.espn.com/ffl/clubhouse?leagueId={}&teamId={}&seasonId={}'
-        for team, code in teams.items():
-            rosters['{}_{}'.format(team, code)] = self.get(url.format(league_id, code, season))
-
-        return rosters
-
-    def projections(self, subset=None):
-        pages = []
-        if subset:
-            for idx in subset:
-                content = self.get(self.projection_urls[idx])
-                pages.append(content)
-        else:
-            for url in self.projection_urls:
-                content = self.get(url)
-                pages.append(content)
-
-        return pages
-
-    def waiver_wire(self, league_id=302946, team_id=12):
-
-        url = 'http://games.espn.com/ffl/freeagency?leagueId={}&teamId={}'
-        # http: // games.espn.com / ffl / freeagency?leagueId = 302946 & teamId = 12  # &context=freeagency&view=overview&version=projections&startIndex=50
-        return self.get(url.format(league_id, team_id))
+    def waiver_wire(self, league_id, team_id):
+        '''
+        Gets waiver wire from ESPN fantasy league
+        league_id=302946, team_id=12
+        '''
+        url = 'http://games.espn.com/ffl/freeagency?'
+        params = {'leagueId': league_id, 'teamId': team_id}
+        return self.get(url, payload=params)
 
 if __name__ == "__main__":
-    s = ESPNNFLScraper()
-    s.league_rosters()
-
-    #pass
+    pass

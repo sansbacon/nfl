@@ -1,58 +1,166 @@
 import logging
 
-from ewt.scraper import EWTScraper
+from nfl.scrapers.scraper import FootballScraper
 
 
-class FantasyProsNFLScraper(EWTScraper):
+class FantasyProsNFLScraper(FootballScraper):
 
     '''
     '''
-    def __init__(self, headers=None, cookies=None, cache_name=None):
+
+    def adp(self, fmt):
+        '''
+        Gets ADP page        
+
+        Args:
+            fmt: 'std', 'ppr'
+
+        Returns:
+            content: HTML string of page
+        '''
+        if fmt == 'std':
+            url = 'https://www.fantasypros.com/nfl/adp/overall.php'
+        elif fmt == 'ppr':
+            url = 'https://www.fantasypros.com/nfl/adp/ppr-overall.php'
+        else:
+            raise ValueError('invalid format: {}'.format(fmt))
+
+        return self.get(url)
+
+    def draft_rankings(self, pos, fmt):
+        '''
+        Gets draft rankings page
+
+        Args:
+            pos: 'qb', 'rb', 'wr', 'te', 'flex', 'qb-flex', 'k', 'dst'
+            fmt: 'std', 'ppr', 'hppr'
+
+        Returns:
+            content: HTML string of page
+        '''
+        std_positions = ['qb', 'k', 'dst']
+        ppr_positions = ['rb', 'wr', 'te', 'flex', 'qb-flex']
+        formats = ['std', 'ppr', 'hppr']
+        if fmt not in formats:
+            raise ValueError('invalid format: {}'.format(fmt))
+
+        if pos in std_positions:
+            url = 'https://www.fantasypros.com/nfl/rankings/{pos}-cheatsheets.php'
+
+        elif pos in ppr_positions:
+            if fmt == 'std':
+                url = 'https://www.fantasypros.com/nfl/rankings/{pos}-cheatsheets.php'
+            elif fmt == 'ppr':
+                url = 'https://www.fantasypros.com/nfl/rankings/ppr-{pos}-cheatsheets.php'
+            elif fmt == 'hppr':
+                url = 'https://www.fantasypros.com/nfl/rankings/half-point-ppr-{pos}-cheatsheets.php'
+        else:
+            raise ValueError('invalid position: {}'.format(pos))
+
+        return self.get(url)
+
+    def projections(self, pos, fmt, week):
+        '''
+        Gets rest-of-season rankings page
+
+        Args:
+            pos: 'qb', 'rb', 'wr', 'te', 'flex', 'qb-flex', 'k', 'dst'
+            fmt: 'std', 'ppr', 'hppr'
+            week: 'draft' or 1-17
+
+        Returns:
+            content: HTML string of page
+        '''
+        formats = ['std', 'ppr', 'hppr']
+        if fmt not in formats:
+            raise ValueError('invalid format: {}'.format(fmt))
+
+        std_positions = ['qb', 'k', 'dst']
+        ppr_positions = ['rb', 'wr', 'te', 'flex', 'qb-flex']
+
+        if pos in std_positions:
+            url = 'https://www.fantasypros.com/nfl/projections/{pos}.php'
+        elif pos in ppr_positions:
+            if fmt == 'std':
+                url = 'https://www.fantasypros.com/nfl/projections/{pos}.php'
+            elif fmt == 'ppr':
+                url = 'https://www.fantasypros.com/nfl/projections/ppr-{pos}.php'
+            elif fmt == 'hppr':
+                url = 'https://www.fantasypros.com/nfl/projections/half-point-ppr-{pos}.php'
+        else:
+            raise ValueError('invalid position: {}'.format(pos))
+
+        params = {'week': week}
+        return self.get(url, payload=params)
+
+    def ros_rankings(self, pos, fmt):
+        '''
+        Gets rest-of-season rankings page
+
+        Args:
+            pos: 'qb', 'rb', 'wr', 'te', 'flex', 'qb-flex', 'k', 'dst'
+            fmt: 'std', 'ppr', 'hppr'
+
+        Returns:
+            content: HTML string of page
+        '''
+
+        formats = ['std', 'ppr', 'hppr']
+        if fmt not in formats:
+            raise ValueError('invalid format: {}'.format(fmt))
+
+        std_positions = ['qb', 'k', 'dst']
+        ppr_positions = ['rb', 'wr', 'te', 'flex', 'qb-flex']
+
+        if pos in std_positions:
+            url = 'https://www.fantasypros.com/nfl/rankings/ros-{pos}.php'
+        elif pos in ppr_positions:
+            if fmt == 'std':
+                url = 'https://www.fantasypros.com/nfl/rankings/ros-{pos}.php'
+            elif fmt == 'ppr':
+                url = 'https://www.fantasypros.com/nfl/rankings/ros-ppr-{pos}-cheatsheets.php'
+            elif fmt == 'hppr':
+                url = 'https://www.fantasypros.com/nfl/rankings/ros-half-point-ppr-{pos}-cheatsheets.php'
+        else:
+            raise ValueError('invalid position: {}'.format(pos))
+
+        return self.get(url)
+
+    def weekly_rankings(self, pos, fmt, week=None):
+        '''
+        Gets weekly rankings page
         
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        Args:
+            pos: 'qb', 'rb', 'wr', 'te', 'flex', 'qb-flex', 'k', 'dst'
+            fmt: 'std', 'ppr', 'hppr'
+            week: default None, int between 1-17
 
-        if not headers:
-            self.headers = {'Referer': 'http://www.fantasylabs.com/nfl/player-models/',
-                        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0'}
-        else:
-            self.headers = headers
-
-        self.cookies = cookies
-        self.cache_name = cache_name
-
-        EWTScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
-
-        self.adp_url = 'http://www.fantasypros.com/nfl/adp/overall.php?export=xls'
-        self.projection_url = 'http://www.fantasypros.com/nfl/rankings/consensus-cheatsheets.php?export=xls'
-
-    def get_adp(self, fname=None):
-        if not fname:
-            return self._get(self.adp_url)
-
-        else:
-            tmp_fname, headers = self.get_file(self.adp_url, fname)
-            logging.debug('get_adp: http response headers')
-            logging.debug(headers)
-            return tmp_fname
-
-    def get_season_rankings(self, fname=None):
-        pass
-
-    def get_projections(self, fname=None):
+        Returns:
+            content: HTML string of page
         '''
-        Download csv file and save to specified or temporary location if no fname parameter
-        :param fname (str): specified location to save file
-        :return tmp_fname (str), headers(dict)
-        '''
+        std_positions = ['qb', 'k', 'dst']
+        ppr_positions = ['rb', 'wr', 'te', 'flex', 'qb-flex']
+        formats = ['std', 'ppr', 'hppr']
+        if fmt not in formats:
+            raise ValueError('invalid format: {}'.format(fmt))
 
-        if not fname:
-            return self.get(self.projection_url)
-
+        if pos in std_positions:
+            url = 'https://www.fantasypros.com/nfl/rankings/{pos}.php'
+        elif pos in ppr_positions:
+            if fmt == 'std':
+                url = 'https://www.fantasypros.com/nfl/rankings/{pos}.php'
+            elif fmt == 'ppr':
+                url = 'https://www.fantasypros.com/nfl/rankings/ppr-{pos}.php'
+            elif fmt == 'hppr':
+                url = 'https://www.fantasypros.com/nfl/rankings/half-point-ppr-{pos}.php'
         else:
-            tmp_fname, headers = self.get_file(self.projection_url, fname)
-            logging.debug('get_projections: http response headers')
-            logging.debug(headers)
-            return tmp_fname
+            raise ValueError('invalid position: {}'.format(pos))
+
+        if week:
+            url = url + '?week={}'.format(week)
+
+        return self.get(url)
+
 
 if __name__ == "__main__":
     pass

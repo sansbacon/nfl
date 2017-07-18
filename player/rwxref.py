@@ -1,20 +1,7 @@
 '''
 rotowirexref.py
 cross-reference rotowire ids with nfl.player table ids
-
-Usage:
-    import logging
-    import os
-    import pandas as pd
-    import rwxref
-    logging.basicConfig(level=logging.ERROR)
-    from nfl.db.nflpg import NFLPostgres
-    nflp = NFLPostgres(database='nfl', user=os.environ.get('NFLPGUSER'), password=os.environ.get('NFLPGPASSWORD')
-
 '''
-
-import logging
-import re
 
 from bs4 import BeautifulSoup
 
@@ -117,6 +104,3 @@ def update_rw_xref(nflp, fn):
 
 if __name__ == '__main__':
     pass
-    #from nfl.db.nflpg import NFLPostgres
-    #nflp = NFLPostgres()
-    #update_rw_xref(nflp, fn')

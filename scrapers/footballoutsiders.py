@@ -6,19 +6,6 @@ from scraper import FootballScraper
 class FootballOutsidersNFLScraper(FootballScraper):
 
 
-    def __init__(self, headers=None, cookies=None, cache_name=None):
-        '''
-
-        Args:
-            headers:
-            cookies:
-            cache_name:
-        '''
-        # see http://stackoverflow.com/questions/8134444
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
-        FootballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name)
-
-
     def dvoa_table(self, table):
         '''
 

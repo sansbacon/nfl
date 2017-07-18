@@ -16,7 +16,7 @@ class FootballScraper(object):
             cookies: cookiejar object
             cache_name: should be full path
             delay: int (be polite!!!)
-            expire_hours: int - default 4
+            expire_hours: int - default 168
             as_string: get string rather than parsed json
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -47,23 +47,21 @@ class FootballScraper(object):
                 from cachecontrol import CacheControlAdapter
                 from cachecontrol.heuristics import ExpiresAfter
                 from cachecontrol.caches import FileCache
-                _s.mount('http://', CacheControlAdapter(cache=FileCache(cache_name), cache_etags = False, heuristic=ExpiresAfter(hours=expire_hours)))
+                _s.mount('http://', CacheControlAdapter(cache=FileCache(cache_name), cache_etags = False,
+                                                        heuristic=ExpiresAfter(hours=expire_hours)))
             except ImportError as e:
                 try:
                     import requests_cache
                     requests_cache.install_cache(cache_name)
                 except:
                     pass
-
         self.s = _s
         self.urls = []
         self.as_string = as_string
-
         if delay > 0:
             self.delay = delay
         else:
             self.delay = None
-
 
     def get(self, url, payload=None, encoding='utf-8'):
         '''
@@ -85,7 +83,6 @@ class FootballScraper(object):
         if self.delay:
             time.sleep(self.delay)
         return r.content.decode(encoding)
-
 
     def get_filecache(self, url, savedir='/tmp', encoding='utf-8'):
         '''
@@ -113,7 +110,6 @@ class FootballScraper(object):
                 time.sleep(self.delay)
         return content
 
-
     def get_json(self, url, payload=None):
         '''
         Gets JSON resource and (default) parses into python data structure
@@ -137,7 +133,6 @@ class FootballScraper(object):
         else:
             return r.json()
 
-
     def post(self, url, payload):
         '''
 
@@ -157,7 +152,6 @@ class FootballScraper(object):
         if self.delay:
             time.sleep(self.delay)
         return r.content
-
 
 if __name__ == "__main__":
     pass

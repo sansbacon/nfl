@@ -9,38 +9,33 @@ class FantasyFootballCalculatorScraper(FootballScraper):
     Obtains html content of NFL fantasy projections or ADP page of fantasycalculator.com       
     '''
 
-    def __init__(self):
-        '''
-        Args:
-        '''
-        FootballScraper.__init__(self)
-
-
     def adp(self, fmt='ppr', teams=14):
         '''
-        
+        Gets ADP page from fantasyfootballcalculator        
+
         Args:
             fmt: 
             teams: 
 
         Returns:
-
+            HTML string or None
         '''
-        url = 'https://fantasyfootballcalculator.com/adp_xml.php?format={}&teams={}'
-        return self.get(url.format(fmt, teams))
+        url = 'https://fantasyfootballcalculator.com/adp_xml.php?'
+        params = {'format': fmt, 'teams': teams}
+        return self.get(url, payload=params)
 
-
-    def projections(self, url=None, fname=None):
+    def projections(self):
         '''
-        Fetch projections url, try cache, then file, then web
+        Fetch projections/rankings
+
         Args:
             url (str): url for the fantasy football calculator projections page
+
         Returns:
-            Str if successful, None otherwise.
+            HTML string if successful, None otherwise.
         '''
         url = 'https://fantasyfootballcalculator.com/rankings'
         return self.get(url)
-
 
 if __name__ == "__main__":
     pass

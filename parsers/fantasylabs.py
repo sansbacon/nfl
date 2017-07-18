@@ -16,7 +16,7 @@ class FantasyLabsNFLParser():
         # games
     '''
 
-    def __init__(self,**kwargs):
+    def __init__(self):
         '''
 
         '''

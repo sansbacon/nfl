@@ -1,10 +1,10 @@
 import logging
 
-from nba.dates import convert_format, strtodate, subtract_datestr, today
-from nba.scrapers.scraper import BasketballScraper
+from nfl.dates import convert_format, subtract_datestr, today
+from nfl.scrapers.scraper import FootballScraper
 
 
-class WaybackScraper(BasketballScraper):
+class WaybackScraper(FootballScraper):
 
 
     def __init__(self, headers=None, cookies=None, cache_name=None, expire_hours=12, as_string=False):
@@ -18,10 +18,8 @@ class WaybackScraper(BasketballScraper):
             expire_hours: how long to cache requests
             as_string: return as raw string rather than json parsed into python data structure
         '''
+        FootballScraper.__init__(self, headers, cookies, cache_name, expire_hours, as_string)
         self.wburl = 'http://archive.org/wayback/available?url={}&timestamp={}'
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
-        BasketballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name, expire_hours=expire_hours, as_string=as_string)
-
 
     def get_wayback(self, url, d=None, max_delta=None):
         '''

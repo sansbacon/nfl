@@ -115,6 +115,19 @@ def merge(merge_dico, dico_list):
                     merge_dico[key] = value
         return merge_dico
 
+def merge_two(d1, d2):
+    '''
+    See http://stackoverflow.com/questions/28838291/merging-multiple-dictionaries-in-python
+
+    Arguments:
+        d1: dict
+        d2: dict
+    Returns:
+        merged dictionary
+    '''
+    context = d1.copy()
+    context.update(d2)
+    return context    
 
 def save_csv(data, csv_fname, fieldnames, sep=';'):
     '''

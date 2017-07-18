@@ -197,41 +197,27 @@ class FootballOutsidersNFLParser(object):
             return None
 
 
-    def weekTeamSeasonDvoa(self, year, week, pause=1):
+    def weekTeamSeasonDvoa(self, content, year, week):
         '''
         Weekly DVOA by team - includes ranks and weightings
     
         Argument: 
-            year(int)
-            week(int)
+            year: int
+            week: int
     
         '''
-        base_url = 'http://www.footballoutsiders.com/premium/weekTeamSeasonDvoa.php?od=O&team=ARI&year={y}&week={w}'
-        cols = ['team', 'wl', 'total_dvoa', 'total_dvoa_rank', 'weighted_dvoa', 'weighted_dvoa_rank', 'off_dvoa',
-                'off_dvoa_rank',
-                'weighted_off_dvoa', 'weighted_off_dvoa_rank', 'def_dvoa', 'def_dvoa_rank', 'weighted_def_dvoa',
-                'weighted_def_dvoa_rank',
-                'st_dvoa', 'st_dvoa_rank', 'weighted_st_dvoa', 'weighted_st_dvoa_rank']
-        url = base_url.format(y=year, w=week)
-        response = _get(url)
-        extras = {'season': int(year), 'week': int(week)}
+        results = []
+        soup = BeautifulSoup(content, 'lxml')
+        t = soup.find('table', {'id': 'dataTable'})
+        thead = t.find('thead')
+        headers = [th.text for th in thead.find_all('th')]
+        for tr in t.find('tbody').find_all('tr'):
+            result = dict(zip(headers, [td.text for td in tr.find_all('td')]))
+            result['season_year'] = 2016
+            result['week'] = week
+            results.append(result)
 
-        if not response.from_cache:
-            time.sleep(pause)
-
-        if response.content:
-            teams = _parse(response, cols, extras)
-
-            for idx, team in enumerate(teams):
-                wl = team.get('wl')
-
-                if wl:
-                    teams[idx]['w'], teams[idx]['l'] = wl.split('-')
-
-            return teams
-
-        else:
-            return None
+        return results
 
 
     def weekly_dvoa(self, years, weeks, teams):

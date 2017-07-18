@@ -5,26 +5,13 @@ RotoguruNFLScraper
 
 import logging
 
-from ewt.scraper import EWTScraper
+from nfl.scrapers.scraper import FootballScraper
 
 
-class RotoguruNFLScraper(EWTScraper):
-    '''
-    Usage:
-        s = RotoguruNFLScraper()
-
+class RotoguruNFLScraper(FootballScraper):
     '''
 
-    def __init__(self, **kwargs):
-        # see http://stackoverflow.com/questions/8134444
-        EWTScraper.__init__(self, **kwargs)
-        self.logger = logging.getLogger(__name__).addHandler(logging.NullHandler())
-
-        if 'polite' in 'kwargs':
-            self.polite = kwargs['polite']
-        else:
-            self.polite = True
-
+    '''
 
     def dfs_week(self, year, week, sites):
         '''

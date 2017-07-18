@@ -80,6 +80,31 @@ class PfrNFLParser():
 
         return players
 
+    def fantasy_week(self, content):
+        '''
+        Takes HTML of 100 rows of weekly results, returns list of players
+
+        Args:
+            content: HTML string
+
+        Returns:
+            players: list of player dict
+        '''
+        players = []
+        soup = BeautifulSoup(content, 'lxml')
+        tbl = soup.find('table', {'id': 'results'})
+        if tbl:
+            for tr in tbl.find('tbody').findAll('tr', class_=None):
+                player = {td['data-stat']: td.text for td in tr.find_all('td')}
+                a = tr.find('a', {'href': re.compile(r'/players/')})
+                if a:
+                    try:
+                        player['source_player_id'] = a['href'].split('/')[-1].split('.')[:-1]
+                    except:
+                        pass
+                players.append(player)
+
+        return players
 
     def team_plays(self, content):
         '''
@@ -225,4 +250,31 @@ class PfrNFLParser():
         return players
 
 if __name__ == "__main__":
-    pass
+    import logging
+    import random
+    import json
+    from nfl.scrapers.pfr import PfrNFLScraper
+
+    logging.basicConfig(level=logging.INFO)
+    s = PfrNFLScraper()
+    p = PfrNFLParser()
+    players = []
+    season_year = 2015
+    for week in range(1, 2):
+        for offset in [0, 100]:#, 200, 300]:
+            try:
+                content = s.fantasy_week(season_year, week, offset)
+                if content:
+                    week_players = p.fantasy_week(content)
+                    if week_players:
+                        players += week_players
+                        logging.info('finished week {} offset {}'.format(week, offset))
+            except Exception as e:
+                logging.exception(e)
+
+    if players:
+        logging.info(random.sample(players, 3))
+        #with open('/home/sansbacon/fantasy-2016.json', 'w') as outfile:
+        #    json.dump(players, outfile)
+    else:
+        logging.error('no players')

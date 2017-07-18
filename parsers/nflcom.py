@@ -2,6 +2,7 @@ import logging
 import re
 
 from bs4 import BeautifulSoup
+import demjson
 
 from nfl.dates import convert_format
 from nfl.utility import merge
@@ -80,6 +81,76 @@ class NFLComParser:
                 games.append(game)
         return games
 
+    def injuries(self, content, season, week):
+        '''
+        Returns injured players from injruies page
+        Args:
+            content: HTML string   
+        Returns:
+            list of player dict
+        '''
+        players = []
+        away_patt = re.compile(r'dataAway.*?(\[.*?\]);',
+                               re.MULTILINE | re.IGNORECASE | re.DOTALL)
+        home_patt = re.compile(r'dataHome.*?(\[.*?\]);',
+                               re.MULTILINE | re.IGNORECASE | re.DOTALL)
+        awayAbbr_patt = re.compile(r'awayAbbr\s+=\s+\'([A-Z]+)\'')
+        homeAbbr_patt = re.compile(r'homeAbbr\s+=\s+\'([A-Z]+)\'')
+
+        soup = BeautifulSoup(content, 'lxml')
+
+        # values are embedded in <script> tag
+        # I am trying to scrape the homeAbbr and awayAbbr variables
+        for script in soup.find_all('script'):
+            try:
+                # get away and home team codes
+                match = re.search(awayAbbr_patt, script.text)
+                if match:
+                    away_team = match.group(1)
+
+                match = re.search(homeAbbr_patt, script.text)
+                if match:
+                    home_team = match.group(1)
+
+                # away team
+                away_player = {'team_code': away_team, 'season_year': season, 'week': week}
+                match = re.search(away_patt, script.text)
+                if match:
+                    for player in demjson.decode(match.group(1)):
+                        context = away_player.copy()
+                        context.update(player)
+                        players.append(context)
+
+                # home team
+                home_player = {'team_code': home_team, 'season_year': season, 'week': week}
+                match = re.search(home_patt, script.text)
+                if match:
+                    for player in demjson.decode(match.group(1)):
+                        context = home_player.copy()
+                        context.update(player)
+                        players.append(context)
+            except:
+                pass
+
+        return players
+
+    def position(self, content):
+        '''
+        Returns player's position from his profile page on nfl.com
+        Args:
+            content: HTML string   
+        Returns:
+            pos: 'QB', 'RB', 'WR', 'TE', 'UNK'
+        '''
+        patt = re.compile(r'[A-Z]{1}.*?,\s+([A-Z]{1,2})', re.IGNORECASE | re.UNICODE)
+        soup = BeautifulSoup(content, 'lxml')
+        title = soup.title.text
+        match = re.search(patt, title)
+        if match:
+            return match.group(1)
+        else:
+            return u'UNK'
+
     def upcoming_week_page(self, content):
         '''
         Parses upcoming week page for 2017 season
@@ -96,24 +167,6 @@ class NFLComParser:
         for div in soup.select('div.schedules-list-content'):
             games.append({att: div[att] for att in div.attrs if att in wanted})
         return games
-
-    def position(self, content):
-        '''
-        Returns position from profile page
-        Args:
-            content: HTML string   
-        Returns:
-            pos: 'QB', 'RB', 'WR', 'TE', 'UNK'
-        '''
-        patt = re.compile(r'[A-Z]{1}.*?,\s+([A-Z]{1,2})', re.IGNORECASE | re.UNICODE)
-        soup = BeautifulSoup(content, 'lxml')
-        title = soup.title.text
-        match = re.search(patt, title)
-        if match:
-            return match.group(1)
-        else:
-            return u'UNK'
-
 
     def week_page(self, content):
         '''

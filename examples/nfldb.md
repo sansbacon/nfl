@@ -1374,31 +1374,33 @@ Created by EWT. Selects dfs points on a per-week basis.
 
 Created by EWT. Selects dst fantasy points on a per-week basis.
 
-    CREATE OR REPLACE VIEW public.vw_dst AS 
-     SELECT dst.gsis_id,
-        dst.season_year,
-        dst.week,
-        dst.team_code,
-        dst.opp,
-        dst.fantasy_points,
-        dst.pts_allowed,
-        dst.sacks,
-        dst.def_td,
-        dst.return_td,
-        dst."int",
-        dst.fum_rec,
-        dst.safeties,
-        gm.consensus_game_ou AS ou,
-        gm.consensus_implied_total AS impltot,
-        round(gm.consensus_game_ou - gm.consensus_implied_total, 2) AS opp_impltot,
-        gm.is_home,
-        gm.is_win,
-        wd.weighted_off_dvoa,
-        wd.weighted_def_dvoa
-       FROM dst
-         LEFT JOIN gamesmeta gm ON dst.gsis_id::text = gm.gsis_id::text AND dst.team_code::text = gm.team_code::text
-         LEFT JOIN weekly_dvoa wd ON dst.team_code::text = wd.team_code::text AND dst.season_year = wd.season_year AND dst.week = wd.week
-      ORDER BY dst.season_year, dst.week, dst.fantasy_points DESC;
+    SELECT dst.gsis_id,
+    dst.season_year,
+    dst.week,
+    dst.team_code,
+    dst.opp,
+    dst.fantasy_points,
+    dst.pts_allowed,
+    dst.sacks,
+    dst.def_td,
+    dst.return_td,
+    dst."int",
+    dst.fum_rec,
+    dst.safeties,
+    gm.consensus_game_ou AS ou,
+    gm.consensus_implied_total AS impltot,
+    round(gm.consensus_game_ou - gm.consensus_implied_total, 2) AS opp_impltot,
+    gm.is_home,
+    gm.is_win,
+    wd.weighted_off_dvoa,
+    wd.weighted_def_dvoa,
+    wd2.weighted_off_dvoa AS opp_weighted_off_dvoa,
+    wd2.weighted_def_dvoa AS opp_weighted_def_dvoa
+    FROM dst
+     LEFT JOIN gamesmeta gm ON dst.gsis_id::text = gm.gsis_id::text AND dst.team_code::text = gm.team_code::text
+     LEFT JOIN weekly_dvoa wd ON dst.team_code::text = wd.team_code::text AND dst.season_year = wd.season_year AND dst.week = wd.week
+     LEFT JOIN weekly_dvoa wd2 ON dst.opp = wd2.team_code AND dst.season_year = wd2.season_year AND dst.week = wd2.week
+    ORDER BY dst.season_year, dst.week, dst.fantasy_points DESC;
 
 ## vw_offplays
 

@@ -1,10 +1,7 @@
-import logging
-import pprint
-
-from ewt.scraper import EWTScraper
+from nfl.scrapers.scraper import FootballScraper
 
 
-class FFNerdNFLScraper(EWTScraper):
+class FFNerdNFLScraper(FootballScraper):
 
     '''
     Obtains content of NFL fantasy projections page of fantasyfootballnerd.com
@@ -17,100 +14,141 @@ class FFNerdNFLScraper(EWTScraper):
         content = s.get_projections()
     '''
 
-    def __init__(self, api_key, positions=['QB', 'RB', 'WR', 'TE'], response_format='json', league_format='standard', **kwargs):
+    def __init__(self, api_key, response_format='json', league_format='1',
+                 headers=None, cookies=None, cache_name=None,
+                 delay=1, expire_hours=168, as_string=False):
         '''
+        Scrape ffnerd API
+
         Args:
-            api_key (str): Must specify API key for successful requests
+            api_key: string
+            response_format: json or xml
+            league_format: 1 for ppr, 0 for standard
+            headers: dict of headers
+            cookies: cookiejar object
+            cache_name: should be full path
+            delay: int (be polite!!!)
+            expire_hours: int - default 168
+            as_string: get string rather than parsed json
         '''
-
-        # see http://stackoverflow.com/questions/8134444/python-constructor-of-derived-class
-        EWTScraper.__init__(self, **kwargs)
-
+        FootballScraper.__init__(headers, cookies, cache_name, delay, expire_hours, as_string)
         self.api_key = api_key
-        self.positions = positions
+        self.positions = ['QB', 'RB', 'WR', 'TE', 'DEF']
         self.response_format = response_format
         self.league_format = league_format
 
-    def _generate_urls(self, **kwargs):
-        """
+    def depth_charts(self):
+        '''
+        NFL team depth charts
 
-        :param positions (list):
-        :param response_format (str): json or xml, default is json
-        :param league_format: standard or ppr, default is ppr
-        :return list(str): urls for rankings and projection resources
-        """
+        Returns:
+            dict
+        '''
+        url = 'http://www.fantasyfootballnerd.com/service/depth-charts/{rformat}/{api_key}'
+        return self.get_json(url.format(rformat=self.response_format, api_key=self.api_key))
 
-        # use defaults from instantiation or can pass new values
+    def draft_projections(self, pos):
+        '''
+        Draft rankings for current season
 
-        if 'positions' in 'kwargs':
-            positions = kwargs['positions']
+        Args:
+            pos:
+
+        Returns:
+            dict
+        '''
+        url = 'http://www.fantasyfootballnerd.com/service/draft-projections/{rformat}/{api_key}/{pos}'
+        return self.get_json(url.format(rformat=self.response_format, api_key=self.api_key, pos=pos))
+
+    def draft_rankings(self):
+        '''
+        Draft rankings for current season
+        
+        Returns:
+            dict
+        '''
+        url = 'http://www.fantasyfootballnerd.com/service/draft-rankings/{rformat}/{api_key}'
+        return self.get_json(url.format(rformat=self.response_format, api_key=self.api_key)
+
+    def draft_tiers(self):
+        '''
+        Draft tiers for current season
+
+        Returns:
+            dict
+        '''
+        url = 'http://www.fantasyfootballnerd.com/service/tiers/{rformat}/{api_key}'
+        return self.get_json(url.format(rformat=self.response_format, api_key=self.api_key)
+
+    def injuries(self, week):
+        '''
+        
+        Args:
+            week: int 1-17
+
+        Returns:
+            dict
+        '''
+        url = 'http://www.fantasyfootballnerd.com/service/injuries/{rformat}/{api_key}/{week}'
+        return self.get_json(url.format(rformat=self.response_format, api_key=self.api_key, week=week))
+
+    def players(self, pos=None):
+        '''
+        Gets plalyers
+        
+        Args:
+            pos: default None
+
+        Returns:
+            dict            
+        '''
+        if pos:
+            url = 'http://www.fantasyfootballnerd.com/service/schedule/{rformat}/{api_key}/{pos}'
+            return self.get(url.format(rformat=self.response_format, api_key=self.api_key, pos=pos))
         else:
-            positions = self.positions
+            url = 'http://www.fantasyfootballnerd.com/service/schedule/{rformat}/{api_key}'
+            return self.get(url.format(rformat=self.response_format, api_key=self.api_key))
 
-        if 'response_format' in 'kwargs':
-            response_format = kwargs['response_format']
-        else:
-            response_format = self.response_format
+    def schedule(self):
+        '''
+        Gets schedule for current season
 
-        if 'league_format' in 'kwargs':
-            league_format = kwargs['league_format']
-        else:
-            league_format = self.league_format
+        Returns:
+            dict            
+        '''
+        url = 'http://www.fantasyfootballnerd.com/service/schedule/{rformat}/{api_key}'
+        return self.get(url.format(rformat=self.response_format, api_key=self.api_key))
 
-        urls = {'rankings': [], 'projections': {}}
+    def weekly_projections(self, week, pos):
+        '''
+        
+        Args:
+            week: 
+            pos: 
 
-        # add the rankings url
-        if league_format == 'ppr':
-            urls['rankings'].append('http://www.fantasyfootballnerd.com/service/draft-rankings/{0}/{1}/{2}/'.format(response_format, self.api_key, '1'))
-        else:
-            urls['rankings'].append('http://www.fantasyfootballnerd.com/service/draft-rankings/{0}/{1}/{2}/'.format(response_format, self.api_key, '0'))
+        Returns:
 
-        # now do the positional urls
-        valid_positions = ['QB', 'RB', 'WR', 'TE', 'DEF', 'K']
+        '''
+        if pos not in self.positions:
+            raise ValueError('invalid position: {}'.format(pos))
+        url = 'http://www.fantasyfootballnerd.com/service/weekly-projections/{rformat}/{api_key}/{pos}/{week}/'
+        return self.get_json(url.format(rformat=self.response_format, api_key=self.api_key, pos=pos, week=week))
 
-        # you can pass a list of positions, have to check if valid
-        for position in positions:
-            if position in valid_positions:
-                urls['projections'][position] = 'http://www.fantasyfootballnerd.com/service/draft-projections/{0}/{1}/{2}/'.format(response_format, self.api_key, position)
-            else:
-                logging.warn('%s not valid' % position)
+    def weekly_rankings(self, week, pos):
+        '''
 
-        logging.debug('urls: %s' % pprint.pformat(urls))
-        return urls
+        Args:
+            week: 
+            pos: 
 
-    def season_projections(self):
-        """
-        Gets rankings and projections, can assemble together with parser
-        :return projections(dictionary): keys are positions, values are lists of player dictionaries
-        :return rankings(list): list of player dictionaries
-        """
+        Returns:
 
-        rankings = []
-        projections = {}
-
-        # loop through urls and fetch them
-        for url_type, url_values in self._generate_urls().items():
-
-            # rankings value will be a list (typically 1 item)
-            if url_type == 'rankings':
-                for url_value in url_values:
-                    rankings.append(self.get(url_value))
-
-            # projections value will be a dictionary
-            elif url_type =='projections':
-                for position, url in url_values.items():
-                    projections[position] = self.get(url)
-            else:
-                pass
-
-        return projections, rankings
-
-    def weekly_projections(self, week, positions = ['QB', 'RB', 'WR', 'TE', 'DEF']):
-        proj_url = 'http://www.fantasyfootballnerd.com/service/weekly-projections/{format}/{api_key}/{pos}/{week}/'
-        projections = {pos: self.get(proj_url.format(format='json', api_key=self.api_key, pos=pos, week=week)) for pos in positions}
-        rank_url = 'http://www.fantasyfootballnerd.com/service/weekly-rankings/{format}/8x3g9y245w6a/{pos}/{week}/1'
-        rankings = {pos: self.get(rank_url.format(format='json', api_key=self.api_key, pos=pos, week=week)) for pos in positions}
-        return projections, rankings
+        '''
+        if pos not in self.positions:
+            raise ValueError('invalid position: {}'.format(pos))
+        url = 'http://www.fantasyfootballnerd.com/service/weekly-rankings/{rformat}/{api_key}/{pos}/{week}/{lformat}'
+        return self.get_json(url.format(rformat=self.response_format, api_key=self.api_key,
+                                   pos=pos, week=week, lformat=self.league_format))
 
 if __name__ == "__main__":
     pass
