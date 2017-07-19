@@ -1,4 +1,4 @@
-import logging
+from __future__ import absolute_import, print_function, division
 
 from nfl.scrapers.scraper import FootballScraper
 

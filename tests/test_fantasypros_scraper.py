@@ -1,7 +1,8 @@
-'''
-test_fantasypros_scraper.py
-'''
+# -*- coding: utf-8 -*-
 
+from __future__ import absolute_import, print_function, division
+
+import logging
 import random
 import unittest
 
@@ -46,4 +47,5 @@ class TestFantasyProsScraper(unittest.TestCase):
         self.assertIsNotNone(self.s.weekly_rankings(pos=random.choice(ppr_positions), fmt='hppr', week=random.choice(range(1,18))))
 
 if __name__ == '__main__':
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     unittest.main()

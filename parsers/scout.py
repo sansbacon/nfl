@@ -1,13 +1,16 @@
+# -*- coding: utf-8 -*-
+
+from __future__ import absolute_import, print_function, division
+
 import logging
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup as BS
 
 
 class ScoutNFLParser(object):
     '''
     
     '''
-
     def __init__(self,**kwargs):
         '''
 

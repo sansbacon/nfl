@@ -1,14 +1,14 @@
-'''
-PlayerProfilerNFLScraper
-For use by subscribers
-Non-subscribers should be aware of site's TOS
-'''
+# -*- coding: utf-8 -*-
+
+from __future__ import absolute_import, print_function, division
 
 from nfl.scrapers.scraper import FootballScraper
 
 
 class PlayerProfilerNFLScraper(FootballScraper):
     '''
+    For use by subscribers
+    Non-subscribers should be aware of site's TOS
     '''
 
     def player_page(self, site_player_id):

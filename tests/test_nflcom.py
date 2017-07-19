@@ -1,4 +1,6 @@
-from __future__ import absolute_import, print_function
+# -*- coding: utf-8 -*-
+
+from __future__ import absolute_import, print_function, division
 
 import logging
 import random
@@ -9,9 +11,6 @@ from nfl.agents.nflcom import NFLComAgent
 from nfl.scrapers.nflcom import NFLComScraper
 from nfl.parsers.nflcom import NFLComParser
 from nfl.pipelines.nflcom import gamesmeta_table
-
-logger = logging.getLogger()
-logger.level = logging.DEBUG
 
 
 class Nfldotcom_test(unittest.TestCase):
@@ -43,4 +42,5 @@ class Nfldotcom_test(unittest.TestCase):
 
 
 if __name__=='__main__':
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     unittest.main()
