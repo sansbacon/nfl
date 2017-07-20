@@ -134,6 +134,26 @@ class NFLComParser:
 
         return players
 
+    def ol(self, content):
+        '''
+        Parses offensive line stats page on nfl.com
+        
+        Args:
+            content: HTML string   
+
+        Returns:
+            teams
+        '''
+        soup = BeautifulSoup(content, 'lxml')
+        headers = ['rank', 'team', 'experience', 'rush_att', 'rush_yds', 'rush_ypc', 'rush_tds',
+                   'rush_fd_left', 'rush_neg_left', 'rush_pty_left', 'rush_pwr_left',
+                   'rush_fd_center', 'rush_neg_center', 'rush_pty_center', 'rush_pwr_center',
+                   'rush_fd_right', 'rush_neg_right', 'rush_pty_right', 'rush_pwr_right', 'sacks', 'qb_hits']
+
+        return [dict(zip(headers, [td.text.strip() for td in tr.find_all('td')]))
+                for tr in soup.find('table', {'id': 'result'}).find('tbody').find_all('tr')]
+
+
     def position(self, content):
         '''
         Returns player's position from his profile page on nfl.com

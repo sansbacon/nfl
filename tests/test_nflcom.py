@@ -23,22 +23,21 @@ class Nfldotcom_test(unittest.TestCase):
         self.p = NFLComParser()
         self.a = NFLComAgent(scraper=self.s, parser=self.p)
         self.stream_handler = logging.StreamHandler(sys.stdout)
-        logger.addHandler(self.stream_handler)
         self.all_games = []
 
-    def tearDown(self):
-        logger.removeHandler(self.stream_handler)
+    def test_gamebook(self):
+        self.assertIsNotNone(self.s.gamebook(2016, 1, 56905))
 
-    def test_week_page(self):
-        season = random.choice(range(2002, 2009))
-        week = random.choice(range(1, 17))
-        dc = gamesmeta_table(self.p.week_page(self.s.week_page(season, week)))
-        logging.info(dc)
+    #def test_week_page(self):
+    #    season = random.choice(range(2002, 2009))
+    #    week = random.choice(range(1, 17))
+    #    dc = gamesmeta_table(self.p.week_page(self.s.week_page(season, week)))
+    #    logging.info(dc)
 
-    def test_week_pages(self):
-        season = random.choice(range(2002, 2009))
-        for week in random.sample(range(1, 17), 3):
-            logging.info(gamesmeta_table(self.p.week_page(self.s.week_page(season, week))))
+    #def test_week_pages(self):
+    #    season = random.choice(range(2002, 2009))
+    #    for week in random.sample(range(1, 17), 3):
+    #        logging.info(gamesmeta_table(self.p.week_page(self.s.week_page(season, week))))
 
 
 if __name__=='__main__':

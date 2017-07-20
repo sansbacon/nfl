@@ -1,75 +1,126 @@
-import logging
+# -*- coding: utf-8 -*-
+
+from __future__ import absolute_import, print_function, division
 
 from scraper import FootballScraper
 
 
 class FootballOutsidersNFLScraper(FootballScraper):
 
-
-    def dvoa_table(self, table):
+    def dl(self, season=''):
         '''
-
-        Args:
-            table:
+        Gets DL stats page
 
         Returns:
-
+            HTML string
         '''
-        teams = {}
-        headers = ['def_rank', 'team', 'def_dvoa', 'def_rank_last_week', 'weighted_def', 'weighted_def_rank', 'pass_def', 'pass_rank', 'rush_def', 'rush_rank', 'na_total', 'na_pass', 'na_rush', 'var', 'var_rank', 'sched', 'sched_rank']
+        url = 'http://www.footballoutsiders.com/stats/dl{}'
+        return self.get(url.format(season))
 
-        for row in table.findAll('tr')[2:]:
-            if 'WEIGHTED' in row.get_text() or 'DVOA' in row.get_text():
-                pass
-            else:
-                values = [td.get_text().strip() for td in row.findAll('td')]
-
-                if len(values[0]) > 0:
-                    team = dict(zip(headers, values))
-                    team_name = team['team']
-                    teams[team_name] = team
-        return teams
-
-
-    def passing_table(self, table):
+    def drive(self, season=''):
         '''
-
-        Args:
-            table:
+        Gets drivestats page
 
         Returns:
-
+            HTML string
         '''
-        teams = {}
-        headers = ['pass_rank', 'team', 'dvoa_wr1', 'dvoa_wr1_rank', 'ppg_wr1', 'ypg_wr1', 'dvoa_wr2', 'dvoa_wr2_rank', 'ppg_wr2', 'ypg_wr2', 'dvoa_wr3', 'dvoa_wr3_rank', 'ppg_wr3', 'ypg_wr3', 'dvoa_te', 'dvoa_te_rank', 'ppg_te', 'ypg_te', 'dvoa_rb', 'dvoa_rb_rank', 'ppg_rb', 'ypg_rb']
+        url = 'http://www.footballoutsiders.com/stats/drivestats{}'
+        return self.get(url.format(season))
 
-        # skip 2 rows which are headers
-        for row in table.findAll('tr')[2:]:
-            if 'DVOA' or 'TOTAL' in row.get_text():
-                pass
-            else:
-                values = [td.get_text().strip() for td in row.findAll('td')]
-                team = dict(zip(headers, values))
-                team_name = team['team']
-                teams[team_name] = team
-        return teams
+    def ol(self, season=''):
+        '''
+        Gets OL stats page
 
+        Returns:
+            HTML string
+        '''
+        url = 'http://www.footballoutsiders.com/stats/ol{}'
+        return self.get(url.format(season))
+
+    def qb(self, season=''):
+        '''
+        Gets QB stats page
+
+        Returns:
+            HTML string
+        '''
+        url = 'http://www.footballoutsiders.com/stats/qb{}'
+        return self.get(url.format(season))
+
+    def rb(self, season=''):
+        '''
+        Gets RB stats page
+
+        Returns:
+            HTML string
+        '''
+        url = 'http://www.footballoutsiders.com/stats/rb{}'
+        return self.get(url.format(season))
+
+    def te(self, season=''):
+        '''
+        Gets TE stats page
+
+        Returns:
+            HTML string
+        '''
+        url = 'http://www.footballoutsiders.com/stats/te{}'
+        return self.get(url.format(season))
+
+    def wr(self, season=''):
+        '''
+        Gets WR stats page
+
+        Returns:
+            HTML string
+        '''
+        url = 'http://www.footballoutsiders.com/stats/wr{}'
+        return self.get(url.format(season))
 
     def snap_counts(self, year, week):
         '''
+        Gets weekly snapcounts
 
         Args:
-            year:
-            week:
+            year: 2017, 2016, etc.
+            week: 1, 2, etc.
 
         Returns:
-
+            HTML string
         '''
         url = 'http://www.footballoutsiders.com/stats/snapcounts'
         payload = {'team': 'ALL', 'week': week, 'pos': 'ALL', 'year': year, 'Submit': 'Submit'}
         return self.post(url, payload)
 
+    def team_defense(self, season=''):
+        '''
+        Gets defense DVOA page
+
+        Returns:
+            HTML string
+        '''
+        url = 'http://www.footballoutsiders.com/stats/teamdef{}'
+        return self.get(url.format(season))
+
+    def team_offense(self, season=''):
+        '''
+        Gets offense DVOA page
+
+        Returns:
+            HTML string
+        '''
+        url = 'http://www.footballoutsiders.com/stats/teamoff{}'
+        return self.get(url.format(season))
+
+    def team_efficiency(self, season=''):
+        '''
+        Gets team DVOA page
+
+        Returns:
+            HTML string
+        '''
+        url = 'http://www.footballoutsiders.com/stats/teameff{}'
+        return self.get(url.format(season))
 
 if __name__ == '__main__':    
     pass
-

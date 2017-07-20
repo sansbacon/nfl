@@ -31,7 +31,7 @@ class FFNerdNFLScraper(FootballScraper):
             expire_hours: int - default 168
             as_string: get string rather than parsed json
         '''
-        FootballScraper.__init__(headers, cookies, cache_name, delay, expire_hours, as_string)
+        FootballScraper.__init__(self, headers, cookies, cache_name, delay, expire_hours, as_string)
         self.api_key = api_key
         self.positions = ['QB', 'RB', 'WR', 'TE', 'DEF']
         self.response_format = response_format
@@ -68,7 +68,7 @@ class FFNerdNFLScraper(FootballScraper):
             dict
         '''
         url = 'http://www.fantasyfootballnerd.com/service/draft-rankings/{rformat}/{api_key}'
-        return self.get_json(url.format(rformat=self.response_format, api_key=self.api_key)
+        return self.get_json(url.format(rformat=self.response_format, api_key=self.api_key))
 
     def draft_tiers(self):
         '''
@@ -78,7 +78,7 @@ class FFNerdNFLScraper(FootballScraper):
             dict
         '''
         url = 'http://www.fantasyfootballnerd.com/service/tiers/{rformat}/{api_key}'
-        return self.get_json(url.format(rformat=self.response_format, api_key=self.api_key)
+        return self.get_json(url.format(rformat=self.response_format, api_key=self.api_key))
 
     def injuries(self, week):
         '''
