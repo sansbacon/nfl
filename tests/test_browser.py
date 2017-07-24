@@ -14,11 +14,12 @@ class Browser_test(unittest.TestCase):
     def setUp(self):
         self.s = BrowserScraper()
 
-
     def test_get(self):
         url = 'http://www.google.com'
         content = self.s.get(url)
         self.assertIsNotNone(content)
+        self.assertIn('body', content)
+
 
 if __name__=='__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)

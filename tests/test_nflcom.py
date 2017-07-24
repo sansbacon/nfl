@@ -16,6 +16,7 @@ from nfl.pipelines.nflcom import gamesmeta_table
 class Nfldotcom_test(unittest.TestCase):
     '''
     Tests nfldotcom scraper and parser
+    TODO: these are not fully implemented
     '''
 
     def setUp(self):

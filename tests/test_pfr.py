@@ -16,15 +16,25 @@ class Pfr_test(unittest.TestCase):
         self.s = PfrNFLScraper(cache_name='pfr-plays-query')
         self.p = PfrNFLParser()
 
-
     def test_team_plays_query(self):
-        content = self.s.team_plays_query(season_start=2009, season_end=2016, offset=0)
+        content = self.s.team_plays_query(season_start=2016, season_end=2016, offset=0)
         self.assertIsNotNone(content)
         self.assertRegexpMatches(content, r'html')
-        teams = self.p.team_plays(content)
-        self.assertIsNotNone(teams)
-        logging.info(teams)
 
+    def test_draft(self):
+        content = self.s.draft(2016)
+        self.assertIsNotNone(content)
+        self.assertIn('Myles', content)
+
+    def test_fantasy_season(self):
+        content = self.s.fantasy_season(2016)
+        self.assertIsNotNone(content)
+        self.assertIn('Bell', content)
+
+    def test_fantasy_week(self):
+        content = self.s.fantasy_week(2016, 9)
+        self.assertIsNotNone(content)
+        self.assertIn('Bell', content)
 
 if __name__=='__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)

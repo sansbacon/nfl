@@ -1,42 +1,34 @@
-imoprt logging
+# -*- coding: utf-8 -*-
+
+from __future__ import absolute_import, print_function, division
+
+import logging
 import mmap
-import os
 
 import pandas as pd
 
 
-class DraftKingsNFLScraper:
+class DraftKingsNFLScraper(object):
     '''
-    s = DraftKingsNFLScraper()
-    s.contest_fn = (os.path.join(os.path.dirname(os.path.realpath(__file__)), 'sample.csv'))
-    mm = s.contest_data(s.contest_fn)
-    while True:
-        line=mm.readline()
-        if line == '': break
-        print line.strip()
+    TODO: this class is not really implemented. Need to add in the contest page stuff as well.
     '''
 
     def __init__(self):
-        self._contest_fn = None
-
-    @property
-    def contest_fn(self):
-        return self._contest_fn
-
-    @contest_fn.setter
-    def contest_fn(self, x):
-        self._contest_fn = x
+        self.contest_fn = None
 
     def contest_data(self, fname):
         '''
-        Uses memory map instead of file_io due to filesize
-        :param fname(str): .csv file with draft kings contest results
-        :return mm(mmap): memory map of file
+        Uses memory map instead of file_io to process DK contest results
+
+        Args:
+            fname: string
+
+        Returns:
+            memory map of file           
         '''
         try:
             with open(fname, 'r+b') as f:
                 return mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
-
         except Exception as e:
             logging.exception(e)
 

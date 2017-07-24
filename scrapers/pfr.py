@@ -12,7 +12,11 @@ class PfrNFLScraper(FootballScraper):
 
     @property
     def pgl_finder_url(self):
-        return 'https://www.pro-football-reference.com/play-index/pgl_finder.cgi'
+        return 'https://www.pro-football-reference.com/play-index/pgl_finder.cgi?'
+
+    @property
+    def tgl_finder_url(self):
+        return 'https://www.pro-football-reference.com/play-index/tgl_finder.cgi?'
 
     @property
     def params(self):
@@ -97,8 +101,26 @@ class PfrNFLScraper(FootballScraper):
         Returns:
             content: HTML string of 100 entries
         '''
-        base_url = """http://www.pro-football-reference.com/play-index/tgl_finder.cgi?request=1&match=game&year_min={year_min}&year_max={year_max}&game_type=R&game_num_min=0&game_num_max=99&week_num_min=0&week_num_max=99&temperature_gtlt=lt&team_conf_id=All%20Conferences&team_div_id=All%20Divisions&opp_conf_id=All%20Conferences&opp_div_id=All%20Divisions&team_off_scheme=Any%20Scheme&team_def_align=Any%20Alignment&opp_off_scheme=Any%20Scheme&opp_def_align=Any%20Alignment&c1stat=plays_offense&c1comp=gt&c1val=10&c2stat=choose&c2comp=gt&c3stat=choose&c3comp=gt&c4stat=choose&c4comp=gt&c5comp=choose&c5gtlt=lt&c6mult=1.0&c6comp=choose&order_by=game_date&order_by_asc=Y&offset={offset}"""
-        return self.get(base_url.format(year_min=season_start, year_max=season_end, offset=offset))
+        params = {
+            'request': '1',
+            'match': 'game',
+            'year_min': '2009',
+            'year_max': '2016',
+            'game_type': 'R',
+            'game_num_min': '0',
+            'game_num_max': '99',
+            'week_num_min': '0',
+            'week_num_max': '99',
+            'temperature_gtlt': 'lt',
+            'c1stat': 'plays_offense',
+            'c1comp': 'gt',
+            'c1val': '0',
+            'c5val': '1.0',
+            'order_by': 'game_date',
+            'order_by_asc': 'Y'
+        }
+
+        return self.get(self.tgl_finder_url, payload=params)
 
 if __name__ == "__main__":
     pass

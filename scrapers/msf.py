@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+
+from __future__ import absolute_import, print_function, division
+
+import base64
+import logging
+
 from nfl.scrapers.scraper import FootballScraper
 
 
@@ -6,8 +13,8 @@ class MySportsFeedsNFLScraper(FootballScraper):
     '''
     '''
 
-    def __init__(self, username=None, password=None, response_format='json', league_format='1',
-                 headers=None, cookies=None, cache_name=None,
+    def __init__(self, username, password, response_format='json', league_format='1',
+                 headers={}, cookies=None, cache_name=None,
                  delay=1, expire_hours=168, as_string=False):
         '''
         Scrape mysportsfeeds API
@@ -22,9 +29,12 @@ class MySportsFeedsNFLScraper(FootballScraper):
             expire_hours: int - default 168
             as_string: get string rather than parsed json
         '''
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        auth = 'Basic ' + base64.b64encode('{}:{}'.format(username, password).encode('utf-8')).decode('ascii')
+        headers['Authorization'] = auth
         FootballScraper.__init__(self, headers, cookies, cache_name, delay, expire_hours, as_string)
-        self.username = username
-        self.password = password
+        self.response_format = response_format
+        self.league_format = league_format
 
     def boxscore(self,  game_id, season='latest'):
         '''
@@ -38,7 +48,10 @@ class MySportsFeedsNFLScraper(FootballScraper):
             dict
         '''
         url = 'https://api.mysportsfeeds.com/v1.1/pull/nfl/{season}/game_boxscore.{format}?gameid={game_id}'
-        return self.get(url.format(season=season, format=self.response_format, game_id=game_id))
+        if self.response_format == 'json':
+            return self.get_json(url.format(season=season, format=self.response_format, game_id=game_id))
+        else:
+            return self.get(url.format(season=season, format=self.response_format, game_id=game_id))
 
 
     def season_stats(self, season='latest'):
@@ -51,7 +64,12 @@ class MySportsFeedsNFLScraper(FootballScraper):
             dict
         '''
         url = 'https://api.mysportsfeeds.com/v1.1/pull/nfl/{season}/cumulative_player_stats.{format}'
-        return self.get(url.format(season=season, format=self.response_format))
+        if isinstance(season, int):
+            season = '{}-{}-regular'.format(season, season+1)
+        if self.response_format == 'json':
+            return self.get_json(url.format(season=season, format=self.response_format))
+        else:
+            return self.get(url.format(season=season, format=self.response_format))
 
     def schedule(self, season='latest'):
         '''
@@ -64,7 +82,12 @@ class MySportsFeedsNFLScraper(FootballScraper):
             dict            
         '''
         url = 'https://api.mysportsfeeds.com/v1.1/pull/nfl/{season}/full_game_schedule.{format}'
-        return self.get(url.format(season=season, format=self.response_format))
+        if isinstance(season, int):
+            season = '{}-{}-regular'.format(season, season+1)
+        if self.response_format == 'json':
+            return self.get_json(url.format(season=season, format=self.response_format))
+        else:
+            return self.get(url.format(season=season, format=self.response_format))
 
 if __name__ == "__main__":
     pass

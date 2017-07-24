@@ -24,6 +24,21 @@ class FantasyFootballCalculatorScraper(FootballScraper):
         params = {'format': fmt, 'teams': teams}
         return self.get(url, payload=params)
 
+    def adp_old(self, season_year, fmt='ppr'):
+        '''
+        Gets ADP page from fantasyfootballcalculator        
+
+        Args:
+            fmt: 
+            teams: 
+
+        Returns:
+            HTML string or None
+        '''
+        url = 'https://fantasyfootballcalculator.com/adp?'
+        params = {'year': season_year, 'format': fmt, 'teams': '12', 'view': 'graph', 'pos': 'all'}
+        return self.get(url, payload=params)
+
     def projections(self):
         '''
         Fetch projections/rankings

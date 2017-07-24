@@ -7,7 +7,7 @@ import random
 import sys
 import unittest
 
-from nfl.scrapers.footballoutsiders_api import FootballOutsidersAPIScraper
+from nfl.scrapers.footballoutsiders import FootballOutsidersAPIScraper
 
 
 class FO_api_test(unittest.TestCase):

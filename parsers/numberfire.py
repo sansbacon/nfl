@@ -5,7 +5,7 @@ import re
 
 from bs4 import BeautifulSoup
 
-class NumberfireNFLParser():
+class NumberfireNFLParser(object):
 
     def __init__(self,**kwargs):
 

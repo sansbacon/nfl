@@ -34,32 +34,42 @@ class TestFFNerdScraper(unittest.TestCase):
                                   cache_name='test-ffnerd-scraper')
 
     def test_depth_charts(self):
-        self.assertIsNotNone(self.s.depth_charts())
+        content = self.s.depth_charts()
+        self.assertIsInstance(content, dict)
 
     def test_draft_projections(self):
-        self.assertIsNotNone(self.s.draft_projections(self.position))
+        content = self.s.draft_projections(self.position)
+        self.assertIsInstance(content, dict)
 
     def test_draft_rankings(self):
-        self.assertIsNotNone(self.s.draft_rankings())
+        content = self.s.draft_rankings()
+        self.assertIsInstance(content, dict)
 
     def test_draft_tiers(self):
-        self.assertIsNotNone(self.s.draft_tiers())
+        content = self.s.draft_tiers()
+        self.assertIsInstance(content, dict)
 
     def test_injuries(self):
-        self.assertIsNotNone(self.s.injuries(self.week))
+        content = self.s.injuries(self.week)
+        self.assertIsInstance(content, dict)
 
     def test_players(self):
-        self.assertIsNotNone(self.s.players())
-        self.assertIsNotNone(self.s.players(self.position))
+        content = self.s.players()
+        self.assertIsInstance(content, dict)
+        content = self.s.players(self.position)
+        self.assertIsInstance(content, dict)
 
     def test_schedule(self):
-        self.assertIsNotNone(self.s.schedule())
+        content = self.s.schedule()
+        self.assertIsInstance(content, dict)
 
     def test_weekly_projections(self):
-        self.assertIsNotNone(self.s.weekly_projections(self.week, self.position))
+        content = self.s.weekly_projections(self.week, self.position)
+        self.assertIsInstance(content, dict)
 
     def test_weekly_rankings(self):
-        self.assertIsNotNone(self.s.weekly_rankings(self.week, self.position))
+        content = self.s.weekly_rankings(self.week, self.position)
+        self.assertIsInstance(content, dict)
 
 if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)

@@ -21,16 +21,9 @@ class FFTodayParser(NFLProjectionsParser):
         players = p.projections(content)
     '''
 
-    def __init__(self,**kwargs):
+    def __init__(self):
         '''
-        Args:
-            **kwargs: logger (logging.Logger)
         '''
-
-        if 'logger' in kwargs:
-          self.logger = kwargs['logger']
-        else:
-          self.logger = logging.getLogger(__name__)
 
 
     def _parse_dst_row(self, row):
@@ -238,7 +231,7 @@ class FFTodayParser(NFLProjectionsParser):
 
         return players
 
-    def _parse(content, headers, season, week, pos):
+    def _parse(self, content, headers, season, week, pos):
         players = []
 
         soup = BeautifulSoup(content, 'lxml')
@@ -282,32 +275,47 @@ class FFTodayParser(NFLProjectionsParser):
 
         return players
 
-    def weekly_results(content, season, week, position):
+    def weekly_results(self, content, season, week, position):
         '''
         Need a different parser for each position type
         '''
         if position == 'DST':
             headers = ['g', 'sack', 'fumbles_recovered', 'interceptions', 'def_td', 'points_allowed', 'pass_yds_allowed', 'rush_yds_allowed', 'safety', 'kick_td', 'fantasy_points', 'fantasy_points_g']
-            return _parse(content, headers, season, week, 'DST')
+            return self._parse(content, headers, season, week, 'DST')
 
         elif position == 'QB':
             headers = ['team', 'g', 'pass_cmp', 'pass_att', 'pass_yds', 'pass_td', 'pass_int', 'rush_att', 'rush_yds', 'rush_td', 'fantasy_points', 'fantasy_points_g']
-            return _parse(content, headers, season, week, 'QB')
+            return self._parse(content, headers, season, week, 'QB')
 
         elif position == 'RB':
             headers = ['team', 'g', 'rush_att', 'rush_yds', 'rush_td', 'rec_target', 'rec_rec', 'rec_yds', 'rec_td', 'fantasy_points', 'fantasy_points_g']
-            return _parse(content, headers, season, week, 'RB')
+            return self._parse(content, headers, season, week, 'RB')
 
         elif position == 'TE':
             headers = ['team', 'g', 'rec_target', 'rec_rec', 'rec_yds', 'rec_td', 'fantasy_points', 'fantasy_points_g']
-            return _parse(content, headers, season, week, 'TE')
+            return self._parse(content, headers, season, week, 'TE')
 
         elif position == 'WR':
             headers = ['team', 'g', 'rec_target', 'rec_rec', 'rec_yds', 'rec_td', 'rush_att', 'rush_yds', 'rush_td', 'fantasy_points', 'fantasy_points_g']
-            return _parse(content, headers, season, week, 'WR')
+            return self._parse(content, headers, season, week, 'WR')
 
         else:
             return None
+
+
+    def weekly_rankings(self, content):
+        """
+        Parses weekly rankings page
+        
+        Args:
+            content: 
+
+        Returns:
+            list of dict
+        """
+        soup = BeautifulSoup(content, 'lxml')
+        for t in soup.find_all('table', {'width': '100%', 'border': '0', 'cellpadding': '0', 'cellspacing': '0'}):
+            pass # do something here
 
 
 if __name__ == '__main__':

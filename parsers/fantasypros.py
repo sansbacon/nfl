@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+from __future__ import absolute_import, print_function, division
+
 import logging
 import re
 
@@ -157,10 +160,50 @@ class FantasyProsNFLParser(object):
         Returns:
             list of player dict
         '''
+        if not content:
+            raise ValueError('content is None')
+
+        results = []
+        positions = ['QB', 'WR', 'TE', 'DST', 'RB']
         soup = BeautifulSoup(content, 'lxml')
         t = soup.find('table', {'id': 'data'})
         headers = ['rank', 'player', 'opp', 'best', 'worst', 'avg', 'stdev']
-        return [self._tr(tr, headers) for tr in t.find_all('tr', {'class': re.compile(r'mpb-player')})]
+        for tr in t.find_all('tr', {'class': re.compile(r'mpb-player')}):
+            result = self._tr(tr, headers)
+            # get week and position
+            # <title>Week 1 QB Rankings, QB Cheat Sheets, QB Week 1 Fantasy Football Rankings</title>
+            # but different locations on the half ppr and standard rankings pages
+            title = soup.find('title')
+            subtitle = title.text.split(', ')[0]
+            week, pos = subtitle.split()[1:3]
+            if week.isdigit and pos in positions:
+                result['week'] = week
+                result['pos'] = pos
+            elif pos in positions:
+                result['pos'] = pos
+                h1 = soup.find('div', {'id': 'main'}).find('h1')
+                if h1 and 'WEEK' in h1.text:
+                    result['week'] = h1.text.split()[-1]
+            else:
+                for span in soup.find_all('span'):
+                    if 'Week' in span.text:
+                        result['week'] = span.text.split()[-1]
+                for li in soup.find_all('li', {'class': 'active'}):
+                    a = li.find('a')
+                    if a:
+                        result['pos'] = a.text
+
+            # get last updated
+            for div in soup.find_all('div', {'class': 'clearfix'}):
+                    if div.text and ' ' in div.text:
+                        try:
+                            last_updated = div.text.split()[-1]
+                        except:
+                            pass
+
+            results.append(result)
+
+        return results
 
 if __name__ == "__main__":
     pass

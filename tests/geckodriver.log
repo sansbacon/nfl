@@ -1,0 +1,13 @@
+1500763637347	geckodriver	INFO	Listening on 127.0.0.1:60841
+1500763638346	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.WE0KBpJi6RmG
+1500763638347	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1500763638352	geckodriver::marionette	INFO	Connecting to Marionette on localhost:32904
+1500763638831	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1500763639879	Marionette	INFO	Listening on port 32904
+1500763639962	Marionette	WARN	TLS certificate errors will be ignored for this session
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************

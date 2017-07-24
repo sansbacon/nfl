@@ -1,12 +1,48 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import absolute_import, print_function, division
+import logging
 
 from nfl.scrapers.scraper import FootballScraper
+from nfl.scrapers.wayback import WaybackScraper
 
 
 class FantasyProsNFLScraper(FootballScraper):
 
     '''
     '''
+
+    @staticmethod
+    def construct_url(pos, fmt, cat):
+        '''
+        Creates url for rankings or projections pages
+
+        Args:
+            pos: 
+            fmt: 
+            cat: rankings or projections
+
+        Returns:
+            url string
+        '''
+        std_positions = ['qb', 'k', 'dst']
+        ppr_positions = ['rb', 'wr', 'te', 'flex', 'qb-flex']
+        formats = ['std', 'ppr', 'hppr']
+        if fmt not in formats:
+            raise ValueError('invalid format: {}'.format(fmt))
+        if pos in std_positions:
+            url = 'https://www.fantasypros.com/nfl/{cat}/{pos}.php'
+        elif pos in ppr_positions:
+            if fmt == 'std':
+                url = 'https://www.fantasypros.com/nfl/{cat}/{pos}.php'
+            elif fmt == 'ppr':
+                url = 'https://www.fantasypros.com/nfl/{cat}/ppr-{pos}.php'
+            elif fmt == 'hppr':
+                url = 'https://www.fantasypros.com/nfl/{cat}/half-point-ppr-{pos}.php'
+        else:
+            raise ValueError('invalid position: {}'.format(cat=cat, pos=pos))
+
+        return url.format(cat=cat, pos=pos)
 
     def adp(self, fmt):
         '''
@@ -161,6 +197,25 @@ class FantasyProsNFLScraper(FootballScraper):
 
         return self.get(url)
 
+
+class FantasyProsWaybackNFLScraper(WaybackScraper):
+    '''
+    '''
+
+    def weekly_rankings(self, pos, fmt, d):
+        '''
+        Gets weekly rankings page
+
+        Args:
+            pos: 'qb', 'rb', 'wr', 'te', 'flex', 'qb-flex', 'k', 'dst'
+            fmt: 'std', 'ppr', 'hppr'
+            d: datestring
+
+        Returns:
+            content: 2-element tuple with HTML string of page and datestring
+        '''
+        url = FantasyProsNFLScraper.construct_url(pos, fmt, 'rankings')
+        return self.get_wayback(url, d)
 
 if __name__ == "__main__":
     pass

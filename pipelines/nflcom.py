@@ -1,6 +1,7 @@
 # pipelines.py
 # functions to transform nflcom data
 # for insertion into database, use in optimizer, etc.
+
 from __future__ import print_function
 from copy import deepcopy
 import logging

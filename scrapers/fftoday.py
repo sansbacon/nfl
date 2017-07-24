@@ -1,118 +1,68 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
+from __future__ import absolute_import, print_function, division
 import logging
 
-from .scraper import FootballScraper
-
-### THIS NEEDS TO BE BROKEN UP INTO SCRAPER AND PARSER
+from nfl.scrapers.scraper import FootballScraper
 
 
-class FFTodayScraper(FootballScraper):
+class FantasyFootballTodayScraper(FootballScraper):
     '''
-    Obtains html content of NFL fantasy projections page of fantasyfootballtoday.com
-
-    Example:
-        s = FFTodayScraper()
-        content = s.get_projections()
-        content = s.get_projections(positions=['qb','wr'])
+    Scrapes fftoday.com pages
     '''
 
-    # there has to be a better way to do this
-    projections_urls = {
-        'qb': 'http://www.fftoday.com/rankings/playerproj.php?Season=2015&PosID=10&LeagueID=26955',
-        'rb1': 'http://www.fftoday.com/rankings/playerproj.php?Season=2015&PosID=20&LeagueID=26955',
-        'rb2': 'http://www.fftoday.com/rankings/playerproj.php?Season=2015&PosID=20&LeagueID=26955&order_by=FFPts&sort_order=DESC&cur_page=1',
-        'wr1': 'http://www.fftoday.com/rankings/playerproj.php?Season=2015&PosID=30&LeagueID=26955',
-        'wr2': 'http://www.fftoday.com/rankings/playerproj.php?Season=2015&PosID=30&LeagueID=26955&order_by=FFPts&sort_order=DESC&cur_page=1',
-        'te': 'http://www.fftoday.com/rankings/playerproj.php?Season=2015&PosID=40&LeagueID=26955',
-        'dst': 'http://www.fftoday.com/rankings/playerproj.php?Season=2015&PosID=99&LeagueID=26955',
-    }
-
-
-    def _fix_positions(self, positions):
-
-        fixed_positions = []
-
-        for position in positions:
-            position = position.lower()
-
-            if position == 'rb':
-                fixed_positions = fixed_positions + ['rb1', 'rb2']
-
-            elif position == 'wr':
-                fixed_positions = fixed_positions + ['wr1', 'wr2']
-
-            else:
-                fixed_positions.append(position)
-
-        return fixed_positions
-
-    def projections(self, positions=None, fname=None):
+    def position_id(self, pos):
         '''
-        Fetch projections url, try cache, then file, then web
         
         Args:
-            positions (list): 
-        
+            pos: 'qb', 'rb', etc.
+
         Returns:
-            content (dictionary): key is position, value is list
+            int 10, 20, etc.
         '''
-        
-        content = {'qb': [], 'rb': [], 'wr': [], 'te': [], 'dst': []}
+        return {'qb': 10, 'rb': 20, 'wr': 30, 'te': 40, 'dst': 99, 'def': 99, 'k': 80}.get(pos.lower(), None)
 
-        if positions:
-            positions = self._fix_positions(positions)
-            logging.debug(positions)
-            urls = [self.projections_urls[x] for x in positions if x in self.projections_urls.keys()]
-            logging.debug(urls)
+    def weekly_results(self, season, week, pos):
+        '''
+        Scrapes weekly results from fftoday.com
+
+        Args:
+            season: 2016, 2015, etc.
+            week: 1, 2, etc.
+            pos: 'QB', 'RB', etc.
+
+        Returns:
+            HTML string if successful, None otherwise.
+        '''
+        url = 'http://fftoday.com/stats/playerstats.php?'
+        params = {'Season': season, 'GameWeek': week, 'PosID': self.position_id(pos), 'LeagueID': '107644'}
+        return self.get(url, payload=params)
+
+    def weekly_rankings(self, season, week, pos):
+        '''
+        Fetch projections/rankings
+
+        Args:
+            season: 2016, 2015, etc.
+            week: 1, 2, etc.
+            pos: 'QB', 'RB', etc.
+
+        Returns:
+            HTML string if successful, None otherwise.
+        '''
+        if pos.lower() in ['qb', 'rb']:
+            pos_id = 10
+        elif pos.lower() in ['wr', 'te']:
+            pos_id = 30
+        elif pos.lower() in ['def', 'k']:
+            pos_id = 80
         else:
-            urls = self.projections_urls.values()
+            raise ValueError('invalid position: {}'.format(pos))
 
-        for url in urls:
-            page = self.get(url, fname)
-            
-            if page:
-                if 'PosID=10' in url:
-                    content['qb'].append(page)
-                    
-                elif 'PosID=20' in url:
-                    content['rb'].append(page)
-                
-                elif 'PosID=30' in url:
-                    content['wr'].append(page)
-                
-                elif 'PosID=40' in url:
-                    content['te'].append(page)
+        url = 'https://fftoday.com/rankings/playerwkrank.php?'
+        params = {'Season': season, 'GameWeek': week, 'PosID': pos_id}
+        return self.get(url, payload=params)
 
-                elif 'PosID=99' in url:
-                    content['dst'].append(page)
-
-            else:
-                logging.debug('no page to append: %s' % url)
-
-        return content
-                
-    def weekly_fantasy(self, seasons, weeks, positions):
-        '''
-        Scrapes weekly results - url requires season, week, and position_id
-        '''
-        results = {}
-        base_url = 'http://fftoday.com/stats/playerstats.php?Season={}&GameWeek={}&PosID={}&LeagueID=168784'
-
-        for season in seasons:
-            results[season] = {}
-            
-            for week in weeks:
-                results[season][week] = {}
-            
-                for position, position_code in positions.items():
-                    results[season][week][position] = self.get(base_url.format(season, week, position_code))
-                    
-        return results
 
 if __name__ == "__main__":
     pass

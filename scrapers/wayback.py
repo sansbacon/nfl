@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, print_function, division
+
 import logging
 
 from nfl.dates import convert_format, subtract_datestr, today
@@ -32,26 +35,33 @@ class WaybackScraper(FootballScraper):
             content: HTML string
         '''
         content = None
+        ts = None
+
         if not d:
             d = today('db')
         else:
             d = convert_format(d, 'db')
         resp = self.get_json(self.wburl.format(url, d))
+
         if resp:
-            ts = resp['archived_snapshots']['closest']['timestamp'][:8]
-            if max_delta:
-                closest_url = resp['archived_snapshots']['closest']['url']
-                if subtract_datestr(d, ts) <= max_delta:
-                    content = self.get(resp['archived_snapshots']['closest']['url'])
+            try:
+                ts = resp['archived_snapshots']['closest']['timestamp'][:8]
+                if ts and max_delta:
+                    closest_url = resp['archived_snapshots']['closest']['url']
+                    if abs(subtract_datestr(d, ts)) <= max_delta:
+                        content = self.get(resp['archived_snapshots']['closest']['url'])
+                    else:
+                        logging.error('page is too old: {}'.format(ts))
                 else:
-                    logging.error('page is too old: {}'.format(ts))
-            else:
-                closest_url = resp['archived_snapshots']['closest']['url']
-                return self.get(closest_url)
+                    closest_url = resp['archived_snapshots']['closest']['url']
+                    content = self.get(closest_url)
+
+            except Exception as e:
+                logging.exception(e)
         else:
             logging.error('url unavailable on wayback machine')
-        return content, ts
 
+        return content, ts
 
 if __name__ == "__main__":
     pass

@@ -13,39 +13,24 @@ class RotoguruNFLScraper(FootballScraper):
 
     '''
 
-    def dfs_week(self, year, week, sites):
+    def dfs_week(self, season_year, week, site):
         '''
         Gets rotoguru page of one week of dfs results - goes back to 2014
-        '''
-        
-        contents = {}
-        base_url = 'http://rotoguru1.com/cgi-bin/fyday.pl?week={week}&year={year}&game={site}&scsv=1'
 
-        for site in sites:
-            url = base_url.format(week=week, year=year, site=site)                 
-            contents[site] = self.get(url)
-                    
-        return contents
+        Args:
+            season_year: int 2016, 2015, etc.
+            week: int 1-17
+            site: 'dk', 'fd', etc.
 
-    def dfs_weeks(self, years, weeks, sites):
+        Returns:
+            HTML string
         '''
-        Gets rotoguru page of range of weeks of dfs results - goes back to 2014
-        '''
-        
-        contents = {}
-        base_url = 'http://rotoguru1.com/cgi-bin/fyday.pl?week={week}&year={year}&game={site}&scsv=1'
-
-        for site in sites:
-            contents[site] = {}
-            
-            for year in years:
-                contents[site][year] = {}
-                
-                for week in weeks:
-                    url = base_url.format(week=week, year=year, site=site)                 
-                    contents[site][year][week] = self.get(url)
-                    
-        return contents
+        sites = ['dk', 'fd', 'yh']
+        if site not in sites:
+            raise ValueError('invalid site: {}'.format(site))
+        url = 'http://rotoguru1.com/cgi-bin/fyday.pl?'
+        params = {'week': week, 'year': season_year, 'game': site, 'scsv': 1}
+        return self.get(url, payload=params)
 
 if __name__ == "__main__":
     pass

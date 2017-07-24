@@ -16,17 +16,11 @@ class FantasyFootballCalculatorParser():
         players = p.projections(content)
     '''
 
-    def __init__(self, positions = None):
+    def __init__(self):
         '''
-        Args:
-            **kwargs: logger (logging.Logger)
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-        if not positions:
-            self.positions = ['QB', 'RB', 'WR', 'TE']
-        else:
-            self.positions = positions
-
+        self.positions = ['QB', 'RB', 'WR', 'TE']
 
     def _to_overall_pick(self, adp, adp_league_size, my_league_size):
         '''
@@ -45,6 +39,28 @@ class FantasyFootballCalculatorParser():
             adjusted_pick = overall_pick - ((adjusted_round - 1) * my_league_size)
         return {'overall_pick': overall_pick, 'round': adjusted_round, 'pick': adjusted_pick}
 
+    def adp_old(self, content):
+        '''
+        Gets ADP from past seasons
+
+        Args:
+            content: 
+
+        Returns:
+            list of dict
+        '''
+        results = []
+        soup = BeautifulSoup(content, 'lxml')
+        t = soup.find('table', class_=['table', 'adp'])
+        headers = ['rank', 'pick', 'source_player_name', 'pos', 'team_code', 'overall', 'stdev', 'high', 'low', 'n']
+        for tr in t.find_all('tr'):
+            if tr.has_attr('class'):
+                vals = [td.text for td in tr.find_all('td')[:-1]]
+                results.append(dict(zip(headers, vals)))
+            else:
+                pass
+
+        return results
 
     def adp (self, xml, size):
         '''
@@ -72,7 +88,6 @@ class FantasyFootballCalculatorParser():
                         player[self.fix_header(child.tag.lower())] = child.text
                 players.append(player)
         return players
-
 
     def fix_header(self, header):
         '''
@@ -147,56 +162,4 @@ class FantasyFootballCalculatorParser():
 
 if __name__ == '__main__':
     pass
-    #logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    #p = FantasyFootballCalculatorParser()
-    #players = p.adp(my_league_size=16, content=content)
-    #logging.info(pprint.pformat(players))
-    
-    '''
-    import copy
-    import xml.etree.ElementTree as ET
 
-    with open('/home/sansbacon/players.xml', 'r') as infile:                                   
-        tree = ET.parse(infile) 
-        
-    players = [node.attrib for node in tree.iter('player')] 
-    fixed = []
-    positions_wanted = ['QB', 'RB', 'WR', 'TE']
-
-    for player in players:
-        
-        p = copy.deepcopy(player)
-        
-        # remove fields
-        p.pop('twitter_username', None)
-        p.pop('status', None)
-            
-        # convert birthdate from epoch
-        try:
-            p['birthdate'] = datetime.datetime.fromtimestamp(float(p.get('birthdate'))).strftime('%Y-%m-%d')
-        except:
-            p['birthdate'] = None
-
-        # fix ffcalc_id
-        try:
-            ffcid = p.get('id')
-            p['ffcalc_id'] = ffcid
-        except:
-            pass
-        finally:
-            p.pop('id', None)
-
-        # fix nflcom_id
-        try:
-            nflid = p.get('nfl_id').split('/')[1]
-            p['nflcom_id'] = nflid
-        except:
-            pass
-        finally:
-            p.pop('nfl_id', None)
-
-        if p.get('position') in positions_wanted:
-            fixed.append(p)
-        
-    print random.choice(fixed)
-    '''

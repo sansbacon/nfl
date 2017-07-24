@@ -1,6 +1,8 @@
 # dates.py
 # common date routines
 
+from past.builtins import basestring
+
 import datetime
 import logging
 import re
@@ -27,7 +29,6 @@ def convert_format(d, site):
             return None
     else:
         return None
-
 
 def date_list(d1, d2):
     '''
@@ -57,7 +58,6 @@ def date_list(d1, d2):
     season = d1 - d2
     return [d1 - datetime.timedelta(days=x) for x in range(0, season.days+1)]
 
-
 def datetostr(d, site):
     '''
     Converts datetime object to formats used by different sites
@@ -70,7 +70,6 @@ def datetostr(d, site):
         datestr in specified format
     '''
     return datetime.datetime.strftime(d, site_format(site))
-
 
 def format_type(datestr):
     '''
@@ -102,7 +101,6 @@ def format_type(datestr):
     else:
         return None
 
-
 def site_format(site):
     '''
     Stores date formats used by different sites
@@ -115,7 +113,6 @@ def site_format(site):
         'db': '%Y%m%d'
     }
     return fmt.get(site, None)
-
 
 def strtodate(d):
     '''
@@ -140,7 +137,6 @@ def subtract_datestr(d1, d2):
         delta = d1 - d2
     return delta.days
 
-
 def today(fmt='nfl'):
     '''
     Datestring for today's date
@@ -155,7 +151,6 @@ def today(fmt='nfl'):
     if not fmt:
         raise ValueError('invalid date format')
     return datetime.datetime.strftime(datetime.datetime.today(), fmt)
-
 
 def yesterday(fmt='nfl'):
     '''

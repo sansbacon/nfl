@@ -8,7 +8,7 @@ from nfl.dates import convert_format
 from nfl.utility import merge
 
 
-class NFLComParser:
+class NFLComParser(object):
     '''
     Used to parse NFL.com GameCenter pages, which are json documents with game and play-by-play stats
     '''
