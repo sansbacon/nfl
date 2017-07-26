@@ -8,7 +8,7 @@ import requests
 
 class FootballScraper(object):
 
-    def __init__(self, headers=None, cookies=None, cache_name=None, delay=1, expire_hours=168, as_string=False):
+    def __init__(self, headers=None, cookies=None, cache_name=None, delay=1, expire_hours=168, as_string=False, proxies=None):
         '''
         Base class for common scraping tasks
         Args:
@@ -18,6 +18,7 @@ class FootballScraper(object):
             delay: int (be polite!!!)
             expire_hours: int - default 168
             as_string: get string rather than parsed json
+            proxies: dict of proxies
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
@@ -34,6 +35,8 @@ class FootballScraper(object):
 
         _s = requests.Session()
         _s.cookies = cookies
+        if proxies:
+            _s.proxies = proxies
 
         if headers:
             _s.headers.update(headers)

@@ -2,41 +2,40 @@
 
 from __future__ import absolute_import, print_function, division
 
-from nfl.scrapers.scraper import FootballScraper
+from nfl.scrapers.browser import BrowserScraper
+
+class PFFScraper(BrowserScraper):
 
 
-class PFFScraper(FootballScraper):
-
-
-    def __init__(self, headers=None, cookies=None, cache_name='fo-api', delay=1, expire_hours=168, as_string=False):
-        '''
-        Scrape profootballfocus
-
-        Args:
-            headers: dict of headers
-            cookies: cookiejar object
-            cache_name: should be full path
-            delay: int (be polite!!!)
-            expire_hours: int - default 168
-            as_string: get string rather than parsed json
-        '''
-        if not cookies:
-            try:
-                import browser_cookie3
-                cookies = browser_cookie3.firefox()
-            except:
-                try:
-                    import browsercookie
-                    cookies = browsercookie.firefox()
-                except:
-                    pass
-
-        if not headers:
-            headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-                       'Referer': 'http://www.footballoutsiders.com/premium/index.php', 'DNT': '1'}
-
-        FootballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name,
-                                 delay=delay, expire_hours=expire_hours, as_string=as_string)
+    #def __init__(self, headers=None, cookies=None, cache_name='fo-api', delay=1, expire_hours=168, as_string=False):
+    #    '''
+    #    Scrape profootballfocus
+    #
+    #    Args:
+    #        headers: dict of headers
+    #        cookies: cookiejar object
+    #        cache_name: should be full path
+    #        delay: int (be polite!!!)
+    #        expire_hours: int - default 168
+    #        as_string: get string rather than parsed json
+    #    '''
+    #    if not cookies:
+    #        try:
+    #            import browser_cookie3
+    #            cookies = browser_cookie3.firefox()
+    #        except:
+    #            try:
+    #                import browsercookie
+    #                cookies = browsercookie.firefox()
+    #            except:
+    #               pass
+    #
+    #    if not headers:
+    #        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
+    #                   'Referer': 'http://www.footballoutsiders.com/premium/index.php', 'DNT': '1'}
+    #
+    #    FootballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name,
+    #                             delay=delay, expire_hours=expire_hours, as_string=as_string)
 
     def depth_charts(self, team_id):
         '''

@@ -40,7 +40,7 @@ class FantasyLabsNFLScraper(FootballScraper):
             
         '''
         url = 'http://www.fantasylabs.com/api/sportevents/1/{0}'.format(game_date)
-        return self.get(url)
+        return self.get_json(url)
 
     def model(self, model_day, model_name='default'):
         '''
@@ -57,7 +57,7 @@ class FantasyLabsNFLScraper(FootballScraper):
         if not url:
             logging.error('could not find url for {0} model'.format(model_name))
             url = self.model_urls.get('default')
-        return self.get(url.format(model_date=model_day))
+        return self.get_json(url.format(model_date=model_day))
 
 if __name__ == "__main__":
     pass

@@ -11,3 +11,311 @@ A coding exception was thrown and uncaught in a Task.
 Full message: TypeError: NetworkError when attempting to fetch resource.
 Full stack: 
 *************************
+1501011221250	geckodriver	INFO	Listening on 127.0.0.1:51002
+1501011222220	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.EIrZieSYA0qg
+1501011222222	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011222227	geckodriver::marionette	INFO	Connecting to Marionette on localhost:35438
+1501011222725	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011223842	Marionette	INFO	Listening on port 35438
+1501011223937	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011226007	geckodriver	INFO	Listening on 127.0.0.1:53415
+1501011227007	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.V9b1RAh9hlez
+1501011227009	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011227014	geckodriver::marionette	INFO	Connecting to Marionette on localhost:33678
+1501011227502	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011228558	Marionette	INFO	Listening on port 33678
+1501011228627	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011228784	geckodriver	INFO	Listening on 127.0.0.1:60027
+1501011229787	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.upAKRnl4Bl4i
+1501011229788	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011229793	geckodriver::marionette	INFO	Connecting to Marionette on localhost:46825
+1501011230283	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011231342	Marionette	INFO	Listening on port 46825
+1501011231413	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011231608	geckodriver	INFO	Listening on 127.0.0.1:32989
+1501011232610	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.jItnYOhTvdMb
+1501011232612	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011232618	geckodriver::marionette	INFO	Connecting to Marionette on localhost:43326
+1501011233113	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011234188	Marionette	INFO	Listening on port 43326
+1501011234233	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011234415	geckodriver	INFO	Listening on 127.0.0.1:60422
+1501011235415	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.QWwp9SymB0CO
+1501011235418	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011235423	geckodriver::marionette	INFO	Connecting to Marionette on localhost:37728
+1501011235917	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011236989	Marionette	INFO	Listening on port 37728
+1501011237044	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011237202	geckodriver	INFO	Listening on 127.0.0.1:59035
+1501011238203	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.ojFcbZ2Ep1Vv
+1501011238205	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011238210	geckodriver::marionette	INFO	Connecting to Marionette on localhost:35315
+1501011238705	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011239753	Marionette	INFO	Listening on port 35315
+1501011239833	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011240009	geckodriver	INFO	Listening on 127.0.0.1:52104
+1501011241009	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.uJhkQ1K6swhk
+1501011241011	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011241017	geckodriver::marionette	INFO	Connecting to Marionette on localhost:33482
+1501011241514	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011242538	Marionette	INFO	Listening on port 33482
+1501011242635	Marionette	WARN	TLS certificate errors will be ignored for this session
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+1501011873729	geckodriver	INFO	Listening on 127.0.0.1:41489
+1501011874730	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.03GqtfoaVWnj
+1501011874732	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011874738	geckodriver::marionette	INFO	Connecting to Marionette on localhost:39881
+1501011875230	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011876305	Marionette	INFO	Listening on port 39881
+1501011876361	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011876527	geckodriver	INFO	Listening on 127.0.0.1:44838
+1501011877530	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.zKh2La6zFELf
+1501011877532	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011877537	geckodriver::marionette	INFO	Connecting to Marionette on localhost:44058
+1501011878021	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011879115	Marionette	INFO	Listening on port 44058
+1501011879156	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011879333	geckodriver	INFO	Listening on 127.0.0.1:40034
+1501011880335	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.WQlKoIbGLlV8
+1501011880337	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011880342	geckodriver::marionette	INFO	Connecting to Marionette on localhost:35420
+1501011880835	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011881889	Marionette	INFO	Listening on port 35420
+1501011881957	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011882154	geckodriver	INFO	Listening on 127.0.0.1:59315
+1501011883148	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.2DmIL5WsXGPu
+1501011883150	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011883155	geckodriver::marionette	INFO	Connecting to Marionette on localhost:35405
+1501011883632	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011884713	Marionette	INFO	Listening on port 35405
+1501011884770	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011884956	geckodriver	INFO	Listening on 127.0.0.1:33744
+1501011885950	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.Jfw26BUgPJXN
+1501011885952	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011885958	geckodriver::marionette	INFO	Connecting to Marionette on localhost:43779
+1501011886464	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011887497	Marionette	INFO	Listening on port 43779
+1501011887576	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011887756	geckodriver	INFO	Listening on 127.0.0.1:51471
+1501011888751	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.tN2sbQVJj6Wi
+1501011888752	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011888754	geckodriver::marionette	INFO	Connecting to Marionette on localhost:42427
+1501011889231	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011890271	Marionette	INFO	Listening on port 42427
+1501011890368	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011890537	geckodriver	INFO	Listening on 127.0.0.1:49593
+1501011891538	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.v7NVAS1IJkPZ
+1501011891540	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011891545	geckodriver::marionette	INFO	Connecting to Marionette on localhost:44049
+1501011892039	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011893115	Marionette	INFO	Listening on port 44049
+1501011893160	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011948170	geckodriver	INFO	Listening on 127.0.0.1:58347
+1501011949174	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.TiOOP8hQUm6n
+1501011949179	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011949187	geckodriver::marionette	INFO	Connecting to Marionette on localhost:37779
+1501011949714	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011950817	Marionette	INFO	Listening on port 37779
+1501011950903	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011951071	geckodriver	INFO	Listening on 127.0.0.1:48714
+1501011952073	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.wuA0bk7893sP
+1501011952075	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011952080	geckodriver::marionette	INFO	Connecting to Marionette on localhost:46240
+1501011952560	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011953645	Marionette	INFO	Listening on port 46240
+1501011953711	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011953893	geckodriver	INFO	Listening on 127.0.0.1:49966
+1501011954897	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.E3uoUGzNKJRu
+1501011954901	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011954906	geckodriver::marionette	INFO	Connecting to Marionette on localhost:45421
+1501011955392	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011956451	Marionette	INFO	Listening on port 45421
+1501011956532	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011956725	geckodriver	INFO	Listening on 127.0.0.1:38158
+
+(firefox:13987): Gdk-WARNING **: firefox: Fatal IO error 11 (Resource temporarily unavailable) on X server :1061.
+
+
+(firefox:13889): Gdk-WARNING **: firefox: Fatal IO error 11 (Resource temporarily unavailable) on X server :1057.
+
+1501011994861	geckodriver	INFO	Listening on 127.0.0.1:57368
+1501011995863	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.5Aa4xC7uWwEh
+1501011995865	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011995871	geckodriver::marionette	INFO	Connecting to Marionette on localhost:35633
+1501011996380	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501011997421	Marionette	INFO	Listening on port 35633
+1501011997486	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501011997685	geckodriver	INFO	Listening on 127.0.0.1:59971
+1501011998680	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.uNPfhEdXa63S
+1501011998682	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501011998688	geckodriver::marionette	INFO	Connecting to Marionette on localhost:35873
+1501011999186	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501012000269	Marionette	INFO	Listening on port 35873
+1501012000311	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501012000476	geckodriver	INFO	Listening on 127.0.0.1:51635
+1501012001477	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.3eup51vLGSMc
+1501012001479	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501012001485	geckodriver::marionette	INFO	Connecting to Marionette on localhost:39455
+1501012001961	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501012003017	Marionette	INFO	Listening on port 39455
+1501012003098	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501012003283	geckodriver	INFO	Listening on 127.0.0.1:37095
+1501012004283	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.i8uRnWavjH9n
+1501012004284	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501012004290	geckodriver::marionette	INFO	Connecting to Marionette on localhost:37692
+1501012004779	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501012005843	Marionette	INFO	Listening on port 37692
+1501012005905	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501012006063	geckodriver	INFO	Listening on 127.0.0.1:54999
+1501012007066	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.Af9GZp6FnnWR
+1501012007068	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501012007074	geckodriver::marionette	INFO	Connecting to Marionette on localhost:35345
+1501012007572	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501012008645	Marionette	INFO	Listening on port 35345
+1501012008688	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501012008854	geckodriver	INFO	Listening on 127.0.0.1:54424
+1501012009855	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.xqZwg1oNNq6y
+1501012009857	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501012009862	geckodriver::marionette	INFO	Connecting to Marionette on localhost:40717
+1501012010345	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501012011399	Marionette	INFO	Listening on port 40717
+1501012011486	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501012011661	geckodriver	INFO	Listening on 127.0.0.1:58306
+1501012012656	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.KjWvitbXkBTF
+1501012012656	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501012012658	geckodriver::marionette	INFO	Connecting to Marionette on localhost:39791
+1501012013154	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501012014215	Marionette	INFO	Listening on port 39791
+1501012014286	Marionette	WARN	TLS certificate errors will be ignored for this session
+1501012044718	geckodriver	INFO	Listening on 127.0.0.1:46642
+1501012045719	mozprofile::profile	INFO	Using profile path /tmp/rust_mozprofile.EKmVXn9qd3Qi
+1501012045721	geckodriver::marionette	INFO	Starting browser /usr/bin/firefox
+1501012045727	geckodriver::marionette	INFO	Connecting to Marionette on localhost:36333
+1501012046213	Marionette	WARN	Deprecated preference marionette.defaultPrefs.enabled detected, please use marionette.enabled
+1501012047285	Marionette	INFO	Listening on port 36333
+1501012047345	Marionette	WARN	TLS certificate errors will be ignored for this session
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************

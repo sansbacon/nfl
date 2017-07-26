@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import, print_function, division
 
+import json
 import logging
 
 from pyvirtualdisplay import Display
@@ -28,6 +29,7 @@ class BrowserScraper():
             self.browser = webdriver.Firefox(capabilities=caps, firefox_profile=webdriver.FirefoxProfile(profile))
         else:
             self.browser = webdriver.Firefox(capabilities=caps)
+        self.urls = []
 
     def get(self, url):
         '''
@@ -40,8 +42,27 @@ class BrowserScraper():
             string of HTML
         '''
         self.browser.get(url)
+        self.urls.append(url)
         elem = self.browser.find_element_by_xpath("//*")
         return elem.get_attribute("outerHTML")
+
+    def get_json(self, url):
+        '''
+        
+        Args:
+            url: 
+
+        Returns:
+            dict parsed json
+        '''
+        content = self.get(url)
+        try:
+            result = json.loads(content)
+        except:
+            logging.error(content)
+            result = None
+        finally:
+            return result
 
 
 if __name__ == "__main__":
