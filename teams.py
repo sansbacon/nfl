@@ -288,5 +288,14 @@ def to_nfl(team_code, site):
     else:
         raise ValueError('invalid site')
 
+def espn_teams():
+    '''
+    Get all of the espn.com team codes ('ari', 'buf', etc.
+    
+    Returns:
+        list
+    '''
+    return [t for t in _to_nfl['espn'].keys() if t != 'stl']
+
 if __name__ == '__main__':
     pass

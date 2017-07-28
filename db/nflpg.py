@@ -225,7 +225,7 @@ class NFLPostgres(object):
                 cursor.execute(sql)
                 return cursor.fetchall()
             except Exception as e:
-                logging.exception(e.message)
+                logging.exception(e)
                 return None
 
 

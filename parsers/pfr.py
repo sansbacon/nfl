@@ -73,10 +73,21 @@ class PfrNFLParser():
                 p[tds[0]['data-stat']] = tds[0].text
                 p[tds[1]['data-stat']] = tds[1].text
 
-                # <td class="left " data-append-csv="RamcRy00" data-stat="player" csk="Ramczyk, Ryan"><a href="/players/R/RamcRy00.htm">Ryan Ramczyk</a></td>
-                p[tds[2]['data-stat']] = tds[2]['csk']
-                p['source_player_id'] = tds[2]['data-append-csv']
+                try:
+                    # <td class="left " data-append-csv="RamcRy00" data-stat="player" csk="Ramczyk, Ryan"><a href="/players/R/RamcRy00.htm">Ryan Ramczyk</a></td>
+                    p[tds[2]['data-stat']] = tds[2]['csk']
+                    p['source_player_id'] = tds[2]['data-append-csv']
+                except:
+                    try:
+                        # /players/C/CarrDa00.htm
+                        a = tr.find('a', {'href': re.compile(r'/players/')})
+                        p['source_player_id'] = a['href'].split('.htm')[0].split('/')[-1]
+                    except:
+                        pass
+            if p.get('source_player_id'):
                 players.append(p)
+            else:
+                logging.error('missing id: {}'.format(p))
 
         return players
 
@@ -103,6 +114,61 @@ class PfrNFLParser():
                     except:
                         pass
                 players.append(player)
+
+        return players
+
+    def players(self, content):
+        '''
+        Parses page of players with same last initial (A, B, C, etc.) 
+
+        Args:
+            content: HTML string
+
+        Returns:
+            list of dict
+        '''
+        results = []
+        soup = BeautifulSoup(content, 'lxml')
+        for p in soup.select('div#div_players p'):
+            try:
+                player = {'source': 'pfr'}
+                name, posyears = p.text.split('(')
+                pos, years = posyears.split(')')
+                player['source_player_name'] = name.strip()
+                player['source_player_position'] = pos.strip()
+                player['source_player_years'] = years.strip()
+                a = p.find('a')
+                if a:
+                    id = a['href'].split('/')[-1].split('.htm')[0]
+                    player['source_player_id'] = id.strip()
+                results.append(player)
+            except:
+                pass
+
+        return results
+
+    def player_fantasy_season(self, content, season_year=None):
+        '''
+        Parses player fantasy page for season
+        
+        Args:
+            content: HTML string
+            season_year: 2016, etc.
+
+        Returns:
+            list of dict
+        '''
+        players = []
+        soup = BeautifulSoup(content, 'lxml')
+
+        try:
+            for tr in soup.find('table', {'id': 'player_fantasy'}).find('tbody').find_all('tr'):
+                player = {td['data-stat']: td.text for td in tr.find_all('td')}
+                if season_year:
+                    player['season_year'] = season_year
+                players.append(player)
+        except Exception as e:
+            logging.exception(e)
 
         return players
 

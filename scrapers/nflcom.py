@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, print_function, division
+import logging
+from string import ascii_uppercase
 
 from nfl.scrapers.scraper import FootballScraper
 
@@ -77,6 +79,39 @@ class NFLComScraper(FootballScraper):
           'Submit': 'Go'
         }
         return self.get(url, payload=params)
+
+    def player_profile(self, profile_id):
+        '''
+        Gets nfl.com player profile
+        
+        Args:
+            profile_id: int 25311, etc.
+
+        Returns:
+            HTML string
+        '''
+        url = 'http://www.nfl.com/player/zacrobinson/{}/profile'
+        return self.get(url.format(profile_id))
+
+    def players(self, last_initial):
+        '''
+        
+        Args:
+            last_initial: A, B, C, etc.
+
+        Returns:
+            list of dict
+        '''
+
+        try:
+            last_initial = last_initial.upper()
+            if last_initial in ascii_uppercase:
+                url = 'http://www.nfl.com/players/search?category=lastName&filter={}&playerType=current'
+                return self.get(url.format(last_initial))
+            else:
+                raise ValueError('invalid last_initial')
+        except Exception as e:
+            logging.exception(e)
 
     def schedule_week(self, season, week):
         '''

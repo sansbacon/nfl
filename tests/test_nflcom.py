@@ -28,6 +28,11 @@ class Nfldotcom_test(unittest.TestCase):
         return random.choice(vals)
 
     @property
+    def profile_id(self):
+        vals = ['2553568', '2506122', '2495700', '2555341']
+        return random.choice(vals)
+
+    @property
     def season(self):
         return random.choice(range(2009, 2017))
 
@@ -53,6 +58,11 @@ class Nfldotcom_test(unittest.TestCase):
 
     def test_ol(self):
         self.assertIsNotNone(self.s.ol(self.season))
+
+    def test_player_page(self):
+        content = self.s.player_profile(self.profile_id)
+        self.assertIsNotNone(content)
+        self.assertIs(self.p.player_page(content, self.profile_id))
 
     def test_schedule_week(self):
         # season, week):

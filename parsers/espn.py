@@ -9,13 +9,10 @@ from nfl.teams import nickname_to_code
 
 class ESPNNFLParser(object):
 
-    def __init__(self, **kwargs):
-
-        if 'logger' in kwargs:
-            self.logger = kwargs['logger']
-        else:
-            self.logger = logging.getLogger(__name__) \
-                .addHandler(logging.NullHandler())
+    def __init__(self):
+        '''
+        '''
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
 
     def _parse_projections_row(self, row):
         '''
@@ -55,7 +52,7 @@ class ESPNNFLParser(object):
                 player['position'] = re.sub(r'\s+', '', player_position)
 
             except ValueError:
-                self.logger.exception("pos_tm_string error")
+                logging.exception("pos_tm_string error")
 
         # now get the projected points
         fantasy_points = row.find("td", {"class": "appliedPoints"}).string
@@ -65,6 +62,29 @@ class ESPNNFLParser(object):
             player['fantasy_points'] = fantasy_points
 
         return player
+
+    def nfl_team_roster(self, content):
+        '''
+        Parses team roster page into list of player dict
+        
+        Args:
+            content: HTML of espn nfl team roster page
+
+        Returns:
+            list of dict
+        '''
+        players = []
+        soup = BeautifulSoup(content, 'lxml')
+        for tr in soup.find_all('tr'):
+            a = tr.find('a', {'href': re.compile(r'/nfl/player/_/id/')})
+            if a:
+                player = {'source': 'espn'}
+                tds = tr.find_all('td')
+                player['source_player_position'] = tds[2].text
+                player['source_player_name'] = a.text
+                player['source_player_id'] = a['href'].split('/')[-2]
+                players.append(player)
+        return players
 
     def projections(self, content):
         '''
@@ -170,7 +190,7 @@ class ESPNNFLParser(object):
                 site_player_id, site_player_stub = url.split('/')[7:9]
                 site_player_name = link.split('>')[1].split('<')[0]
 
-        print season, week, pos, label, sublabel, site_player_id, site_player_stub, site_player_name
+        #print season, week, pos, label, sublabel, site_player_id, site_player_stub, site_player_name
 
 
     def team_roster(self, team_string, content):
@@ -251,6 +271,3 @@ class ESPNNFLParser(object):
 
 if __name__ == "__main__":
     pass
-    #p = ESPNNFLParser()
-    #with open('/home/sansbacon/workspace/nfl/parsers/clubhouse.html', 'r') as infile:
-    #    pprint.pprint(p.team_roster('Fred_7', infile.read()))

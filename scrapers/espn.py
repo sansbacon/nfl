@@ -2,6 +2,9 @@
 
 from __future__ import absolute_import, print_function, division
 
+import logging
+import time
+
 from nfl.scrapers.scraper import FootballScraper
 
 
@@ -10,31 +13,7 @@ class ESPNNFLScraper(FootballScraper):
 
     '''
 
-    def __init__(self, headers=None, cookies=None, cache_name='espn-scraper', delay=1, expire_hours=1, as_string=False):
-        '''
-        Scrape espn
-
-        Args:
-            headers: dict of headers
-            cookies: cookiejar object
-            cache_name: should be full path
-            delay: int (be polite!!!)
-            expire_hours: int - default 168
-            as_string: get string rather than parsed json
-        '''
-        if not cookies:
-            try:
-                import browser_cookie3
-                cookies = browser_cookie3.firefox()
-            except:
-                try:
-                    import browsercookie
-                    cookies = browsercookie.firefox()
-                except:
-                    pass
-        FootballScraper.__init__(self, headers, cookies, cache_name, delay, expire_hours, as_string)
-
-    def league_roster(self, season, league_id, team_id):
+    def fantasy_league_roster(self, season, league_id, team_id):
         '''
         Gets roster for team in ESPN fantasy league
         '''
@@ -44,7 +23,20 @@ class ESPNNFLScraper(FootballScraper):
                       'seasonId': season}
         return self.get(url, payload=params)
 
-    def projections(self, offset=0):
+    def nfl_team_roster(self, team_code):
+        '''
+        Gets list of NFL players from ESPN.com
+
+        Args:
+            team_code: str 'DEN', 'BUF', etc.
+
+        Returns:
+            HTML string
+        '''
+        url = 'http://www.espn.com/nfl/team/roster/_/name/{}'
+        return self.get(url=url.format(team_code), encoding='latin1')
+
+    def fantasy_projections(self, offset=0):
         '''
         Gets ESPN fantasy football projections
         '''
@@ -52,7 +44,7 @@ class ESPNNFLScraper(FootballScraper):
         params = {'startIndex': offset}
         return self.get(url, payload=params)
 
-    def waiver_wire(self, league_id, team_id):
+    def fantasy_waiver_wire(self, league_id, team_id):
         '''
         Gets waiver wire from ESPN fantasy league
         league_id=302946, team_id=12

@@ -4,6 +4,7 @@ PfrNFLScraper
 '''
 
 import logging
+from string import ascii_uppercase
 
 from nfl.scrapers.scraper import FootballScraper
 
@@ -88,6 +89,40 @@ class PfrNFLScraper(FootballScraper):
         params = self._merge_params({'year_min': season_year, 'year_max': season_year,
                                      'week_num_min': week, 'week_num_max': week, 'offset': offset})
         return self.get(self.pgl_finder_url, payload=params)
+
+    def player_fantasy_season(self, season_year, player_id):
+        '''
+        Gets fantasy page for individual player
+        
+        Args:
+            player_id: 
+
+        Returns:
+            HTML string
+        '''
+        # https://www.pro-football-reference.com/players/{R}/{RyanMa00}/fantasy/{2016}
+        url = 'https://www.pro-football-reference.com/players/{}/{}/fantasy/{}'
+        return self.get(url.format(player_id[0], player_id, season_year))
+
+    def players(self, last_initial):
+        '''
+        Gets player page for last initial, such as A, B, C
+        
+        Args:
+            last_initial: str A, B, C
+
+        Returns:
+            HTML string
+        '''
+        try:
+            last_initial = last_initial.upper()
+            if last_initial in ascii_uppercase:
+                url = 'https://www.pro-football-reference.com/players/{}/'
+                return self.get(url.format(last_initial))
+            else:
+                raise ValueError('invalid last_initial')
+        except Exception as e:
+            logging.exception(e)
 
     def team_plays_query(self, season_start, season_end, offset):
         '''

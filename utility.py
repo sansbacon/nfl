@@ -24,6 +24,16 @@ def csv_to_dict(fn):
         for row in csv.DictReader(infile, skipinitialspace=True, delimiter=','):
             yield {k: v for k, v in row.items()}
 
+def digits(s):
+    '''
+    Removes non-numeric characters from a string
+    Args:
+        s: 
+
+    Returns:
+        str
+    '''
+    return ''.join(ch for ch in s if ch.isdigit())
 
 def flatten(d):
         '''

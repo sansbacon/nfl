@@ -3,9 +3,8 @@ names.py
 '''
 
 import logging
-import re
 
-from fuzzywuzzy import fuzz, process
+from fuzzywuzzy import process
 from nameparser import HumanName
 
 
@@ -18,8 +17,15 @@ def first_last(name):
     
     '''
     hn = HumanName(name)
-    return '{0} {1}'.format(hn.first, hn.last) 
+    return '{0} {1}'.format(hn.first, hn.last)
 
+def first_last_pair(name):
+    '''
+    Returns name in First Last pair
+
+    '''
+    hn = HumanName(name)
+    return [hn.first, hn.last]
 
 def last_first(name):
     '''
