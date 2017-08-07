@@ -37,13 +37,6 @@ class PfrNFLParser():
 
         return teams
 
-    def _season_from_path(self, path):
-        '''Extracts 4-digit season from path, each html file begins with season'''
-
-        fn = os.path.split(path)[-1]
-        return fn[0:4]
-
-
     def draft(self, content, season_year):
         '''
         Parses page of draft results for single season
@@ -91,7 +84,7 @@ class PfrNFLParser():
 
         return players
 
-    def fantasy_week(self, content):
+    def fantasy_week(self, content, season_year=None):
         '''
         Takes HTML of 100 rows of weekly results, returns list of players
 
@@ -107,10 +100,15 @@ class PfrNFLParser():
         if tbl:
             for tr in tbl.find('tbody').findAll('tr', class_=None):
                 player = {td['data-stat']: td.text for td in tr.find_all('td')}
+                if season_year:
+                    player['season_year'] = season_year
+
                 a = tr.find('a', {'href': re.compile(r'/players/')})
                 if a:
                     try:
-                        player['source_player_id'] = a['href'].split('/')[-1].split('.')[:-1]
+                        pid = a['href'].split('/')[-1].split('.')[:-1]
+                        pid = pid[0]
+                        player['source_player_id'] = pid
                     except:
                         pass
                 players.append(player)
@@ -172,6 +170,40 @@ class PfrNFLParser():
 
         return players
 
+    def player_page(self, content, pid):
+        '''
+        Parses player page 
+
+        Args:
+            content: HTML string
+
+        Returns:
+            dict: source, source_player_id, source_player_name, 
+                  source_player_position, source_player_dob
+        '''
+        player = {'source': 'pfr', 'source_player_id': pid}
+        soup = BeautifulSoup(content, 'lxml')
+
+        #source_player_name
+        h1 = soup.find('h1', {'itemprop': 'name'})
+        if h1:
+            player['source_player_name'] = h1.text
+
+        #source_player_position
+        try:
+            meta = soup.find('meta', {'name': 'Description'})
+            metac = meta.attrs.get('content')
+            player['source_player_position'] = metac.split(',')[0].split(': ')[-1]
+        except:
+            pass
+
+        # source_player_dob
+        span = soup.find('span', {'id': 'necro-birth'})
+        if span:
+            player['source_player_dob'] = span.attrs.get('data-birth')
+
+        return player
+
     def team_plays(self, content):
         '''
         Takes HTML of 100 rows of team plays, returns list of team_plays
@@ -198,6 +230,58 @@ class PfrNFLParser():
 
         return teams
 
+    def team_defense_weekly(self, content):
+        '''
+        Team defense stats for single week
+
+        Args:
+            content: HTML string
+
+        Returns:
+            teams: list of dict
+        '''
+        teams = []
+        soup = BeautifulSoup(content, 'lxml')
+        defense = soup.find('table', {'id': 'results'}).find('tbody')
+        for tr in defense.findAll('tr'):
+            teams.append({td['data-stat']: td.text for td in tr.find_all('td')})
+        return teams
+
+    def team_defense_yearly(self, content, season_year=None):
+        '''
+        Team defense stats for total season
+
+        Args:
+            content: HTML string
+
+        Returns:
+            teams: list of dict
+        '''
+        teams = []
+        soup = BeautifulSoup(content, 'lxml')
+        defense = soup.find('table', {'id': 'team_stats'}).find('tbody')
+        for tr in defense.findAll('tr'):
+            team = {td['data-stat']: td.text for td in tr.find_all('td')}
+            if season_year:
+                team['season_year'] = season_year
+            teams.append(team)
+        return teams
+
+    def team_offense_weekly(self, content):
+        '''
+        
+        Args:
+            content: HTML string
+
+        Returns:
+            teams: list of dict
+        '''
+        teams = []
+        soup = BeautifulSoup(content, 'lxml')
+        offense = soup.find('table', {'id': 'results'}).find('tbody')
+        for tr in offense.findAll('tr'):
+            teams.append({td['data-stat']: td.text for td in tr.find_all('td')})
+        return teams
 
     def team_season(self, content, season):
         '''
@@ -226,121 +310,7 @@ class PfrNFLParser():
         
             k = team['team'] + "_" + season
             teams[k] = team
-
-        """
-        passing = soup.find('table', {'id': 'passing'}).find('tbody')
-        for tr in passing.findAll('tr'):
-            team = {'season': season}
-        
-            for td in tr.findAll('td'):
-                val = td.text
-                
-                # fix team name - has newline and extra space
-                if '\n' in val:
-                    val = ' '.join(val.split('\n'))
-                    val = ' '.join(val.split())
-                    
-                # column headers on page are duplicates (yds, td, etc.)    
-                # data-stat attribute has accurate column name (rush_yds)
-                team[td['data-stat']] = val
-
-            k = team['team'] + "_" + season
-            teams[k] = {**teams[k], **team}
-
-        rushing = soup.find('table', {'id': 'rushing'}).find('tbody')
-
-        for tr in rushing.findAll('tr'):
-            team = {'season': season}
-        
-            for td in tr.findAll('td'):
-                val = td.text
-                
-                # fix team name - has newline and extra space
-                if '\n' in val:
-                    val = ' '.join(val.split('\n'))
-                    val = ' '.join(val.split())
-                    
-                # column headers on page are duplicates (yds, td, etc.)    
-                # data-stat attribute has accurate column name (rush_yds)
-                team[td['data-stat']] = val
-
-            k = team['team'] + "_" + season
-            teams[k] = {**teams[k], **team}
-            
         return teams
-        """
-
-    def parse_season(self, content, season):
-        soup = BeautifulSoup(content)
-
-        players = []
-
-        headers = [
-            'rk', 'player', 'team', 'age', 'g', 'gs', 'pass_cmp', 'pass_att', 'pass_yds', 'pass_td', 'pass_int', 'rush_att',
-            'rush_yds', 'rush_yds_per_att',
-            'rush_td', 'targets', 'rec', 'rec_yds', 'rec_yds_per_rec', 'rec_td', 'fantasy_pos', 'fantasy_points',
-            'draftkings_points', 'fanduel_points', 'vbd', 'fantasy_rank_pos', 'fantasy_rank_overall'
-        ]
-
-        t = soup.find('table', {'id': 'fantasy'})
-        body = t.find('tbody')
-
-        for row in body.findAll('tr'):
-            values = [cell.text for cell in row.findAll('td')]
-
-            # filter out header rows
-            if 'Receiving' in values or 'Y/A' in values:
-                continue
-
-            player = (dict(zip(headers, values)))
-            player['Season'] = season
-
-            # fix *+ in name
-            # add playerid
-            link = row.find('a', href=re.compile(r'/players/'))
-
-            if link:
-                player['Player'] = link.text
-                pid = link['href'].split('/')[-1]
-                player['Id'] = pid[:-4]
-
-            else:
-                name = player.get('Player')
-                if name:
-                    name.replace('*', '')
-                    name.replace('*', '+')
-                    player['Player'] = name
-
-            players.append(player)
-
-        return players
 
 if __name__ == "__main__":
-    import logging
-    import random
-    import json
-    from nfl.scrapers.pfr import PfrNFLScraper
-
-    logging.basicConfig(level=logging.INFO)
-    s = PfrNFLScraper()
-    p = PfrNFLParser()
-    players = []
-    season_year = 2015
-    for week in range(1, 2):
-        for offset in [0, 100]:#, 200, 300]:
-            try:
-                content = s.fantasy_week(season_year, week, offset)
-                if content:
-                    week_players = p.fantasy_week(content)
-                    if week_players:
-                        players += week_players
-                        logging.info('finished week {} offset {}'.format(week, offset))
-            except Exception as e:
-                logging.exception(e)
-
-    if players:
-        logging.info(random.sample(players, 3))
-        #with open('/home/sansbacon/fantasy-2016.json', 'w') as outfile:
-        #    json.dump(players, outfile)
-    else:
-        logging.error('no players')
+    pass

@@ -166,6 +166,24 @@ class NFLComParser(object):
         '''
         soup = BeautifulSoup(content, 'lxml')
 
+    def esb_id(self, content):
+        '''
+        Gets player esb_id
+        
+        Args:
+            content: 
+
+        Returns:
+            esb_id
+        '''
+        soup = BeautifulSoup(content, 'lxml')
+        # GSIS ID and ESB ID are buried in the comments
+        for c in soup.find_all(string=lambda text: isinstance(text, Comment)):
+            if 'GSIS' in c:
+                parts = [part.strip() for part in c.split('\n')]
+                return parts[2].split(':')[-1].strip()
+        return None
+
     def player_page(self, content, profile_id):
         '''
         Returns data from individual player page
@@ -187,6 +205,8 @@ class NFLComParser(object):
                 gsis_id = parts[3].split(':')[-1].strip()
                 player['player_id'] = gsis_id
                 player['profile_id'] = profile_id
+                if esb_id:
+                    player['esb_id'] = esb_id
                 break
 
         # Most player data is found in the player-profile div
@@ -194,22 +214,29 @@ class NFLComParser(object):
         paras = soup.find('div', {'id': 'player-profile'}).find_all('p')
 
         if not paras or len(paras) < 6:
+            paras = soup.find('div', {'id': 'player-info'}).find_all('p')
+
+        if not paras or len(paras) < 6:
             return None
 
-        # paras[0]: name and number
-        spans = paras[0].find_all('span')
-        name = spans[0].text.strip()
-        player['full_name'] = name
-        player['first_name'], player['last_name'] = first_last_pair(name)
-        number, pos = spans[1].text.split()
-        player['number'] = digits(number)
-        player['position'] = pos
-
-        # paras[1]: team
-        player['team'] = paras[1].find('a')['href'].split('=')[-1]
-
-        # paras[2]: height, weight, age
         try:
+            # paras[0]: name and number
+            spans = paras[0].find_all('span')
+            name = spans[0].text.strip()
+            player['full_name'] = name
+            player['first_name'], player['last_name'] = first_last_pair(name)
+            number, pos = spans[1].text.split()
+            player['number'] = digits(number)
+            player['position'] = pos
+
+            # paras[1]: team
+            player['team'] = paras[1].find('a')['href'].split('=')[-1]
+        except Exception as e:
+            logging.exception(e)
+            return None
+
+        try:
+            # paras[2]: height, weight, age
             parts = paras[2].text.split()
             feet,inches = parts[1].split('-')
             player['height'] = int(digits(feet)) * 6 + int(digits(inches))

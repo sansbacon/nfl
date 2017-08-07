@@ -157,5 +157,122 @@ class PfrNFLScraper(FootballScraper):
 
         return self.get(self.tgl_finder_url, payload=params)
 
+    def team_passing_weekly(self, season_start, season_end, week):
+        '''
+        Gets game-by-game passing stats for teams
+
+        Args:
+            season_start: int 2016, 2017, etc.
+            season_end: int 2016, 2017, etc.
+            week: int 1, 2, etc.
+
+        Returns:
+            content: HTML string
+        '''
+        params = {
+            'request': '1',
+            'match': 'game',
+            'year_min': season_start,
+            'year_max': season_end,
+            'game_type': 'R',
+            'game_num_min': '0',
+            'game_num_max': '99',
+            'week_num_min': week,
+            'week_num_max': week,
+            'temperature_gtlt': 'lt',
+            'c1stat': 'pass_cmp',
+            'c1comp': 'gt',
+            'c1val': '0',
+            'c5val': '1.0',
+            'order_by': 'pass_td'
+        }
+
+    def team_defense_yearly(self, season_year):
+        '''
+        Gets total team defense stats for specific season_year
+        
+        Args:
+            season_year: 2016, etc.
+
+        Returns:
+            list of dict
+        '''
+        url = 'https://www.pro-football-reference.com/years/{}/opp.htm'
+        return self.get(url.format(season_year))
+
+    def team_defense_weekly(self, season_start, season_end, week):
+        '''
+        Gets game-by-game defense stats for teams
+
+        Args:
+            season_start: int 2016, 2017, etc.
+            season_end: int 2016, 2017, etc.
+            week: int 1, 2, etc.
+
+        Returns:
+            content: HTML string
+        '''
+        params = {
+            'request': '1',
+            'match': 'game',
+            'year_min': season_start,
+            'year_max': season_end,
+            'game_type': 'R',
+            'game_num_min': '0',
+            'game_num_max': '99',
+            'week_num_min': week,
+            'week_num_max': week,
+            'temperature_gtlt': 'lt',
+            'c1stat': 'plays_defense',
+            'c1comp': 'gt',
+            'c1val': '0',
+            'c2stat': 'pass_cmp_opp',
+            'c2comp': 'gt',
+            'c2val': '0',
+            'c3stat': 'rush_att_opp',
+            'c3comp': 'gt',
+            'c3val': '0',
+            'c4stat': 'pass_sacked_opp',
+            'c4comp': 'gt',
+            'c4val': '0',
+            'c5val': '1.0',
+            'order_by': 'game_date',
+            'order_by_asc': 'Y'
+        }
+
+        return self.get(self.tgl_finder_url, payload=params)
+
+    def team_offense_weekly(self, season_start, season_end, week):
+        '''
+        Gets game-by-game offense stats for teams
+
+        Args:
+            season_start: int 2016, 2017, etc.
+            season_end: int 2016, 2017, etc.
+            week: int 1, 2, etc.
+
+        Returns:
+            content: HTML string
+        '''
+        params = {
+            'request': '1',
+            'match': 'game',
+            'year_min': season_start,
+            'year_max': season_end,
+            'game_type': 'R',
+            'game_num_min': '0',
+            'game_num_max': '99',
+            'week_num_min': week,
+            'week_num_max': week,
+            'temperature_gtlt': 'lt',
+            'c1stat': 'rush_att',
+            'c1comp': 'gt',
+            'c1val': '0',
+            'c5val': '1.0',
+            'order_by': 'pass_td'
+        }
+
+        return self.get(self.tgl_finder_url, payload=params)
+
 if __name__ == "__main__":
     pass
