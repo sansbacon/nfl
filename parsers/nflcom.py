@@ -280,13 +280,22 @@ class NFLComParser(object):
         Returns:
             pos: 'QB', 'RB', 'WR', 'TE', 'UNK'
         '''
-        patt = re.compile(r'[A-Z]{1}.*?,\s+([A-Z]{1,2})', re.IGNORECASE | re.UNICODE)
+        allowed = ['C', 'CB', 'DB', 'DE', 'DL', 'DT', 'FB', 'FS', 'G', 'ILB',
+                   'K', 'LB', 'LS', 'MLB', 'NT', 'OG', 'OL', 'OLB', 'OT',
+                   'P', 'QB', 'RB', 'SAF', 'SS', 'T', 'TE', 'WR', 'UNK', 'DST']
+
+        xref = {'ML': 'LB', 'IL': 'LB', 'SAF': 'S'}
+        patt = re.compile(r'[A-Z]{1}.*?,\s+([A-Z]{1,3})', re.IGNORECASE | re.UNICODE)
         soup = BeautifulSoup(content, 'lxml')
         title = soup.title.text
         match = re.search(patt, title)
-        if match:
-            return match.group(1)
-        else:
+        try:
+            pos = match.group(1)
+            if pos in allowed:
+                return pos
+            else:
+                return xref.get(pos, u'UNK')
+        except:
             return u'UNK'
 
     def upcoming_week_page(self, content):
