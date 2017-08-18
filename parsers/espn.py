@@ -102,50 +102,6 @@ class ESPNNFLParser(object):
 
         return rows
 
-    def _ww_player_cell(self, cell):
-        '''
-        [u'Buccaneers D/ST D/ST']
-        [u'Dexter McCluster', u'Ten RB']
-        [u'Brandon LaFell', u'Cin WR']
-        [u'Kenny Stills', u'Mia WR  Q']
-        '''
-        player = {}
-        ptp = cell.text
-        a = cell.find('a')
-        if a:
-            player['espn_id'] = a['playerid']
-            player['season'] = a['seasonid']
-            player['espn_player_name'] = a.text.strip()
-
-        # [u'Buccaneers D/ST D/ST']
-        if 'D/ST' in ptp:
-            pattern = r'(.*?)\s+D/ST'
-            match = re.match(pattern, ptp)
-            if match:
-                player['espn_player_name'] = '{} Defense'.format(match.group(1))
-                player['player_position'] = 'DST'
-                player['player_team'] = nickname_to_code(match.group(1))
-                # need to add team code from Falcons, Seahawks, etc.
-
-        # [u'Kenny Stills', u'Mia WR  Q']
-        elif '  ' in ptp:
-            pattern = r'(.*?),\s+(\w{2,4})\s+(\w{2})\s+(\w+)'
-            match = re.match(pattern, ptp)
-            if match:
-                if not player.get('espn_player_name'): player['espn_player_name'] = match.group(1)
-                player['player_team'] = match.group(2).upper()
-                player['player_position'] = match.group(3)
-                player['player_inj'] = match.group(4)
-
-        # [u'Dexter McCluster', u'Ten RB']
-        else:
-            # do generic split routine
-            pn, tp = ptp.split(', ')
-            if not player.get('espn_player_name'): player['espn_player_name'] = pn
-            player['player_team'], player['player_position'] = tp.split()
-
-        return player
-
     def league_rosters(self, rosters):
         '''
 
@@ -228,7 +184,7 @@ class ESPNNFLParser(object):
 
         return roster
 
-    def waiver_wire(self, content):
+    def fantasy_waiver_wire(self, content):
         '''
 
         Args:
@@ -241,16 +197,7 @@ class ESPNNFLParser(object):
                 'player_position': u'TE',
                 'player_team': u'Atl',
                 'season': '2016'}
-
-        Usage:
-            from nfl.scrapers.espn import ESPNNFLScraper as ES
-            from nfl.parsers.espn import ESPNNFLParser as EP
-            s = ES()
-            p = EP()
-            content = s.waiver_wire()
-            players = p.waiver_wire(content)
         '''
-
         players = []
 
         # irregular use of non-breaking spaces; easier to remove at start
@@ -262,11 +209,58 @@ class ESPNNFLParser(object):
 
         #loop through rows in table
         for tr in t.findAll('tr', {'class': 'pncPlayerRow'}):
+            player = {'source': 'espn'}
             tds = tr.findAll('td')
-            if not tds or len(tds) == 0: next
-            player = self._ww_player_cell(tds[0])
-            players.append(player)
-            
+            if not tds or len(tds) == 0:
+                continue
+            else:
+                try:
+                    # td[0]: name, team, pos
+                    ptp = tds[0].text
+                    if 'D/ST' in ptp:
+                        pattern = r'(.*?)\s+D/ST'
+                        match = re.match(pattern, ptp)
+                        if match:
+                            player['source_player_name'] = '{} Defense'.format(match.group(1))
+                            player['source_player_position'] = 'DST'
+                            player['source_player_team'] = nickname_to_code(match.group(1))
+
+                    # [u'Kenny Stills', u'Mia WR  Q']
+                    elif '  ' in ptp:
+                        pattern = r'(.*?),\s+(\w{2,4})\s+(\w{2})\s+(\w+)'
+                        match = re.match(pattern, ptp)
+                        if match:
+                            if not player.get('espn_player_name'): player['espn_player_name'] = match.group(1)
+                            player['source_player_team'] = match.group(2).upper()
+                            player['source_player_position'] = match.group(3)
+
+                    # [u'Dexter McCluster', u'Ten RB']
+                    else:
+                        # do generic split routine
+                        pn, tp = ptp.split(', ')
+                        if not player.get('espn_player_name'):
+                            player['espn_player_name'] = pn
+                        player['source_player_team'], player['source_player_position'] = tp.split()
+
+                    # a[0]: player_id
+                    a = tr.find('a')
+                    if a:
+                        player['source_player_id'] = a.attrs.get('playerid')
+
+                    # tds[2]: player status
+                    player['player_status'] = tds[2].text
+
+                    # tds[-2]: owernership
+                    player['player_own'] = tds[-2].text
+
+                    # tds[-1]: plus/minus
+                    player['player_own_pm'] = tds[-1].text.replace('+', '')
+
+                    players.append(player)
+
+                except Exception as e:
+                    logging.exception(e)
+
         return players
 
 if __name__ == "__main__":

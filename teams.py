@@ -235,7 +235,7 @@ def football_outsiders_teams():
 def long_to_code(name):
     return t['long_to_code'].get(name, None)
 
-def nickname_to_code(name, season_year):
+def nickname_to_code(name, season_year=None):
     '''
     Converts nickname like steelers to PIT
     Args:
@@ -247,12 +247,12 @@ def nickname_to_code(name, season_year):
     '''
     if name[0].isalpha():
         name = name.title()
-
-    if season_year > 2015:
+    if not season_year:
         return t['nickname_to_code_2016'].get(name, None)
-    else:
+    elif season_year < 2016:
         return t['nickname_to_code_pre2016'].get(name, None)
-
+    else:
+        return t['nickname_to_code_2016'].get(name, None)
 
 def from_nfl(team_code, site):
     '''

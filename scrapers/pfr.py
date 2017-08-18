@@ -58,7 +58,25 @@ class PfrNFLScraper(FootballScraper):
         url = 'http://www.pro-football-reference.com/years/{season_year}/draft.htm'
         return self.get(url.format(season_year=season_year))
 
-    def fantasy_season(self, season_year, offset=0):
+    def playerstats_fantasy_weekly(self, season_year, week, offset=0):
+        '''
+        Gets 100 rows of fantasy results for specific season and week
+
+        Args:
+            season_year: 2016, 2015, etc. 
+            week: 1, 2, 3, etc.
+            offset: 0, 100, 200, etc.
+
+        Returns:
+            HTML string
+        '''
+        params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset,
+                                     'week_num_min': week, 'week_num_max': week})
+        content = self.get(self.pgl_finder_url, payload=params)
+        logging.debug(self.urls[-1])
+        return content
+
+    def playerstats_fantasy_yearly(self, season_year, offset=0):
         '''
         Gets 100 rows of fantasy results for specific season
 
@@ -74,23 +92,7 @@ class PfrNFLScraper(FootballScraper):
         logging.debug(self.urls[-1])
         return content
 
-    def fantasy_week(self, season_year, week, offset=0):
-        '''
-        Gets 100 rows of fantasy results for specific week of season
-
-        Args:
-            season_year: 2016, 2015, etc. 
-            week: 1-17
-            offset: 0, 100, 200, etc.
-
-        Returns:
-            HTML string
-        '''
-        params = self._merge_params({'year_min': season_year, 'year_max': season_year,
-                                     'week_num_min': week, 'week_num_max': week, 'offset': offset})
-        return self.get(self.pgl_finder_url, payload=params)
-
-    def player_fantasy_season(self, season_year, player_id):
+    def player_fantasy_year(self, season_year, player_id):
         '''
         Gets fantasy page for individual player
         
@@ -103,6 +105,139 @@ class PfrNFLScraper(FootballScraper):
         # https://www.pro-football-reference.com/players/{R}/{RyanMa00}/fantasy/{2016}
         url = 'https://www.pro-football-reference.com/players/{}/{}/fantasy/{}'
         return self.get(url.format(player_id[0], player_id, season_year))
+
+    def playerstats_offense_weekly(self, season_year, week, offset=0):
+        '''
+        Gets 100 rows of offense results for specific season and week
+
+        Args:
+            season_year: 2016, 2015, etc. 
+            week: 1, 2, 3, etc.
+            offset: 0, 100, 200, etc.
+
+        Returns:
+            HTML string
+        '''
+        params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset,
+                                     'week_num_min': week, 'week_num_max': week})
+        content = self.get(self.pgl_finder_url, payload=params)
+        logging.debug(self.urls[-1])
+        return content
+
+    def playerstats_offense_yearly(self, season_year, offset=0):
+        '''
+        Gets 100 rows of offense results for specific season
+
+        Args:
+            season_year: 2016, 2015, etc. 
+            offset: 0, 100, 200, etc.
+
+        Returns:
+            HTML string
+        '''
+        params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset})
+        content = self.get(self.pgl_finder_url, payload=params)
+        logging.debug(self.urls[-1])
+        return content
+
+    def playerstats_passing_weekly(self, season_year, week, offset=0):
+        '''
+        Gets 100 rows of offense results for specific season and week
+
+        Args:
+            season_year: 2016, 2015, etc. 
+            week: 1, 2, 3, etc.
+            offset: 0, 100, 200, etc.
+
+        Returns:
+            HTML string
+        '''
+        params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset,
+                                     'week_num_min': week, 'week_num_max': week, 'c1stat': 'pass_att', 'c1val': '1'})
+        content = self.get(self.pgl_finder_url, payload=params)
+        logging.debug(self.urls[-1])
+        return content
+
+    def playerstats_passing_yearly(self, season_year, offset=0):
+        '''
+        Gets passing results for specific season
+
+        Args:
+            season_year: 2016, 2015, etc. 
+
+        Returns:
+            HTML string
+        '''
+        url = 'https://www.pro-football-reference.com/years/{}/passing.htm'
+        content = self.get(url.format(season_year))
+        logging.debug(self.urls[-1])
+        return content
+
+    def playerstats_receiving_weekly(self, season_year, week, offset=0):
+        '''
+        Gets 100 rows of receiving results for specific season and week
+
+        Args:
+            season_year: 2016, 2015, etc. 
+            week: 1, 2, 3, etc.
+            offset: 0, 100, 200, etc.
+
+        Returns:
+            HTML string
+        '''
+        params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset,
+                                     'week_num_min': week, 'week_num_max': week, 'c1stat': 'targets', 'c1val': '1'})
+        content = self.get(self.pgl_finder_url, payload=params)
+        logging.debug(self.urls[-1])
+        return content
+
+    def playerstats_receiving_yearly(self, season_year, offset=0):
+        '''
+        Gets rushing/receiving results for specific season
+    
+        Args:
+            season_year: 2016, 2015, etc. 
+    
+        Returns:
+            HTML string
+        '''
+        url = 'https://www.pro-football-reference.com/years/{}/rushing.htm'
+        content = self.get(url.format(season_year))
+        logging.debug(self.urls[-1])
+        return content
+
+    def playerstats_rushing_weekly(self, season_year, week, offset=0):
+        '''
+        Gets 100 rows of offense results for specific season and week
+
+        Args:
+            season_year: 2016, 2015, etc. 
+            week: 1, 2, 3, etc.
+            offset: 0, 100, 200, etc.
+
+        Returns:
+            HTML string
+        '''
+        params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset,
+                                     'week_num_min': week, 'week_num_max': week, 'c1stat': 'rush_att', 'c1val': '1'})
+        content = self.get(self.pgl_finder_url, payload=params)
+        logging.debug(self.urls[-1])
+        return content
+
+    def playerstats_rushing_yearly(self, season_year, offset=0):
+        '''
+        Gets rushing/receiving results for specific season
+
+        Args:
+            season_year: 2016, 2015, etc. 
+
+        Returns:
+            HTML string
+        '''
+        url = 'https://www.pro-football-reference.com/years/{}/rushing.htm'
+        content = self.get(url.format(season_year))
+        logging.debug(self.urls[-1])
+        return content
 
     def players(self, last_initial):
         '''

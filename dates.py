@@ -82,21 +82,18 @@ def format_type(datestr):
         fmt (str): format string for date
 
     '''
-
     if re.match(r'\d{1,2}_\d{1,2}_\d{4}', datestr):
         return site_format('fl')
-
     elif re.match(r'\d{4}-\d{2}-\d{2}', datestr):
         return site_format('nfl')
-
     elif re.match(r'\d{1,2}-\d{1,2}-\d{4}', datestr):
         return site_format('std')
-
     elif re.match(r'\d{1,2}/\d{1,2}/\d{4}', datestr):
         return site_format('odd')
-
     elif re.match(r'\d{8}', datestr):
         return site_format('db')
+    elif re.match(r'\w+ \d+, \d+', datestr):
+        return site_format('bdy')
 
     else:
         return None
@@ -110,8 +107,10 @@ def site_format(site):
         'fl': '%m_%d_%Y',
         'nfl': '%Y-%m-%d',
         'odd': '%m/%d/%Y',
-        'db': '%Y%m%d'
+        'db': '%Y%m%d',
+        'bdy': '%B %d, %Y'
     }
+
     return fmt.get(site, None)
 
 def strtodate(d):
