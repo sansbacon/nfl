@@ -11,7 +11,60 @@ class ESPNNFLScraper(FootballScraper):
 
     '''
 
-    def nfl_team_roster(self, team_code):
+    def projections(self, pos, offset=0):
+        '''
+        Gets page with projections by position
+
+        Args:
+            pos: qb, rb, wr, te, k, etc.
+
+        Returns:
+            HTML string
+        '''
+
+        pos = pos.lower()
+
+        slot_categories = {
+            'qb': 0,
+            'rb': 2,
+            'wr': 4,
+            'te': 6,
+            'dst': 16,
+            'k': 17
+        }
+
+        max_offset = {
+            'qb': 120,
+            'rb': 240,
+            'wr': 360,
+            'te': 160,
+            'dst': 0,
+            'k': 40
+        }
+
+        if pos not in slot_categories.keys():
+            raise ValueError('invalid pos {}'.format(pos))
+
+        if offset > max_offset.get(pos):
+            raise ValueError('invalid offset {}'.format(offset))
+
+        url = 'http://games.espn.com/ffl/tools/projections?slotCategoryId={}&startIndex={}'
+        return self.get(url.format(slot_categories[pos], offset), encoding='latin1')
+
+    def players_position(self, pos):
+        '''
+        Gets page with all players by position
+        
+        Args:
+            pos: qb, rb, wr, te, k, etc.
+
+        Returns:
+            HTML string
+        '''
+        url = 'http://www.espn.com/nfl/players?position={}&league=nfl'
+        return self.get(url.format(pos), encoding='latin1')
+
+    def team_roster(self, team_code):
         '''
         Gets list of NFL players from ESPN.com
 

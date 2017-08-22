@@ -2546,3 +2546,239 @@ Full stack:
 1503005163975	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.PWXsIMDDHLEc/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
 1503005255584	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.J3iH7Hcjd4NG/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
 1503005255584	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.J3iH7Hcjd4NG/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+console.error: PushService: 
+  Failed to drop expired registrations on idle
+  UnknownError
+console.error: PushService: 
+  Failed to drop expired registrations on idle
+  UnknownError
+console.error: PushService: 
+  Failed to drop expired registrations on idle
+  UnknownError
+console.error: PushService: 
+  Failed to drop expired registrations on idle
+  UnknownError
+console.error: PushService: 
+  Failed to drop expired registrations on idle
+  UnknownError
+console.error: PushService: 
+  Failed to drop expired registrations on idle
+  UnknownError
+console.error: PushService: 
+  Failed to drop expired registrations on idle
+  UnknownError
+console.error: PushService: 
+  Failed to drop expired registrations on idle
+  UnknownError
+console.error: PushService: 
+  Failed to drop expired registrations on idle
+  UnknownError
+console.error: PushService: 
+  Failed to drop expired registrations on idle
+  UnknownError
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+1503090471710	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.AfYqhEj6blgy/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503090471710	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.AfYqhEj6blgy/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503090510381	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.ieV5kQO5ds8y/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503090510382	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.ieV5kQO5ds8y/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503090558516	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.BLy6yXS5zvr9/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503090558517	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.BLy6yXS5zvr9/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+1503090736888	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.yhehiMljXREw/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503090736889	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.yhehiMljXREw/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+1503090769335	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.y5ybgJF5aQiG/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503090769343	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.y5ybgJF5aQiG/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503090814640	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.rN4mpNtYu1nN/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503090814642	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.rN4mpNtYu1nN/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+1503090878918	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.DfWHCs4YGQt8/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503090878924	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.DfWHCs4YGQt8/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503090986120	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.LxE2M2hxL5Bn/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503090986120	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.LxE2M2hxL5Bn/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+1503091564577	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.PWXsIMDDHLEc/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503091564579	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.PWXsIMDDHLEc/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503091656162	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.J3iH7Hcjd4NG/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503091656163	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.J3iH7Hcjd4NG/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+1503189516349	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.PWXsIMDDHLEc/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503189516349	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.PWXsIMDDHLEc/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503189607444	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.J3iH7Hcjd4NG/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503189607446	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.J3iH7Hcjd4NG/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+1503190907890	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.AfYqhEj6blgy/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503190907891	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.AfYqhEj6blgy/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503190947660	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.ieV5kQO5ds8y/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503190947660	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.ieV5kQO5ds8y/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503190995812	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.BLy6yXS5zvr9/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503190995813	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.BLy6yXS5zvr9/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+1503194890096	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.yhehiMljXREw/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503194890097	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.yhehiMljXREw/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+1503194921672	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.y5ybgJF5aQiG/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503194921673	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.y5ybgJF5aQiG/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503194966929	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.rN4mpNtYu1nN/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503194966929	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.rN4mpNtYu1nN/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+1503195032394	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.DfWHCs4YGQt8/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503195032395	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.DfWHCs4YGQt8/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503195138460	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.LxE2M2hxL5Bn/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503195138461	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.LxE2M2hxL5Bn/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+1503275933868	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.PWXsIMDDHLEc/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503275933869	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.PWXsIMDDHLEc/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503276025014	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.J3iH7Hcjd4NG/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503276025016	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.J3iH7Hcjd4NG/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
+1503277307791	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.AfYqhEj6blgy/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503277307792	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.AfYqhEj6blgy/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503277348543	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.ieV5kQO5ds8y/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503277348544	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.ieV5kQO5ds8y/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503277395768	DeferredSave.extensions.json	WARN	Write failed: Unix error 2 during operation open on file /tmp/rust_mozprofile.BLy6yXS5zvr9/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+1503277395768	addons.xpi-utils	WARN	Failed to save XPI database: Unix error 2 during operation open on file /tmp/rust_mozprofile.BLy6yXS5zvr9/extensions.json.tmp (No such file or directory) ((unknown module)) No traceback available
+*************************
+A coding exception was thrown and uncaught in a Task.
+
+Full message: TypeError: NetworkError when attempting to fetch resource.
+Full stack: 
+*************************
