@@ -1,88 +1,75 @@
+# -*- coding: utf-8 -*-
+
 '''
 dkxref.py
 cross-reference draftkings players with nfl.player table ids
-
-Usage:
-    import logging
-    import os
-    import pandas as pd
-    import dkxref
-    logging.basicConfig(level=logging.ERROR)
-    from nfl.db.nflpg import NFLPostgres
-    nflp = NFLPostgres(database='nfl', user=os.environ.get('NFLPGUSER'), password=os.environ.get('NFLPGPASSWORD'))
-    dkp = get_player_id(nflp, pd.read_csv(os.path.join(os.path.expanduser('~'), 'Downloads/DKSalaries.csv')))
 '''
+
+from __future__ import absolute_import, print_function, division
 
 import logging
 
-def _dkkey(x):
-    return x['Name'].strip() + '_' + x['Position'].strip()
+from fuzzywuzzy import process
 
-def _first_last(n, fmt='fcl'):
-    if fmt == 'fcl':
-        parts = n.split(', ')
-        return parts[1].strip() + ' ' + parts[0].strip()
-    else:
-        return n
+from nfl.names import match_player
+from nfl.player.playerxref import nflcom_players
+from nfl.utility import memoize
 
-def _player_id(x, dkp):
-    '''
-    DKP is a dict - key = site_player_id, value is dict with key player_id
-    Used in pd.apply to generate string of the nfl.player player_id
-    Can't use integers due to NA values
-    '''
-    key = x['dk_key'])
-    try:
-        return str(dkp[key]['player_id'])
-    except:
-        return None
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-def get_dk_xref(nflp):
-    ## make dk dict
-    ## can now use in processing ffa projection files
-    q = "SELECT * FROM player_xref WHERE site='dk';"
-    return {row['site_player_id']: row for row in nflp.select_dict(q)}
-
-def get_player_id(nflp, df):
-    ## takes df, adds player_id from nfl.player table
-    df['dk_key'] = df.apply(_dkkey, axis=1)
-    dkp = get_dk_xref(nflp)
-    df['player_id'] = df.apply(_player_id, axis=1, args=(dkp,))
-    return df
-
-def update_dk_xref(nflp, fn):
-    '''
-    Maps DK dk_key to nfl.player player_id
+@memoize
+def dk_players(db):
     '''
     
-    ## step one: create dict from existing db - name_pos is key, entire dict is value
-    cp = {}
-    q = 'SELECT player_id, name, "position", team FROM player'
-    for p in nflp.select_dict(q):
-        fl = _first_last(p.get('name', ''))
-        pid = fl + '_' + p.get('position', '')
-        cp[pid] = p
+    Args:
+        db: 
 
-    ## step two: read in DK names
-    df = pd.read_csv(fn)
-    df['dk_key'] = df.apply(_dkkey, axis=1)
-    dkp = df.T.to_dict().values()
+    Returns:
 
-    ## step three: compare
-    # fields: player_id, site, site_player_id, site_player_name, site_player_team, site_player_position
-    for d in dkp:
-        k = d.get('dk_key')
-        if cp.has_key(k):
-            cp[k]['site'] = 'dk'
-            cp[k]['site_player_id'] = k
-            cp[k]['site_player_name'] = d.get('Name')
-            cp[k]['site_player_team'] = d.get('team')
-            cp[k]['site_player_position'] = d.get('Position')
+    '''
+    q = """SELECT DISTINCT source_player_id, source_player_name, source_player_position 
+           FROM extra_fantasy.weekly_dk_players"""
+    return db.select_dict(q)
 
-    ## step four: insert into db
-    ## some inserts will fail, so want to do individual rather than batch
-    for v in cp.values():
-        nflp.insert_dicts([v], 'player_xref')
-              
+def dk_xref(db, dkpl=None):
+    '''
+    
+    Returns:
+
+    '''
+    # nflp is dict of list
+    nflp = nflcom_players(db)
+
+    if not dkpl:
+        dkpl = dk_players(db)
+
+    for dkp in dkpl:
+        name = dkp.get('source_player_name')
+        pos = dkp.get('source_player_position')
+        key = '{}_{}'.format(name, pos)
+
+        # try to find direct match in first nflp
+        match = nflp.get(key)
+        if match:
+            if len(match) == 1:
+                pieces = ['dk', str(dkp['source_player_id']), dkp['source_player_name'], dkp['source_player_position'],
+                          match[0]['player_id'], match[0]['full_name']]
+                print(', '.join(pieces))
+
+            # do something about multiple matches
+            elif len(match) > 1:
+                print(match)
+        else:
+            fuzzy, confidence = process.extractOne(key, list(nflp.keys()))
+            if confidence > .85:
+                match = nflp.get(fuzzy)
+                pieces = ['dk', str(dkp['source_player_id']), dkp['source_player_name'], dkp['source_player_position'],
+                          match[0]['player_id'], match[0]['full_name']]
+                print(', '.join(pieces))
+
+            else:
+                #pieces = [str(dkp['source_player_id']), dkp['source_player_name'], dkp['source_player_position']]
+                print('could not match {}'.format(key))
+
 if __name__ == '__main__':
     pass

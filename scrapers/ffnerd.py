@@ -103,11 +103,11 @@ class FFNerdNFLScraper(FootballScraper):
             dict            
         '''
         if pos:
-            url = 'http://www.fantasyfootballnerd.com/service/schedule/{rformat}/{api_key}/{pos}'
-            return self.get(url.format(rformat=self.response_format, api_key=self.api_key, pos=pos))
+            url = 'http://www.fantasyfootballnerd.com/service/players/{rformat}/{api_key}/{pos}'
+            return self.get_json(url.format(rformat=self.response_format, api_key=self.api_key, pos=pos))
         else:
-            url = 'http://www.fantasyfootballnerd.com/service/schedule/{rformat}/{api_key}'
-            return self.get(url.format(rformat=self.response_format, api_key=self.api_key))
+            url = 'http://www.fantasyfootballnerd.com/service/players/{rformat}/{api_key}'
+            return self.get_json(url.format(rformat=self.response_format, api_key=self.api_key))
 
     def schedule(self):
         '''
@@ -117,7 +117,7 @@ class FFNerdNFLScraper(FootballScraper):
             dict            
         '''
         url = 'http://www.fantasyfootballnerd.com/service/schedule/{rformat}/{api_key}'
-        return self.get(url.format(rformat=self.response_format, api_key=self.api_key))
+        return self.get_json(url.format(rformat=self.response_format, api_key=self.api_key))
 
     def weekly_projections(self, week, pos):
         '''

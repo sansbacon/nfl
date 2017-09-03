@@ -19,25 +19,25 @@ class FO_test(unittest.TestCase):
 
     def setUp(self):
         self.s = FootballOutsidersNFLScraper(cache_name='fo-test')
-        #self.p = FootballOutsidersNFLParser()
+        self.p = FootballOutsidersNFLParser()
 
     def test_dl(self):
+        seas = self.season
         content = self.s.dl()
         self.assertIsNotNone(content)
-        content = self.s.dl(season=self.season)
-        self.assertIsNotNone(content)
+        content = self.s.dl(seas)
+        self.assertIsNotNone(self.p.dl(content, seas))
 
     def test_drive(self):
-        content = self.s.drive()
-        self.assertIsNotNone(content)
-        content = self.s.drive(season=self.season)
-        self.assertIsNotNone(content)
+        content = self.s.drive(season=self.season, offdef='off')
+        self.assertIsNotNone(self.p.drive(content=content, offdef='off'))
 
     def test_ol(self):
+        seas = self.season
         content = self.s.ol()
         self.assertIsNotNone(content)
-        content = self.s.ol(season=self.season)
-        self.assertIsNotNone(content)
+        content = self.s.ol(seas)
+        self.assertIsNotNone(self.p.ol(content, seas))
 
     def test_qb(self):
         content = self.s.qb()
@@ -45,6 +45,7 @@ class FO_test(unittest.TestCase):
         content = self.s.qb(season=self.season)
         self.assertIsNotNone(content)
 
+    '''
     def test_rb(self):
         content = self.s.rb()
         self.assertIsNotNone(content)
@@ -97,6 +98,7 @@ class FO_test(unittest.TestCase):
         #    self.assertIsNotNone(content)
         #    self.assertRegexpMatches(content, r'html')
         #    logging.info('test')
+    '''
 
 if __name__=='__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)

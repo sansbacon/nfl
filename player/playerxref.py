@@ -1,11 +1,35 @@
+# -*- coding: utf-8 -*-
+
 '''
 playerxref.py
 Common cross-reference functions
 '''
 
+from __future__ import absolute_import, print_function, division
+
 from collections import defaultdict
+import logging
 
+from nfl.utility import memoize
 
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+@memoize
+def nflcom_names(db):
+    '''
+    Creates list of names from player (NFL.com) table    
+
+    Args:
+        db: NFLPostgres object (or subclass)
+
+    Returns:
+        dict
+    '''
+    q = """SELECT player_id, full_name, position FROM player
+           WHERE full_name IS NOT NULL"""
+    return db.select_dict(q)
+
+@memoize
 def nflcom_players(db):
     '''
     Creates dictionary of players from player (NFL.com) table    

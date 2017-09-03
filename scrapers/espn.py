@@ -10,6 +10,45 @@ class ESPNNFLScraper(FootballScraper):
     '''
 
     '''
+    def _check_pos(self, pos):
+        '''
+        Makes sure pos is valid and uppercase
+        '''
+        if pos in ['qb', 'rb', 'wr', 'te', 'dst', 'd/st', 'k',
+               'QB', 'RB', 'WR', 'TE', 'K', 'D/ST', 'DST']:
+            if pos in ['DST', 'dst']:
+                return 'D/ST'
+            else:
+                return pos.upper()
+        else:
+            raise ValueError('invalid position: {}'.format(pos))
+
+    def adp(self, pos):
+        '''
+        Gets adp by player position
+        
+        Args:
+            pos: 'qb', 'rb', etc.
+
+        Returns:
+            HTML string
+        '''
+        pos = self._check_pos(pos)
+        url = 'http://games.espn.com/ffl/livedraftresults?position={}'
+        return self.get(url.format(pos), encoding='latin1')
+
+    def players_position(self, pos):
+        '''
+        Gets page with all players by position
+
+        Args:
+            pos: qb, rb, wr, te, k, etc.
+
+        Returns:
+            HTML string
+        '''
+        url = 'http://www.espn.com/nfl/players?position={}&league=nfl'
+        return self.get(url.format(pos), encoding='latin1')
 
     def projections(self, pos, offset=0):
         '''
@@ -50,19 +89,6 @@ class ESPNNFLScraper(FootballScraper):
 
         url = 'http://games.espn.com/ffl/tools/projections?slotCategoryId={}&startIndex={}'
         return self.get(url.format(slot_categories[pos], offset), encoding='latin1')
-
-    def players_position(self, pos):
-        '''
-        Gets page with all players by position
-        
-        Args:
-            pos: qb, rb, wr, te, k, etc.
-
-        Returns:
-            HTML string
-        '''
-        url = 'http://www.espn.com/nfl/players?position={}&league=nfl'
-        return self.get(url.format(pos), encoding='latin1')
 
     def team_roster(self, team_code):
         '''

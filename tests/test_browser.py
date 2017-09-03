@@ -20,6 +20,11 @@ class Browser_test(unittest.TestCase):
         self.assertIsNotNone(content)
         self.assertIn('body', content)
 
+    def test_get_json(self):
+        url = 'https://jsonplaceholder.typicode.com/posts'
+        content = self.s.get_json(url)
+        self.assertIsNotNone(content)
+        self.assertIsInstance(content, list)
 
 if __name__=='__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)

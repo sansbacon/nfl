@@ -4,7 +4,9 @@ from __future__ import absolute_import, print_function, division
 
 import logging
 
+from nfl.dates import today, yesterday_x
 from nfl.scrapers.browser import BrowserScraper
+from nfl.seasons import current_season_year
 
 
 class ESPNFantasyScraper(BrowserScraper):
@@ -17,6 +19,45 @@ class ESPNFantasyScraper(BrowserScraper):
         self.user = config.get('espn', 'username')
         self.password = config.get('espn', 'password')
 
+    def drops(self, league_id, season_year=None, start_date=None, end_date=None):
+        '''
+        http://games.espn.com/ffl/recentactivity?
+
+        Args:
+            league_id: 
+
+        Returns:
+
+        '''
+        if not start_date:
+            start_date = yesterday_x(interval=2, fmt='espn_fantasy')
+        if not end_date:
+            end_date = today(fmt='espn_fantasy')
+        if not season_year:
+            season_year = current_season_year()
+
+        url = 'http://games.espn.com/ffl/recentactivity'
+        params = {
+            'leagueId': league_id,
+            'activityType': '2',
+            'startDate': start_date,
+            'seasonId': season_year,
+            'endDate': end_date,
+            'teamId': '-1',
+            'tranType': '3'
+        }
+
+        try:
+            from urllib.parse import urlencode
+        except ImportError:
+            from urllib import urlencode
+
+        url = '{}?{}'.format(url, urlencode(params))
+        driver = self.browser
+        driver.get(url)
+        self.urls.append(url)
+        return self.browser.page_source
+
     def fantasy_league_rosters(self, league_id):
         '''
         Gets roster for team in ESPN fantasy league
@@ -25,9 +66,9 @@ class ESPNFantasyScraper(BrowserScraper):
         params = {'leagueId': league_id}
 
         try:
-            from urllib.parse import urlparse, urlencode
+            from urllib.parse import urlencode
         except ImportError:
-            from urlparse import urlparse
+            from urllib import urlencode
 
         url = '{}?{}'.format(url, urlencode(params))
         driver = self.browser
@@ -45,9 +86,9 @@ class ESPNFantasyScraper(BrowserScraper):
                       'seasonId': season}
 
         try:
-            from urllib.parse import urlparse, urlencode
+            from urllib.parse import urlencode
         except ImportError:
-            from urlparse import urlparse
+            from urllib import urlencode
 
         url = '{}?{}'.format(url, urlencode(params))
         driver = self.browser

@@ -64,7 +64,8 @@ t = {
     'Indianapolis Colts': 'IND',
     'Jacksonville Jaguars': 'JAC',
     'Kansas City Chiefs': 'KC',
-    'Los Angeles Rams': 'LARM',
+    'Los Angeles Chargers': 'LAC',
+    'Los Angeles Rams': 'LAR',
     'Miami Dolphins': 'MIA',
     'Minnesota Vikings': 'MIN',
     'New England Patriots': 'NE',
@@ -81,6 +82,41 @@ t = {
     'Tampa Bay Buccaneers': 'TB',
     'Tennessee Titans': 'TEN',
     'Washington Redskins': 'WAS'
+},
+
+'nickname_to_code_2017': {
+    'Cardinals': 'ARI',
+    'Falcons': 'ATL',
+    'Ravens': 'BAL',
+    'Bills': 'BUF',
+    'Panthers': 'CAR',
+    'Bears': 'CHI',
+    'Bengals': 'CIN',
+    'Browns': 'CLE',
+    'Cowboys': 'DAL',
+    'Broncos': 'DEN',
+    'Lions': 'DET',
+    'Packers': 'GB',
+    'Texans': 'HOU',
+    'Colts': 'IND',
+    'Jaguars': 'JAC',
+    'Chiefs': 'KC',
+    'Rams': 'LAR',
+    'Dolphins': 'MIA',
+    'Vikings': 'MIN',
+    'Patriots': 'NE',
+    'Saints': 'NO',
+    'Giants': 'NYG',
+    'Jets': 'NYJ',
+    'Raiders': 'OAK',
+    'Eagles': 'PHI',
+    'Steelers': 'PIT',
+    'Chargers': 'LAC',
+    '49ers': 'SF',
+    'Seahawks': 'SEA',
+    'Buccaneers': 'TB',
+    'Titans': 'TEN',
+    'Redskins': 'WAS'
 },
 
 'nickname_to_code_2016': {
@@ -100,7 +136,7 @@ t = {
     'Colts': 'IND',
     'Jaguars': 'JAC',
     'Chiefs': 'KC',
-    'Rams': 'LARM',
+    'Rams': 'LAR',
     'Dolphins': 'MIA',
     'Vikings': 'MIN',
     'Patriots': 'NE',
@@ -248,11 +284,15 @@ def nickname_to_code(name, season_year=None):
     if name[0].isalpha():
         name = name.title()
     if not season_year:
+        return t['nickname_to_code_2017'].get(name, None)
+    elif season_year > 2016:
+        return t['nickname_to_code_2017'].get(name, None)
+    elif season_year == 2016:
         return t['nickname_to_code_2016'].get(name, None)
     elif season_year < 2016:
         return t['nickname_to_code_pre2016'].get(name, None)
     else:
-        return t['nickname_to_code_2016'].get(name, None)
+        return t['nickname_to_code_2017'].get(name, None)
 
 def from_nfl(team_code, site):
     '''

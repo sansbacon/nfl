@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import datetime
+
 import logging
 import re
 
@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 
 from nfl.dates import convert_format
 from nfl.teams import nickname_to_code
+
 
 class ESPNFantasyParser(object):
 
@@ -79,6 +80,29 @@ class ESPNFantasyParser(object):
 
         return players
 
+    def drops(self, content):
+        '''
+        Parses recent drop/add page
+        
+        Args:
+            content: 
+
+        Returns:
+            list of dict
+        '''
+        soup = BeautifulSoup(content, 'lxml')
+        players = []
+        soup = BeautifulSoup(content, 'lxml')
+        colors = ['#f2f2e8', '#f8f8f2']
+        for row in [tr for tr in soup.find_all('tr') if tr.attrs.get('bgcolor') in colors]:
+            player = {'source': 'espn'}
+            tds = row.find_all('td')
+            player['transaction_date'] = tds[0].text
+            player['transaction_type'] = tds[1].text.split()[-1]
+            player['transaction_description'] = tds[2].text
+            players.append(player)
+        return players
+
     def fantasy_league_rosters(self, content):
         '''
         Parses page of entire league rosters
@@ -122,50 +146,31 @@ class ESPNFantasyParser(object):
             if not tds or len(tds) == 0:
                 continue
             else:
-                try:
-                    # td[0]: slot
-                    player['slot'] = tds[0].text
+                # td[0]: slot
+                player['slot'] = tds[0].text
 
-                    # td[1]:
-                    ptp = tds[1].text
-                    if 'D/ST' in ptp:
-                        pattern = r'(.*?)\s+D/ST'
-                        match = re.match(pattern, ptp)
-                        if match:
-                            player['source_player_name'] = '{} Defense'.format(match.group(1))
-                            player['source_player_position'] = 'DST'
-                            player['source_player_team'] = nickname_to_code(match.group(1))
+                # td[1]:
+                ptp = tds[1].text
+                if 'D/ST' in ptp:
+                    pattern = r'(.*?)\s+D/ST'
+                    match = re.match(pattern, ptp)
+                    if match:
+                        player['source_player_name'] = '{} Defense'.format(match.group(1))
+                        player['source_player_position'] = 'DST'
+                        player['source_player_team'] = nickname_to_code(match.group(1))
+                        # a[0]: player_id
+                        a = tr.find('a')
+                        if a:
+                            player['source_player_id'] = a.attrs.get('playerid')
+                else:
+                    a, navstr = list(tds[1].children)[0:2]
+                    player['source_player_name'] = a.text
+                    player['source_player_team'], player['source_player_position'] = navstr.split()[-2:]
+                    player['source_player_id'] = a.attrs.get('playerid')
 
-                    # [u'Kenny Stills', u'Mia WR  Q']
-                    elif '  ' in ptp:
-                        pattern = r'(.*?),\s+(\w{2,4})\s+(\w{2})\s+(\w+)'
-                        match = re.match(pattern, ptp)
-                        if match:
-                            if not player.get('source_player_name'):
-                                player['source_player_name'] = match.group(1)
-                            player['source_player_team'] = match.group(2).upper()
-                            player['source_player_position'] = match.group(3)
-
-                    # [u'Dexter McCluster', u'Ten RB']
-                    else:
-                        # do generic split routine
-                        pn, tp = ptp.split(', ')
-                        if not player.get('source_player_name'):
-                            player['source_player_name'] = pn
-                        player['source_player_team'], player['source_player_position'] = tp.split()
-
-                    # remove asterisk injury or news designation
-                    player['source_player_name'] = player['source_player_name'].replace('*', ' ')
-
-                    # a[0]: player_id
-                    a = tr.find('a')
-                    if a:
-                        player['source_player_id'] = a.attrs.get('playerid')
-
-                    players.append(player)
-
-                except Exception as e:
-                    logging.exception(e)
+                # remove asterisk injury or news designation
+                player['source_player_name'] = player.get('source_player_name', '').replace('*', ' ')
+                players.append(player)
 
         return players
 

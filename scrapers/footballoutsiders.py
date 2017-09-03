@@ -17,14 +17,19 @@ class FootballOutsidersNFLScraper(FootballScraper):
         url = 'http://www.footballoutsiders.com/stats/dl{}'
         return self.get(url.format(season))
 
-    def drive(self, season=''):
+    def drive(self, offdef, season=''):
         '''
         Gets drivestats page
 
         Returns:
             HTML string
         '''
-        url = 'http://www.footballoutsiders.com/stats/drivestats{}'
+        if offdef == 'off':
+            url = 'http://www.footballoutsiders.com/stats/drivestatsoff{}'
+        elif offdef == 'def':
+            url = 'http://www.footballoutsiders.com/stats/drivestatsdef{}'
+        else:
+            raise ValueError('invalid value for offdef: {}'.format(offdef))
         return self.get(url.format(season))
 
     def ol(self, season=''):

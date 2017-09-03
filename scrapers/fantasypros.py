@@ -11,9 +11,23 @@ class FantasyProsNFLScraper(FootballScraper):
 
     '''
     '''
+    @property
+    def formats(self):
+        return ['std', 'ppr', 'hppr']
 
-    @staticmethod
-    def construct_url(pos, fmt, cat):
+    @property
+    def positions(self):
+        return set(self.std_positions + self.ppr_positions)
+
+    @property
+    def ppr_positions(self):
+        return ['rb', 'wr', 'te', 'flex', 'qb-flex']
+
+    @property
+    def std_positions(self):
+        return ['qb', 'k', 'dst']
+
+    def _construct_url(self, pos, fmt, cat):
         '''
         Creates url for rankings or projections pages
 
@@ -25,22 +39,20 @@ class FantasyProsNFLScraper(FootballScraper):
         Returns:
             url string
         '''
-        std_positions = ['qb', 'k', 'dst']
-        ppr_positions = ['rb', 'wr', 'te', 'flex', 'qb-flex']
-        formats = ['std', 'ppr', 'hppr']
-        if fmt not in formats:
+        if fmt not in self.formats:
             raise ValueError('invalid format: {}'.format(fmt))
-        if pos in std_positions:
-            url = 'https://www.fantasypros.com/nfl/{cat}/{pos}.php'
-        elif pos in ppr_positions:
+
+        if pos not in self.positions:
+            raise ValueError('invalid format: {}'.format(fmt))
+
+        url = 'https://www.fantasypros.com/nfl/{cat}/{pos}.php'
+        if pos in self.ppr_positions:
             if fmt == 'std':
                 url = 'https://www.fantasypros.com/nfl/{cat}/{pos}.php'
             elif fmt == 'ppr':
                 url = 'https://www.fantasypros.com/nfl/{cat}/ppr-{pos}.php'
             elif fmt == 'hppr':
                 url = 'https://www.fantasypros.com/nfl/{cat}/half-point-ppr-{pos}.php'
-        else:
-            raise ValueError('invalid position: {}'.format(cat=cat, pos=pos))
 
         return url.format(cat=cat, pos=pos)
 
@@ -60,7 +72,6 @@ class FantasyProsNFLScraper(FootballScraper):
             url = 'https://www.fantasypros.com/nfl/adp/ppr-overall.php'
         else:
             raise ValueError('invalid format: {}'.format(fmt))
-
         return self.get(url)
 
     def draft_rankings(self, pos, fmt):
@@ -74,25 +85,7 @@ class FantasyProsNFLScraper(FootballScraper):
         Returns:
             content: HTML string of page
         '''
-        std_positions = ['qb', 'k', 'dst']
-        ppr_positions = ['rb', 'wr', 'te', 'flex', 'qb-flex']
-        formats = ['std', 'ppr', 'hppr']
-        if fmt not in formats:
-            raise ValueError('invalid format: {}'.format(fmt))
-
-        if pos in std_positions:
-            url = 'https://www.fantasypros.com/nfl/rankings/{pos}-cheatsheets.php'
-
-        elif pos in ppr_positions:
-            if fmt == 'std':
-                url = 'https://www.fantasypros.com/nfl/rankings/{pos}-cheatsheets.php'
-            elif fmt == 'ppr':
-                url = 'https://www.fantasypros.com/nfl/rankings/ppr-{pos}-cheatsheets.php'
-            elif fmt == 'hppr':
-                url = 'https://www.fantasypros.com/nfl/rankings/half-point-ppr-{pos}-cheatsheets.php'
-        else:
-            raise ValueError('invalid position: {}'.format(pos))
-
+        url = self._construct_url(pos, fmt, 'rankings')
         return self.get(url)
 
     def projections(self, pos, fmt, week):
@@ -107,25 +100,7 @@ class FantasyProsNFLScraper(FootballScraper):
         Returns:
             content: HTML string of page
         '''
-        formats = ['std', 'ppr', 'hppr']
-        if fmt not in formats:
-            raise ValueError('invalid format: {}'.format(fmt))
-
-        std_positions = ['qb', 'k', 'dst']
-        ppr_positions = ['rb', 'wr', 'te', 'flex', 'qb-flex']
-
-        if pos in std_positions:
-            url = 'https://www.fantasypros.com/nfl/projections/{pos}.php'
-        elif pos in ppr_positions:
-            if fmt == 'std':
-                url = 'https://www.fantasypros.com/nfl/projections/{pos}.php'
-            elif fmt == 'ppr':
-                url = 'https://www.fantasypros.com/nfl/projections/ppr-{pos}.php'
-            elif fmt == 'hppr':
-                url = 'https://www.fantasypros.com/nfl/projections/half-point-ppr-{pos}.php'
-        else:
-            raise ValueError('invalid position: {}'.format(pos))
-
+        url = self._construct_url(pos, fmt, 'projections')
         params = {'week': week}
         return self.get(url, payload=params)
 
@@ -140,31 +115,14 @@ class FantasyProsNFLScraper(FootballScraper):
         Returns:
             content: HTML string of page
         '''
-
-        formats = ['std', 'ppr', 'hppr']
-        if fmt not in formats:
-            raise ValueError('invalid format: {}'.format(fmt))
-
-        std_positions = ['qb', 'k', 'dst']
-        ppr_positions = ['rb', 'wr', 'te', 'flex', 'qb-flex']
-
-        if pos in std_positions:
-            url = 'https://www.fantasypros.com/nfl/rankings/ros-{pos}.php'
-        elif pos in ppr_positions:
-            if fmt == 'std':
-                url = 'https://www.fantasypros.com/nfl/rankings/ros-{pos}.php'
-            elif fmt == 'ppr':
-                url = 'https://www.fantasypros.com/nfl/rankings/ros-ppr-{pos}-cheatsheets.php'
-            elif fmt == 'hppr':
-                url = 'https://www.fantasypros.com/nfl/rankings/ros-half-point-ppr-{pos}-cheatsheets.php'
-        else:
-            raise ValueError('invalid position: {}'.format(pos))
-
+        url = self._construct_url(pos, fmt, 'rankings')
+        url = url.replace('rankings/', 'rankings/ros-')
         return self.get(url)
 
     def weekly_rankings(self, pos, fmt, week=None):
         '''
         Gets weekly rankings page
+        TODO: add something for the week parameter
         
         Args:
             pos: 'qb', 'rb', 'wr', 'te', 'flex', 'qb-flex', 'k', 'dst'
@@ -174,27 +132,9 @@ class FantasyProsNFLScraper(FootballScraper):
         Returns:
             content: HTML string of page
         '''
-        std_positions = ['qb', 'k', 'dst']
-        ppr_positions = ['rb', 'wr', 'te', 'flex', 'qb-flex']
-        formats = ['std', 'ppr', 'hppr']
-        if fmt not in formats:
-            raise ValueError('invalid format: {}'.format(fmt))
-
-        if pos in std_positions:
-            url = 'https://www.fantasypros.com/nfl/rankings/{pos}.php'
-        elif pos in ppr_positions:
-            if fmt == 'std':
-                url = 'https://www.fantasypros.com/nfl/rankings/{pos}.php'
-            elif fmt == 'ppr':
-                url = 'https://www.fantasypros.com/nfl/rankings/ppr-{pos}.php'
-            elif fmt == 'hppr':
-                url = 'https://www.fantasypros.com/nfl/rankings/half-point-ppr-{pos}.php'
-        else:
-            raise ValueError('invalid position: {}'.format(pos))
-
+        url = self._construct_url(pos, fmt, 'rankings')
         if week:
-            url = url + '?week={}'.format(week)
-
+            url = '{}?week={}'.format(url, week)
         return self.get(url)
 
 

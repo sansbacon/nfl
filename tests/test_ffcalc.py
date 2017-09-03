@@ -10,6 +10,7 @@ import unittest
 from nfl.scrapers.ffcalc import FantasyFootballCalculatorScraper
 from nfl.parsers.ffcalc import FantasyFootballCalculatorParser
 
+
 class FFcalc_test(unittest.TestCase):
 
     @property
@@ -26,15 +27,16 @@ class FFcalc_test(unittest.TestCase):
 
     def setUp(self):
         self.s = FantasyFootballCalculatorScraper(cache_name='ffc-test')
-        self.p = FantasyFootballCalculatorParser
+        self.p = FantasyFootballCalculatorParser()
 
     def test_adp(self):
+        tm = self.teams
         content = self.s.adp()
         self.assertIsNotNone(content)
         content = self.s.adp(fmt=self.format)
         self.assertIsNotNone(content)
-        content = self.s.adp(teams=self.teams)
-        self.assertIsNotNone(content)
+        players = self.p.adp(self.s.adp(teams=tm))
+        self.assertIsNotNone(players)
 
     def test_adp_old(self):
         content = self.s.adp_old(season_year=self.season)
@@ -45,7 +47,6 @@ class FFcalc_test(unittest.TestCase):
     def test_projections(self):
         content = self.s.projections()
         self.assertIsNotNone(content)
-
 
 if __name__=='__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)

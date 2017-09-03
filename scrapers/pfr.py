@@ -58,39 +58,45 @@ class PfrNFLScraper(FootballScraper):
         url = 'http://www.pro-football-reference.com/years/{season_year}/draft.htm'
         return self.get(url.format(season_year=season_year))
 
-    def playerstats_fantasy_weekly(self, season_year, week, offset=0):
+    def playerstats_fantasy_weekly(self, season_year, week, pos=None, offset=0):
         '''
         Gets 100 rows of fantasy results for specific season and week
 
         Args:
             season_year: 2016, 2015, etc. 
             week: 1, 2, 3, etc.
+            pos: 'qb', 'wr', etc.
             offset: 0, 100, 200, etc.
 
         Returns:
             HTML string
         '''
-        params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset,
-                                     'week_num_min': week, 'week_num_max': week})
-        content = self.get(self.pgl_finder_url, payload=params)
-        logging.debug(self.urls[-1])
-        return content
+        if pos:
+            params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset,
+                                         'week_num_min': week, 'week_num_max': week, 'pos': pos})
+        else:
+            params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset,
+                                         'week_num_min': week, 'week_num_max': week})
+        return self.get(self.pgl_finder_url, payload=params)
 
-    def playerstats_fantasy_yearly(self, season_year, offset=0):
+    def playerstats_fantasy_yearly(self, season_year, pos=None, offset=0):
         '''
         Gets 100 rows of fantasy results for specific season
 
         Args:
             season_year: 2016, 2015, etc. 
+            pos: 'qb', 'wr', etc.
             offset: 0, 100, 200, etc.
 
         Returns:
             HTML string
         '''
-        params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset})
-        content = self.get(self.pgl_finder_url, payload=params)
-        logging.debug(self.urls[-1])
-        return content
+        if pos:
+            params = self._merge_params({'year_min': season_year, 'year_max': season_year,
+                                         'offset': offset, 'pos': pos})
+        else:
+            params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset})
+        return self.get(self.pgl_finder_url, payload=params)
 
     def player_fantasy_year(self, season_year, player_id):
         '''

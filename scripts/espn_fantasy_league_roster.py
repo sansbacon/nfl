@@ -20,13 +20,12 @@ config.read(os.path.join(os.path.expanduser('~'), '.fantasy'))
 s = ESPNFantasyScraper(config=config, profile=profile)
 parser = ESPNFantasyParser() 
 
-with open('/home/sansbacon/espnteams.json', 'r') as infile:
+with open('/home/sansbacon/.espnteams.json', 'r') as infile:
     teams = json.load(infile)
 
 all_players = []
 
-# waiting for OFL draft - can delete afterwards
-for team in teams[1:]:
+for team in teams:
     content = s.fantasy_league_rosters(team['leagueId'])
     players = parser.fantasy_league_rosters(content)
 
@@ -40,5 +39,5 @@ for team in teams[1:]:
     else:
         print('could not get players for {}'.format(team['leagueName']))
 
-with open('/home/sansbacon/espn_rosters.json', 'w') as outfile:
-    json.dump(all_players, outfile)
+#with open('/home/sansbacon/espn_rosters.json', 'w') as outfile:
+#    json.dump(all_players, outfile)

@@ -71,6 +71,7 @@ def datetostr(d, site):
     '''
     return datetime.datetime.strftime(d, site_format(site))
 
+
 def format_type(datestr):
     '''
     Uses regular expressions to determine format of datestring
@@ -108,7 +109,8 @@ def site_format(site):
         'nfl': '%Y-%m-%d',
         'odd': '%m/%d/%Y',
         'db': '%Y%m%d',
-        'bdy': '%B %d, %Y'
+        'bdy': '%B %d, %Y',
+        'espn_fantasy': '%Y%m%d'
     }
 
     return fmt.get(site, None)
@@ -165,3 +167,18 @@ def yesterday(fmt='nfl'):
     if not fmt:
         raise ValueError('invalid date format')
     return datetime.datetime.strftime(datetime.datetime.today() - datetime.timedelta(1), fmt)
+
+def yesterday_x(interval, fmt='nfl'):
+    '''
+    Datestring for two days ago date
+
+    Args:
+        fmt: str, code like 'nfl'
+
+    Returns:
+        datestr
+    '''
+    fmt = site_format(fmt)
+    if not fmt:
+        raise ValueError('invalid date format')
+    return datetime.datetime.strftime(datetime.datetime.today() - datetime.timedelta(interval), fmt)

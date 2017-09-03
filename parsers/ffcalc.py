@@ -22,6 +22,37 @@ class FantasyFootballCalculatorParser():
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         self.positions = ['QB', 'RB', 'WR', 'TE']
 
+    def _fix_header(self, header):
+        '''
+        Looks at global list of headers, can provide extras locally
+        :param headers:
+        :return:
+        '''
+
+        fixed = {
+            'id': 'ffcalculator_id',
+            'rk': 'overall_rank',
+            'avg': 'fantasy_points_per_game',
+        }
+
+        #return fixed.get(header, header)
+        fixed_header = self._fix_header(header)
+
+        # fixed_header none if not found, so use local list
+        if not fixed_header:
+            return fixed.get(header, header)
+
+        else:
+            return fixed_header
+
+    def _fix_headers(self, headers):
+        '''
+
+        :param headers:
+        :return:
+        '''
+        return [self.fix_header(header) for header in headers]
+
     def _to_overall_pick(self, adp, adp_league_size, my_league_size):
         '''
         Data is in 2.01 format, so you have to translate those numbers to an overall pick
@@ -62,7 +93,7 @@ class FantasyFootballCalculatorParser():
 
         return results
 
-    def adp (self, xml, size):
+    def adp (self, xml, size=12):
         '''
         Parses xml and returns list of player dictionaries
         Args:
@@ -77,7 +108,7 @@ class FantasyFootballCalculatorParser():
             if item.find('./pos').text.lower() == 'pk':
                 pass
             else:
-                player = {}
+                player = {'source': 'ffcalc'}
                 for child in item.findall('*'):
                     if child.tag.lower() == 'adp':
                         fixed = self._to_overall_pick(child.text, adp_league_size, size)
@@ -85,41 +116,9 @@ class FantasyFootballCalculatorParser():
                         player['round'] = int(fixed['round'])
                         player['pick'] = int(fixed['pick'])
                     else:
-                        player[self.fix_header(child.tag.lower())] = child.text
+                        player[child.tag.lower()] = child.text
                 players.append(player)
         return players
-
-    def fix_header(self, header):
-        '''
-        Looks at global list of headers, can provide extras locally
-        :param headers:
-        :return:
-        '''
-
-        fixed = {
-            'id': 'ffcalculator_id',
-            'rk': 'overall_rank',
-            'avg': 'fantasy_points_per_game',
-        }
-
-        #return fixed.get(header, header)
-        fixed_header = self._fix_header(header)
-
-        # fixed_header none if not found, so use local list
-        if not fixed_header:
-            return fixed.get(header, header)
-
-        else:
-            return fixed_header
-
-    def fix_headers(self, headers):
-        '''
-
-        :param headers:
-        :return:
-        '''
-        return [self.fix_header(header) for header in headers]
-
 
     def projections (self,content):
         '''

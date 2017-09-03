@@ -1,6 +1,3 @@
-import logging
-from urllib import urlencode
-
 from nfl.scrapers.scraper import FootballScraper
 
 
@@ -9,7 +6,7 @@ class FantasyFootballCalculatorScraper(FootballScraper):
     Obtains html content of NFL fantasy projections or ADP page of fantasycalculator.com       
     '''
 
-    def adp(self, fmt='ppr', teams=14):
+    def adp(self, fmt='ppr', teams=12):
         '''
         Gets ADP page from fantasyfootballcalculator        
 

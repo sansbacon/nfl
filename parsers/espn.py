@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-import datetime
+
+from __future__ import absolute_import, print_function, division
+
 import logging
-import numbers
 import re
 
 from bs4 import BeautifulSoup
@@ -29,6 +30,48 @@ class ESPNNFLParser(object):
             return 0
         else:
             return val
+
+    def adp(self, content):
+        '''
+        Parses season-long ADP
+        
+        Args:
+            content: 
+
+        Returns:
+            list of dict
+        '''
+        players = []
+        soup = BeautifulSoup(content, 'lxml')
+        colors = ['#f2f2e8', '#f8f8f2']
+        for row in [tr for tr in soup.find_all('tr') if tr.attrs.get('bgcolor') in colors]:
+            player = {'source': 'espn'}
+            tds = row.find_all('td')
+
+            # tds[0]: rank
+            player['position_rank'] = tds[0].text
+
+            # tds[1]: name/team/pos
+            try:
+                a, navstr = list(tds[1].children)[0:2]
+                player['source_player_name'] = a.text.replace('*','')
+                player['season_year'] = a.attrs.get('seasonid')
+                player['source_player_id'] = a.attrs.get('playerid')
+                player['source_team_code'] = navstr.split(', ')[-1].strip()
+            except:
+                a = tds[1].find('a')
+                player['source_player_name'] = a.text
+                player['season_year'] = a.attrs.get('seasonid')
+                player['source_player_id'] = a.attrs.get('playerid')
+                player['source_team_code'] = nickname_to_code(a.text.split(' D/ST')[0], int(player['season_year']))
+
+            # remaining stats
+            player['source_player_position'] = tds[2].text
+            player['adp'] = tds[3].text
+
+            players.append(player)
+
+        return players
 
     def lovehate(self, season, week, lh):
         '''
@@ -58,29 +101,6 @@ class ESPNNFLParser(object):
                 site_player_name = link.split('>')[1].split('<')[0]
 
         #print season, week, pos, label, sublabel, site_player_id, site_player_stub, site_player_name
-
-    def nfl_team_roster(self, content):
-        '''
-        Parses team roster page into list of player dict
-
-        Args:
-            content: HTML of espn nfl team roster page
-
-        Returns:
-            list of dict
-        '''
-        players = []
-        soup = BeautifulSoup(content, 'lxml')
-        for tr in soup.find_all('tr'):
-            a = tr.find('a', {'href': re.compile(r'/nfl/player/_/id/')})
-            if a:
-                player = {'source': 'espn'}
-                tds = tr.find_all('td')
-                player['source_player_position'] = tds[2].text
-                player['source_player_name'] = a.text
-                player['source_player_id'] = a['href'].split('/')[-2]
-                players.append(player)
-        return players
 
     def projections(self, content, pos):
         '''
@@ -184,7 +204,6 @@ class ESPNNFLParser(object):
                 player['source_team_name'] = tds[1].text
                 a = tr.find('a', {'href': re.compile(r'/team/_/name')})
                 if a:
-                    print(a['href'])
                     match = re.search(r'name/(\w+)/', a['href'])
                     if match:
                         player['source_team_code'] = match.group(1)
@@ -197,40 +216,28 @@ class ESPNNFLParser(object):
 
         return players
 
-    def team_roster(self, team_string, content):
+    def team_roster(self, content):
         '''
-        Parses one team clubhouse
+        Parses team roster page into list of player dict
+
         Args:
-            team_string (str): TEAMOWNER_TEAMID
-            content (str): html string
+            content: HTML of espn nfl team roster page
 
         Returns:
-            roster (list): of player dict
+            list of dict
         '''
-
-        roster = []
-        team_owner, team_id = team_string.split('_')
-
+        players = []
         soup = BeautifulSoup(content, 'lxml')
-        t = soup.find('table', {'id': 'playertable_0'})
-        if not t: return roster
-        today = datetime.datetime.strftime(datetime.date.today(), '%m-%d-%Y')
-
-        for tr in t.findAll('tr', {'class': 'pncPlayerRow'}):
-            player = {}
-            pid = tr.get('id')
-            if pid: player['espn_player_id'] = re.findall(r'\d+', pid)[0]
-            slot = tr.find('td', {'class': 'playerSlot'})
-            if slot: player['slot'] = slot.text.strip()
-            player_name = tr.find('a', {'class': 'flexpop'})
-            if player_name: player['espn_player_name'] = player_name.text.strip()
-            player['fantasy_team'] = team_owner
-            player['fantasy_team_id'] = team_id
-            player['roster_date'] = today
-            if player.get('espn_player_name', None):
-                roster.append(player)
-
-        return roster
+        for tr in soup.find_all('tr'):
+            a = tr.find('a', {'href': re.compile(r'/nfl/player/_/id/')})
+            if a:
+                player = {'source': 'espn'}
+                tds = tr.find_all('td')
+                player['source_player_position'] = tds[2].text
+                player['source_player_name'] = a.text
+                player['source_player_id'] = a['href'].split('/')[-2]
+                players.append(player)
+        return players
 
 if __name__ == "__main__":
     pass

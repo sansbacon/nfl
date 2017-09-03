@@ -6,7 +6,7 @@ import logging
 from nfl.scrapers.scraper import FootballScraper
 
 
-class FantasyFootballTodayScraper(FootballScraper):
+class FFTodayScraper(FootballScraper):
     '''
     Scrapes fftoday.com pages
     '''

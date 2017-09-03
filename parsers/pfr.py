@@ -84,30 +84,33 @@ class PfrNFLParser():
 
         return players
 
-    def fantasy_week(self, content, season_year=None):
+    def playerstats_fantasy_weekly(self, content, season_year=None, pos=None):
         '''
         Takes HTML of 100 rows of weekly results, returns list of players
+        Use next_page parameter to indicate whether another 
 
         Args:
             content: HTML string
 
         Returns:
-            players: list of player dict
+            (players: list of player dict, next_page: boolean)
         '''
         players = []
+
         soup = BeautifulSoup(content, 'lxml')
         tbl = soup.find('table', {'id': 'results'})
         if tbl:
             for tr in tbl.find('tbody').findAll('tr', class_=None):
                 player = {td['data-stat']: td.text for td in tr.find_all('td')}
+                if pos:
+                    player['source_player_position'] = pos
                 if season_year:
                     player['season_year'] = season_year
 
                 a = tr.find('a', {'href': re.compile(r'/players/')})
                 if a:
                     try:
-                        pid = a['href'].split('/')[-1].split('.')[:-1]
-                        pid = pid[0]
+                        pid = a['href'].split('/')[-1].split('.htm')[0]
                         player['source_player_id'] = pid
                     except:
                         pass

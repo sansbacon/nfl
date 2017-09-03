@@ -7,7 +7,8 @@ import random
 import sys
 import unittest
 
-from nfl.scrapers.fftoday import FantasyFootballTodayScraper
+from nfl.parsers.fftoday import FFTodayParser
+from nfl.scrapers.fftoday import FFTodayScraper
 
 class FFcalc_test(unittest.TestCase):
 
@@ -24,7 +25,8 @@ class FFcalc_test(unittest.TestCase):
         return random.choice(range(1,18))
 
     def setUp(self):
-        self.s = FantasyFootballTodayScraper(cache_name='fft-test')
+        self.s = FFTodayScraper(cache_name='fft-test')
+        self.p = FFTodayParser()
 
     def test_position_id(self):
         content = self.s.position_id(self.position)

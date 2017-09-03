@@ -4,6 +4,7 @@ from __future__ import absolute_import, print_function, division
 
 import json
 import logging
+import os
 
 from pyvirtualdisplay import Display
 from selenium import webdriver
@@ -29,9 +30,10 @@ class BrowserScraper():
         caps['marionette'] = True
         if profile:
             self.browser = webdriver.Firefox(capabilities=caps,
-                                             firefox_profile=webdriver.FirefoxProfile(profile))
+                                             firefox_profile=webdriver.FirefoxProfile(profile),
+                                             log_path=os.devnull)
         else:
-            self.browser = webdriver.Firefox(capabilities=caps)
+            self.browser = webdriver.Firefox(capabilities=caps, log_path=os.devnull)
         self.urls = []
 
     def get(self, url, payload=None):
@@ -53,12 +55,9 @@ class BrowserScraper():
 
         self.browser.get(url)
         self.urls.append(url)
-        logging.info(type(self.browser.page_source))
         return self.browser.page_source
-        #elem = self.browser.find_element_by_xpath("//*")
-        #return elem.get_attribute("outerHTML")
 
-    def get_json(self, url, payload):
+    def get_json(self, url, payload=None):
         '''
         
         Args:
@@ -74,11 +73,12 @@ class BrowserScraper():
                 from urlparse import urlparse
             url = '{}?{}'.format(url, urlencode(payload))
 
-        content = self.get(url)
         try:
+            self.browser.get(url)
+            content = self.browser.find_element_by_tag_name('body').text
             result = json.loads(content)
         except:
-            logging.error(content)
+            logging.error('could not get {}'.format(url))
             result = None
         finally:
             return result

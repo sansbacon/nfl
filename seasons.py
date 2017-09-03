@@ -110,6 +110,19 @@ def season_week(d):
     
     # return None on fail
     return None
+
+def current_season_year():
+    '''
+    Gets current season based on today's date
     
+    Returns:
+        int
+    '''
+    d = datetime.date.today()
+    if d.month > 2:
+        return d.year
+    else:
+        return d.year - 1
+
 if __name__ == '__main__':
     pass

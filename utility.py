@@ -1,6 +1,6 @@
 import collections
 import csv
-import io
+from functools import wraps
 import json
 import logging
 import os
@@ -105,6 +105,17 @@ def json_to_dict(json_fname):
     else:
         raise ValueError('{0} does not exist'.format(json_fname))
 
+def memoize(function):
+    memo = {}
+    @wraps(function)
+    def wrapper(*args):
+        if args in memo:
+            return memo[args]
+        else:
+            rv = function(*args)
+            memo[args] = rv
+            return rv
+    return wrapper
 
 def merge(merge_dico, dico_list):
         '''
