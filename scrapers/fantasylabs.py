@@ -2,7 +2,10 @@ from __future__ import absolute_import, print_function, division
 
 import logging
 
+from nfl.dates import convert_format
 from nfl.scrapers.scraper import FootballScraper
+from nfl.seasons import fantasylabs_week
+from nfl.utility import url_quote
 
 
 class FantasyLabsNFLScraper(FootballScraper):
@@ -11,13 +14,6 @@ class FantasyLabsNFLScraper(FootballScraper):
     If you don't have a subscription, you can access the information freely-available on the website
     If you have a subscription, the scraper can use your firefox cookies and access protected content
     You cannot access protected content if you (a) have not logged in (b) have firefox open
-
-    Usage:
-
-        s = FantasyLabsNFLScraper()
-        content = s.today()
-        model = s.model('11_30_2016', 'levitan')
-       
     '''
 
     @property
@@ -31,19 +27,47 @@ class FantasyLabsNFLScraper(FootballScraper):
             'cash': 'http://www.fantasylabs.com/api/playermodel/1/{model_date}/?modelId=193745'
         }
 
-    def games_day(self, game_date):
+    def correlations(self):
         '''
-        Gets json for games on single date (can use any date in upcoming NFL week)
+        
+        Returns:
 
-        Usage:
-            content = s.game(game_date='10_04_2015')
-            
         '''
-        url = 'http://www.fantasylabs.com/api/sportevents/1/{0}'.format(game_date)
+        url = 'http://api.fantasylabs.com/api/v2/correlations/views/1'
+        return self.get_json(url)
+
+    def games(self, season_year, week, fmt='fl_matchups'):
+        '''
+        
+        Args:
+            season_year: 2017, etc.
+            week: 1, 2, etc.
+            fmt: 'fl_matchups', 'fl2017', etc.
+
+        Returns:
+
+        '''
+        game_date = fantasylabs_week(season_year, week, fmt)
+        url = 'http://www.fantasylabs.com/api/teams/1/{}/games/'
+        return self.get_json(url)
+
+    def matchups(self, team_name, game_date):
+        '''
+        
+        Args:
+            game_day: 
+
+        Returns:
+
+        '''
+        game_date = convert_format(game_date, 'fl_matchups')
+        team_name = url_quote(team_name)
+        url = 'http://www.fantasylabs.com/api/matchups/1/team/{}/{}'.format(team_name, game_date)
         return self.get_json(url)
 
     def model(self, model_day, model_name='default'):
         '''
+        TODO: need to see if this still works
         Gets json for model. Stats in most models the same, main difference is the ranking based on weights.
          
         Arguments:
@@ -58,6 +82,34 @@ class FantasyLabsNFLScraper(FootballScraper):
             logging.error('could not find url for {0} model'.format(model_name))
             url = self.model_urls.get('default')
         return self.get_json(url.format(model_date=model_day))
+
+    def sourcedata(self, game_date):
+        '''
+        Gets contest data
+        
+        Args:
+            game_day: 
+
+        Returns:
+        '''
+        game_date = convert_format(game_date, 'fl2017')
+        url = 'http://www.fantasylabs.com/api/sourcedata/1/{}'.format(game_date)
+        return self.get_json(url)
+
+    def vegas(self, game_date):
+        '''
+        Gets vegas data
+        
+        Args:
+            game_day: 
+
+        Returns:
+
+        '''
+        game_date = convert_format(game_date, 'fl2017')
+        url = 'http://www.fantasylabs.com/api/sportevents/1/{}/vegas/'.format(game_date)
+        return self.get_json(url)
+
 
 if __name__ == "__main__":
     pass

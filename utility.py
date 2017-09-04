@@ -230,6 +230,21 @@ def save_file(data, fname):
     else:
         raise ValueError('{0} is not a supported file extension'.format(ext))
 
+def url_quote(s):
+    '''
+    
+    Args:
+        s: 
+
+    Returns:
+
+    '''
+    try:
+        import urllib.parse
+        return urllib.parse.quote(s)
+    except:
+        import urllib
+        return urllib.quote(s)
 
 if __name__ == '__main__':
     pass

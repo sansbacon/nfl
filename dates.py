@@ -106,6 +106,8 @@ def site_format(site):
     fmt = {
         'std': '%m-%d-%Y',
         'fl': '%m_%d_%Y',
+        'fl2017': '%m-%d-%Y',
+        'fl_matchups': '%-m-%-d-%Y',
         'nfl': '%Y-%m-%d',
         'odd': '%m/%d/%Y',
         'db': '%Y%m%d',

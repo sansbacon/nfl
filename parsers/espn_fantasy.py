@@ -90,7 +90,6 @@ class ESPNFantasyParser(object):
         Returns:
             list of dict
         '''
-        soup = BeautifulSoup(content, 'lxml')
         players = []
         soup = BeautifulSoup(content, 'lxml')
         colors = ['#f2f2e8', '#f8f8f2']
