@@ -49,7 +49,7 @@ class FantasyLabsNFLScraper(FootballScraper):
         '''
         game_date = fantasylabs_week(season_year, week, fmt)
         url = 'http://www.fantasylabs.com/api/teams/1/{}/games/'
-        return self.get_json(url)
+        return self.get_json(url.format(game_date))
 
     def matchups(self, team_name, game_date):
         '''

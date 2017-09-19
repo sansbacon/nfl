@@ -82,6 +82,7 @@ class NFLComScraper(FootballScraper):
 
     def player_profile(self, profile_id):
         '''
+        TODO: this does not work, need name as well as profile ID to get page
         Gets nfl.com player profile
         
         Args:
@@ -90,7 +91,7 @@ class NFLComScraper(FootballScraper):
         Returns:
             HTML string
         '''
-        url = 'http://www.nfl.com/player/zacrobinson/{}/profile'
+        url = 'http://www.nfl.com/player/{}/{}/profile'
         return self.get(url.format(profile_id))
 
     def players(self, last_initial):

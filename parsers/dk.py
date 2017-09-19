@@ -2,6 +2,7 @@
 
 from __future__ import absolute_import, print_function, division
 
+from csv import reader
 import datetime
 import logging
 
@@ -14,6 +15,52 @@ class DraftKingsNFLParser(object):
         '''
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+
+    def weekly_contest_file(self, fn):
+        '''
+        Parses contest upload file from dk.com
+
+        Args:
+            fn: 
+
+        Returns:
+
+        '''
+        results = []
+        with open(fn, 'r') as infile:
+            # strange format in the file
+            # data does not start until row 8 (index 7)
+            for idx, row in enumerate(reader(infile)):
+                if idx < 7:
+                    continue
+                elif idx == 7:
+                    headers = row[11:18]
+                elif idx > 7:
+                    results.append(dict(zip(headers, row[11:18])))
+        return results
+
+    def weekly_salaries_file(self, fn):
+        '''
+        Parses salaries file from dk.com
+
+        Args:
+            fn: 
+
+        Returns:
+
+        '''
+        results = []
+        with open(fn, 'r') as infile:
+            # strange format in the file
+            # data does not start until row 8 (index 7)
+            for idx, row in enumerate(reader(infile)):
+                if idx == 0:
+                    headers = row[11:18]
+                elif idx > 0:
+                    results.append(dict(zip(headers, row)))
+        return results
+
 
     def weekly_players_games(self, content):
         '''

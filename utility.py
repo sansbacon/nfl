@@ -70,6 +70,21 @@ def file_to_ds(fname):
         raise ValueError('{0} is not a supported file extension'.format(ext))
 
 
+def getdb(configfn=None):
+    try:
+        import ConfigParser as configparser
+    except ImportError:
+        import configparser
+
+    from nfl.db.nflpg import NFLPostgres
+    config = configparser.ConfigParser()
+    if not configfn:
+        config.read(os.path.join(os.path.expanduser('~'), '.fantasy'))
+    else:
+        config.read(configfn)
+    return NFLPostgres(user=config['db']['username'], password=config['db']['password'], database='nfldb')
+
+
 def isfloat(x):
     try:
         a = float(x)
