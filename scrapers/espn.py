@@ -131,6 +131,30 @@ class ESPNNFLScraper(FootballScraper):
         url = 'http://www.espn.com/nfl/team/roster/_/name/{}'
         return self.get(url=url.format(team_code), encoding='latin1')
 
+    def watson(self, pid):
+        '''
+        
+        Args:
+            pid: player ID (10000, etc.)
+
+        Returns:
+            dict - parsed JSON
+        '''
+        url = ('http://www.watsonfantasyfootball.com/espnpartner/dallasfantasyfootball/projections/',
+               'projections_{}_ESPNFantasyFootball_2017.json')
+        return self.get_json(url.format(pid))
+
+    def watson_players(self):
+        '''
+        Gets list of ESPN fantasy football players for Watson projections
+        
+        Returns:
+            dict - parsed JSON
+        '''
+
+        url = ('http://www.watsonfantasyfootball.com/espnpartner/dallasfantasyfootball/',
+               'players/players_ESPNFantasyFootball_2017.json')
+        return self.get_json(url)
 
 if __name__ == "__main__":
     pass

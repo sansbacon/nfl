@@ -273,5 +273,36 @@ class ESPNNFLParser(object):
                 players.append(player)
         return players
 
+    def watson(self, content):
+        '''
+        
+        Args:
+            content: list of dict - parsed JSON
+
+        Returns:
+            dict
+        '''
+        wanted = ["PLAYERID", "EXECUTION_TIMESTAMP", "SCORE_PROJECTION", "SCORE_DISTRIBUTION",
+                  "LOW_SCORE", "HIGH_SCORE", "OUTSIDE_PROJECTION", "SIMULATION_PROJECTION"]
+
+        # have multiple time-stamped projections
+        # we want the most recent projection model only
+        newest = content[-1]
+        return {k.lower():v for k,v in content.items() if k in wanted}
+
+    def watson_players(self, content, wanted=None):
+        '''
+        Parses list of dict into player
+        
+        Args:
+            content: dict - parsed JSON
+
+        Returns:
+            list of player dict
+        '''
+        if not wanted:
+            wanted = ['FULL_NAME', 'FANTASY_PLAYER_ID', 'PLAYERID', 'POSITION', 'TEAM']
+        return [{k.lower():v for k,v in p.items() if k in wanted} for p in content]
+
 if __name__ == "__main__":
     pass
