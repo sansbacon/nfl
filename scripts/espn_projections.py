@@ -23,5 +23,5 @@ for pos in ['qb', 'rb', 'wr', 'te', 'k']:
         fantasy_players += parser.projections(content, pos)
         print('finished {} {}'.format(pos, offset))
 
-with open('/home/sansbacon/espn-fantasy-players.json', 'w') as outfile:
-    json.dump(fantasy_players, outfile)
+#with open('/home/sansbacon/espn-fantasy-players.json', 'w') as outfile:
+#    json.dump(fantasy_players, outfile)

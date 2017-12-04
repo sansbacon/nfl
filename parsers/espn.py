@@ -16,6 +16,20 @@ class ESPNNFLParser(object):
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
+    @property
+    def fantasy_team_codes(self):
+       return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+               23, 24, 25, 26, 27, 28, 29, 30, 33, 34]
+
+    @property
+    def fantasy_teams(self):
+        return {
+            1: 'Atl', 2: 'Buf', 3: 'Chi', 4: 'Cin', 5: 'Cle', 6: 'Dal', 7: 'Den', 8: 'Det',
+            9: 'GB', 10: 'Ten', 11: 'Ind', 12: 'KC', 13: 'Oak', 14: 'LAR', 15: 'Mia', 16: 'Min',
+            17: 'NE', 18: 'NO', 19: 'NYG', 20: 'NYJ', 21: 'Phi', 22: 'Ari', 23: 'Pit', 24: 'LAC',
+            25: 'SF', 26: 'Sea', 27: 'TB', 28: 'Wsh', 29: 'Car', 30: 'Jax', 33: 'Bal',34: 'Hou'
+        }
+
     def _val(self, val):
         '''
         Converts non-numeric value to numeric 0
@@ -70,6 +84,26 @@ class ESPNNFLParser(object):
             player['adp'] = tds[3].text
 
             players.append(player)
+
+        return players
+
+    def fantasy_players_team(self, content):
+        '''
+        Parses page of fantasy players
+        
+        Args:
+            content: HTML string
+
+        Returns:
+            list of players
+        '''
+        players = {}
+        soup = BeautifulSoup(content, 'lxml')
+        for a in soup.find_all('a', {'class': 'flexpop'}):
+            pid = a.attrs.get('playerid')
+            pname = a.text.strip()
+            if pid and pname:
+                players[pid] = pname
 
         return players
 
