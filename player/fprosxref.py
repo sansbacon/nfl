@@ -1,114 +1,91 @@
 '''
 fprosxref.py
 cross-reference fantasypros ids with nfl.player table ids
-
-Usage:
-    import logging
-    import os
-    import pandas as pd
-    import fprosxref
-    logging.basicConfig(level=logging.ERROR)
-    from nfl.db.nflpg import NFLPostgres
-    nflp = NFLPostgres(database='nfl', user=os.environ.get('NFLPGUSER'), password=os.environ.get('NFLPGPASSWORD')
-    fpros = get_player_id(nflp, pd.read_csv(os.path.join(os.path.expanduser('~'), 'Downloads/FFA-CustomRankings.csv')))
 '''
 
-import json
-import pprint
+import logging
 
-import pandas as pd
+from nfl.names import match_player
+from nfl.player.playerxref import nflcom_players
+from nfl.parsers.fantasypros import FantasyProsNFLParser
+from nfl.scrapers.fantasypros import FantasyProsNFLScraper
+from nfl.utility import getdb
 
-def _fpkey(x):
+def fpros_player_dict(fmt='ppr'):
     '''
-    Used in pd.apply to generate name_position key
+    All ranked players for current week @ fantasypros
+
+    Arguments:
+        None
+
+    Returns:
+        dict
     '''
-    return x['site_player_name'].strip() + '_' + x['pos'].strip()
+    fpros_players = []
+    scraper = FantasyProsNFLScraper(cache_name='fpros-weekly')
+    parser = FantasyProsNFLParser()
+    for pos in ['qb', 'rb', 'wr', 'te', 'dst']:
+        logging.info('starting {}'.format(pos))
+        content = scraper.weekly_rankings(pos=pos, fmt=fmt)
+        fpros_players += parser.weekly_rankings(content)
+        logging.info('finished {}'.format(pos))
+    return {'{}_{}'.format(p['source_player_name'], p['pos']): p
+            for p in fpros_players}
 
-def _first_last(n, fmt='fcl'):
+
+def fpros_xref(nflp, fpros_players):
     '''
-    Converts various name formats to first_last
-    TODO: this is duplicative of some other module - have done for NBA
-    and maybe last year for NFL
+    Cross reference fantasypros players with nfl.com players
     '''
-    if fmt == 'fcl':
-        parts = n.split(', ')
-        return parts[1].strip() + ' ' + parts[0].strip()
-    else:
-        return n
+    xref = {}
+    multimatch = []
+    nomatch = []
 
-def _player_id(x, ffap):
-    '''
-    Used in pd.apply to generate string of the nfl.player player_id
-    Can't use integers due to NA values
-    '''
-    key = str(x['playerId'])
-    try:
-        return str(ffap[key]['player_id'])
-    except:
-        return None
+    # loop through fpros_players
+    # also need to update as go through
+    for k, v in fpros_players.items():
+        if nflp.get(k):
+            if len(nflp.get(k)) > 1:
+                multimatch.append(v)
+            else:
+                fpros_id = v.get('source_player_id')
+                xref[fpros_id] = nflp.get(k)[0].get('player_id')
 
-def get_fpros_xref(nflp):
-    ## make ffa dict
-    ## can now use in processing ffa projection files
-    q = "SELECT * FROM player_xref WHERE site='ffanalytics';"
-    return {row['site_player_id']: row for row in nflp.select_dict(q)}
+        else:
+            match = match_player(k, list(nflp.keys()), .85)
+            if match:
+                fpros_id = v.get('source_player_id')
+                xref[fpros_id] = nflp.get(match)[0].get('player_id')
+            else:
+                nomatch.append(v)
 
-def get_player_id(nflp, df):
-    ## takes df, adds player_id from nfl.player table
-    df['fp_key'] = df.apply(_fpkey, axis=1)
-    fp = get_fpros_xref(nflp)
-    df['player_id'] = df.apply(_player_id, axis=1, args=(fp,))
-    return df
+    logging.info('match {}, multimatch {}, nomatch {}'.format(
+        len(list(xref)), len(multimatch), len(nomatch)))
 
-def update_fpros_xref(nflp, fn):
-    '''
-    Maps fantasypros playerid to nfl.player player_id
-    '''
-    
-    ## step one: create dict from existing db
-    ## name_pos is key, entire dict is value
-    cp = {}
-    q = 'SELECT player_id, name, "position", team FROM player'
-    for p in nflp.select_dict(q):
-        fl = _first_last(p.get('name', ''))
-        pid = fl + '_' + p.get('position', '')
-        cp[pid] = p
+    return (xref, multimatch, nomatch)
 
-    ## step two: read in fpros names
-    df = pd.read_json(fn)
-    df['fp_key'] = df.apply(_fpkey, axis=1)
-    ffap = df.T.to_dict().values()
-
-    ## step three: compare
-    # fields: player_id, site, site_player_id, site_player_name, site_player_team, site_player_position
-    for p in ffap:
-        k = p.get('fp_key')
-        if cp.has_key(k):
-            cp[k]['site'] = p.get('site')
-            cp[k]['site_player_id'] = p.get('site_player_id')
-            cp[k]['site_player_name'] = p.get('site_player_name')
-            cp[k]['site_player_team'] = p.get('team')
-            cp[k]['site_player_position'] = p.get('pos')
-            cp[k].pop('team', '')
-            cp[k].pop('name', '')
-            cp[k].pop('position', '')
-
-    pprint.pprint(cp)
-
-    ## step four: insert into db
-    ## some inserts will fail, so want to do individual rather than batch
-    #for v in cp.values():
-    #    nflp.insert_dicts([v], 'player_xref')
 
 if __name__ == '__main__':
-    pass
-    '''
-    import logging
-    import os
-    import pandas as pd
+    db = getdb
+    logging.basicConfig(level=logging.INFO)
+    nflp = nflcom_players(db)
+    fpros_dict = fpros_player_dict()
+    fpros_players = list(fpros_dict.values())
+    fpros_idx = {item['source_player_id']: idx for idx, item in enumerate(fpros_players)}
 
-    logging.basicConfig(level=logging.ERROR)
-    from nfl.db.nflpg import NFLPostgres
-    nflp = NFLPostgres()
-    update_fpros_xref(nflp, '/home/sansbacon/fpros-players.json')
-    '''
+    # add nflcom_player_id to fpros_players
+    # then insert into extra_misc.player_xref
+    wanted = ['nflcom_player_id', 'pos', 'source', 'source_player_id',
+              'source_player_name', 'source_player_position']
+
+    xref, multimatch, nomatch = fpros_xref(nflp, fpros_dict)
+    for fpros_id, nflcom_id in xref.items():
+        idx = fpros_idx.get(fpros_id)
+        if idx:
+            player = {k: v for k, v in fpros_players[idx].items() if k in wanted}
+            player['nflcom_player_id'] = nflcom_id
+            if player.get('pos'):
+                player['source_player_position'] = player.get('pos')
+                player.pop('pos', 0)
+            db._insert_dict(player, 'extra_misc.player_xref')
+

@@ -183,11 +183,11 @@ class FantasyProsNFLParser(BrowserScraper):
             # tds[0]: rank
             player['source_player_rank'] = tds[0].text
 
-            # tds[1]: player/id/team
-            children = list(tds[1].children)
+            # tds[2]: player/id/team
+            children = list(tds[2].children)
             player['source_player_name'] = children[0].text
             player['source_player_team'] = children[2].text
-            a = tds[1].find('a', {'href': '#'})
+            a = tds[2].find('a', {'href': '#'})
             if a:
                 try:
                     player['source_player_id'] = a.attrs['data-fp-id']
@@ -197,11 +197,14 @@ class FantasyProsNFLParser(BrowserScraper):
                     except (KeyError, ValueError) as e:
                         logging.exception(e)
 
-            # tds[2]: opp
-            player['source_player_opp'] = tds[2].text.split()[-1]
+            # tds[3]: opp
+            try:
+                player['source_player_opp'] = tds[3].text.split()[-1]
+            except:
+                pass
 
-            # tds[3:7] data
-            for k,v in zip(['best', 'worst', 'avg', 'stdev'], [td.text for td in tds[3:7]]):
+            # tds[4:8] data
+            for k,v in zip(['best', 'worst', 'avg', 'stdev'], [td.text for td in tds[4:8]]):
                 player[k] = v
 
             # get last updated
@@ -217,7 +220,7 @@ class FantasyProsNFLParser(BrowserScraper):
             week, pos = subtitle.split()[1:3]
             if week.isdigit and pos in positions:
                 player['week'] = week
-                player['pos'] = pos
+                player['source_player_position'] = pos
 
             elif pos in positions:
                 player['pos'] = pos

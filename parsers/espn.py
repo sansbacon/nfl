@@ -282,13 +282,13 @@ class ESPNNFLParser(object):
         Returns:
             dict
         '''
-        wanted = ["PLAYERID", "EXECUTION_TIMESTAMP", "SCORE_PROJECTION", "SCORE_DISTRIBUTION",
+        wanted = ["PLAYERID", "EXECUTION_TIMESTAMP", "DISTRIBUTION_NAME", "SCORE_PROJECTION", "SCORE_DISTRIBUTION",
                   "LOW_SCORE", "HIGH_SCORE", "OUTSIDE_PROJECTION", "SIMULATION_PROJECTION"]
 
         # have multiple time-stamped projections
         # we want the most recent projection model only
         newest = content[-1]
-        return {k.lower():v for k,v in content.items() if k in wanted}
+        return {k.lower():v for k,v in newest.items() if k in wanted}
 
     def watson_players(self, content, wanted=None):
         '''

@@ -96,6 +96,29 @@ def weekly_dk_players_table(players, games, seas, week):
         fixed.append(f)
     return fixed
 
+def dk_slate_players_table(players, seas, week, slate):
+    '''
+    
+    Args:
+        players: 
+        seas: 
+        week: 
+        slate: 
+
+    Returns:
+
+    '''
+    fixed = []
+    for p in players:
+        f = {'season_year': seas, 'week': week, 'slate': slate}
+        f['source_player_name'] = p['Name']
+        f['source_player_id'] = p['ID']
+        f['source_team_code'] = p['TeamAbbrev']
+        f['source_player_position'] = p['Position']
+        f['salary'] = p['Salary']
+        fixed.append(f)
+    return fixed
+
 def valornone(val):
     '''
     

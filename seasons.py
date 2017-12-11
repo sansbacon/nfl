@@ -58,8 +58,11 @@ def season_week(d):
     Takes date and figures out season and week
 
     Arguments:
-        d(datetime): the day of the game
+        d(datetime.date): the day of the game
     '''
+
+    if not isinstance(d, datetime.date):
+        raise ValueError('d must be date')
 
     # get the year and month
     # infer which season based on these
@@ -80,11 +83,11 @@ def season_week(d):
     if month < 3:
         guess_week = 15
     elif month == 10:
-        guess_week = 3
+        guess_week = 2
     elif month == 11:
-        guess_week = 7
+        guess_week = 6
     elif month == 12:
-        guess_week = 15
+        guess_week = 10
     logging.debug('guess week is {}'.format(guess_week))
 
     # loop from guess

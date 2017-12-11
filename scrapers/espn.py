@@ -140,7 +140,7 @@ class ESPNNFLScraper(FootballScraper):
         Returns:
             dict - parsed JSON
         '''
-        url = ('http://www.watsonfantasyfootball.com/espnpartner/dallasfantasyfootball/projections/',
+        url = ('http://www.watsonfantasyfootball.com/espnpartner/dallasfantasyfootball/projections/'
                'projections_{}_ESPNFantasyFootball_2017.json')
         return self.get_json(url.format(pid))
 
@@ -152,7 +152,7 @@ class ESPNNFLScraper(FootballScraper):
             dict - parsed JSON
         '''
 
-        url = ('http://www.watsonfantasyfootball.com/espnpartner/dallasfantasyfootball/',
+        url = ('http://www.watsonfantasyfootball.com/espnpartner/dallasfantasyfootball/'
                'players/players_ESPNFantasyFootball_2017.json')
         return self.get_json(url)
 

@@ -35,9 +35,9 @@ class DraftKingsNFLParser(object):
                 if idx < 7:
                     continue
                 elif idx == 7:
-                    headers = row[11:18]
+                    headers = row[14:21]
                 elif idx > 7:
-                    results.append(dict(zip(headers, row[11:18])))
+                    results.append(dict(zip(headers, row[14:21])))
         return results
 
     def weekly_salaries_file(self, fn):

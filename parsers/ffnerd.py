@@ -144,15 +144,12 @@ class FFNerdNFLParser(object):
 
         '''
         players = []
-        week = content.get('Week')
-        pos = content.get('Pos')
         for p in content.get('Rankings'):
-            p['week'] = week
-            p['source_player_position'] = pos
+            p['source_player_position'] = p['position']
+            p.pop('position', None)
             p['source'] = 'ffnerd'
             players.append(p)
         return players
-
 
 if __name__ == "__main__":
     pass

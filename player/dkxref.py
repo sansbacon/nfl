@@ -28,7 +28,7 @@ def dk_players(db):
 
     '''
     q = """SELECT DISTINCT source_player_id, source_player_name, source_player_position 
-           FROM extra_fantasy.weekly_dk_players"""
+           FROM extra_fantasy.dk_weekly_players"""
     return db.select_dict(q)
 
 def dk_xref(db, dkpl=None):
@@ -70,6 +70,51 @@ def dk_xref(db, dkpl=None):
             else:
                 #pieces = [str(dkp['source_player_id']), dkp['source_player_name'], dkp['source_player_position']]
                 print('could not match {}'.format(key))
+
+
+def dk_weekly_xref(db, dkpl):
+    '''
+
+    Returns:
+
+    '''
+
+    # nflp is dict of list
+    nflp = nflcom_players(db)
+
+    for idx, p in enumerate(dkpl):
+        key = '{}_{}'.format(p.get('name'), p.get('position'))
+
+        # try to find direct match in first nflp
+        if key in nflp:
+            if len(nflp.get(key)) == 1:
+                dkpl[idx]['nflcom_player_id'] = nflp[key][0]['player_id']
+                logging.info('direct match')
+            else:
+                if 'Jacksonville' in key:
+                    dkpl[idx]['nflcom_player_id'] = nflp[key][0]['player_id']
+                elif 'Michael Thomas' in key:
+                    if 'NO' in p.get('team'):
+                        dkpl[idx]['nflcom_player_id'] = '00-0032765'
+                    else:
+                        dkpl[idx]['nflcom_player_id'] = '00-0033114'
+                else:
+                    logging.error('need to manually handle {}'.format(key))
+
+        else:
+            fuzzy, confidence = process.extractOne(key, list(nflp.keys()))
+            if confidence > .85:
+                match = nflp.get(fuzzy, [])
+                logging.info('fuzzy match: {} | {}'.format(key, match[0].get('full_name')))
+                if (len(match) == 1):
+                    dkpl[idx]['nflcom_player_id'] = match[0]['player_id']
+                else:
+                    logging.error('need to manually handle {}'.format(match))
+            else:
+                print('could not match {}'.format(key))
+
+    return dkpl
+
 
 if __name__ == '__main__':
     pass
