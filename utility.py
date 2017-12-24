@@ -37,23 +37,37 @@ def digits(s):
     return ''.join(ch for ch in s if ch.isdigit())
 
 def flatten(d):
-        '''
-        Flattens nested dict into single dict
+    '''
+    Flattens nested dict into single dict
 
-        Args:
-            d: original dict
+    Args:
+        d: original dict
 
-        Returns:
-            dict
-        '''
-        items = []
-        for k, v in d.items():
-            if isinstance(v, collections.MutableMapping):
-                items.extend(flatten(v).items())
-            else:
-                items.append((k, v))
-        return dict(items)
+    Returns:
+        dict
+    '''
+    items = []
+    for k, v in d.items():
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten(v).items())
+        else:
+            items.append((k, v))
+    return dict(items)
 
+def flatten_list(l):
+    '''
+    Flattens list of lists into list
+
+    Args:
+        l: original list of lists
+
+    Returns:
+        list
+    '''
+    try:
+        return [item for sublist in l for item in sublist]
+    except:
+        return l
 
 def file_to_ds(fname):
     '''

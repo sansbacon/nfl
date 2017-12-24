@@ -258,8 +258,9 @@ class PfrNFLScraper(FootballScraper):
         try:
             last_initial = last_initial.upper()
             if last_initial in ascii_uppercase:
-                url = 'https://www.pro-football-reference.com/players/{}/'
-                return self.get(url.format(last_initial))
+                url = 'https://www.pro-football-reference.com/players/{}/'.format(last_initial)
+                logging.info('getting {}'.format(url))
+                return self.get(url)
             else:
                 raise ValueError('invalid last_initial')
         except Exception as e:

@@ -3,12 +3,14 @@
 from __future__ import absolute_import, print_function, division
 
 import logging
+import pprint
 import re
 
 from bs4 import BeautifulSoup
 
 from nfl.scrapers.browser import BrowserScraper
 from nfl.teams import long_to_code
+
 
 class FantasyProsNFLParser(BrowserScraper):
     '''
@@ -163,7 +165,107 @@ class FantasyProsNFLParser(BrowserScraper):
 
         return [self._tr(tr, headers) for tr in t.find_all('tr', {'class': re.compile(r'mpb-player')})]
 
-    def weekly_rankings(self, content):
+    def _player_id_team(self, td):
+        '''
+        Handles player/id/team cell in fpros rankings
+        
+        Args:
+            td: is a td element
+
+        Returns:
+            name, team, id
+        '''
+        id = None
+        children = list(td.children)
+        name = children[0].text
+        team = children[2].text
+        a = td.find('a', {'href': '#'})
+        if a:
+            try:
+                id = a.attrs['data-fp-id']
+            except:
+                try:
+                    id = a.attrs['class'][-1].split('-')[-1]
+                except (KeyError, ValueError) as e:
+                    logging.exception(e)
+        return name, team, id
+
+    def _week_pos(self, soup):
+        '''
+        Handles subtitle and position in fpros rankings
+
+        Args:
+            soup: parsed BeautifulSoup
+
+        Returns:
+            week, pos
+        '''
+        # <title>Week 1 QB Rankings, QB Cheat Sheets, QB Week 1 Fantasy Football Rankings</title>
+        # but different locations on the half ppr and standard rankings pages
+        positions = ['QB', 'WR', 'TE', 'DST', 'RB']
+        title = soup.find('title')
+        subtitle = title.text.split(', ')[0]
+        week, pos = subtitle.split()[1:3]
+        if not week.isdigit:
+            for span in soup.find_all('span'):
+                if 'Week' in span.text:
+                    week = span.text.split()[-1]
+                else:
+                    week = None
+        if not pos in positions:
+            for li in soup.find_all('li', {'class': 'active'}):
+                a = li.find('a')
+                if a:
+                    pos = a.text
+                else:
+                    pos = None
+        return week, pos
+
+    def flex_weekly_rankings(self, content, fmt, season_year, week):
+        results = []
+        soup = BeautifulSoup(content, 'lxml')
+        for tr in soup.find_all('tr', {'class': re.compile(r'mpb-player')}):
+            player = {'source': 'fantasypros', 'season_year': season_year, 'week': week,
+                      'scoring_format': fmt, 'ranking_type': 'flex'}
+
+            tds = tr.find_all('td')
+
+            # tds[0]: rank
+            player['rank'] = tds[0].text
+
+            # tds[2]: player/id/team
+            player['source_player_name'], player['source_player_team'], player['source_player_id'] = \
+                self._player_id_team(tds[2])
+
+            # tds[3]: posrank
+            try:
+                player['source_player_posrk'] = int(''.join([i for i in tds[3].text if i.isdigit()]))
+                player['source_player_position'] = ''.join([i for i in tds[3].text if not i.isdigit()])
+            except:
+                pass
+
+            # tds[4]: opp
+            try:
+                player['source_player_opp'] = tds[4].text.split()[-1]
+            except:
+                pass
+
+            # tds[5:9] data
+            for k,v in zip(['best', 'worst', 'avg', 'stdev'], [td.text for td in tds[5:9]]):
+                player[k] = v
+
+            # get last updated
+            try:
+                player['source_last_updated'] = soup.select('h5 time')[0].attrs.get('datetime').split()[0]
+            except:
+                pass
+
+            logging.info(pprint.pformat(player))
+            results.append(player)
+
+        return results
+
+    def weekly_rankings(self, content, fmt, pos, season_year, week):
         '''
         Parses weekly rankings page for specific position
 
@@ -173,29 +275,23 @@ class FantasyProsNFLParser(BrowserScraper):
         Returns:
             list of player dict
         '''
+        # table structure is different for flex rankings, so use separate function
+        if pos.lower() == 'flex':
+            return self.flex_weekly_rankings(content=content, fmt=fmt, season_year=season_year, week=week)
+
         results = []
-        positions = ['QB', 'WR', 'TE', 'DST', 'RB']
         soup = BeautifulSoup(content, 'lxml')
         for tr in soup.find_all('tr', {'class': re.compile(r'mpb-player')}):
-            player = {'source': 'fantasypros'}
+            player = {'source': 'fantasypros', 'season_year': season_year, 'week': week,
+                      'scoring_format': fmt, 'ranking_type': 'pos', 'source_player_position': pos.upper()}
             tds = tr.find_all('td')
 
             # tds[0]: rank
-            player['source_player_rank'] = tds[0].text
+            player['rank'] = tds[0].text
 
             # tds[2]: player/id/team
-            children = list(tds[2].children)
-            player['source_player_name'] = children[0].text
-            player['source_player_team'] = children[2].text
-            a = tds[2].find('a', {'href': '#'})
-            if a:
-                try:
-                    player['source_player_id'] = a.attrs['data-fp-id']
-                except:
-                    try:
-                        player['source_player_id'] = a.attrs['class'][-1].split('-')[-1]
-                    except (KeyError, ValueError) as e:
-                        logging.exception(e)
+            player['source_player_name'], player['source_player_team'], player['source_player_id'] = \
+                self._player_id_team(tds[2])
 
             # tds[3]: opp
             try:
@@ -213,32 +309,10 @@ class FantasyProsNFLParser(BrowserScraper):
             except:
                 pass
 
-            # <title>Week 1 QB Rankings, QB Cheat Sheets, QB Week 1 Fantasy Football Rankings</title>
-            # but different locations on the half ppr and standard rankings pages
-            title = soup.find('title')
-            subtitle = title.text.split(', ')[0]
-            week, pos = subtitle.split()[1:3]
-            if week.isdigit and pos in positions:
-                player['week'] = week
-                player['source_player_position'] = pos
-
-            elif pos in positions:
-                player['pos'] = pos
-                h1 = soup.find('div', {'id': 'main'}).find('h1')
-                if h1 and 'WEEK' in h1.text:
-                    player['week'] = h1.text.split()[-1]
-            else:
-                for span in soup.find_all('span'):
-                    if 'Week' in span.text:
-                        player['week'] = span.text.split()[-1]
-                for li in soup.find_all('li', {'class': 'active'}):
-                    a = li.find('a')
-                    if a:
-                        player['pos'] = a.text
-
             results.append(player)
 
         return results
+
 
 if __name__ == "__main__":
     pass

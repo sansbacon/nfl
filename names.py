@@ -7,7 +7,6 @@ import logging
 from fuzzywuzzy import process
 from nameparser import HumanName
 
-
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
@@ -54,6 +53,7 @@ def match_player (to_match, match_from, threshold = .8):
     # first see if there is a direct match
     if to_match in match_from:
         name = to_match
+
     # try first last
     if not name:
         for mf in match_from:
@@ -61,6 +61,7 @@ def match_player (to_match, match_from, threshold = .8):
             possible_match = first_last(mf)
             if to_match == possible_match:
                 name = mf
+
     # if still no match, then try fuzzy matching
     if not name:
         fuzzy, confidence = process.extractOne(to_match, match_from)

@@ -8,6 +8,19 @@ import logging
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
+def pfr_nfl_xref(db):
+    '''
+    Returns dict (pfr_id:nfl_ic) of players from pro-football-reference that have an nfl.com id
+
+    Args:
+        db: NFLPostgres instance
+
+    Returns:
+        dict
+    '''
+    # step one: get the mfl player list
+    q = """SELECT * FROM extra_misc.player_xref WHERE source = 'pfr'"""
+    return {p['source_player_id']:p['nflcom_player_id'] for p in db.select_dict(q)}
 
 def update_xref(db, nflcom_players, pfr_players):
     '''

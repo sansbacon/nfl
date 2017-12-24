@@ -3,6 +3,12 @@
 from __future__ import absolute_import, print_function, division
 
 import logging
+import re
+
+try:
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
 
 from nfl.dates import today, yesterday_x
 from nfl.scrapers.browser import BrowserScraper
@@ -47,30 +53,30 @@ class ESPNFantasyScraper(BrowserScraper):
             'tranType': '3'
         }
 
-        try:
-            from urllib.parse import urlencode
-        except ImportError:
-            from urllib import urlencode
-
         url = '{}?{}'.format(url, urlencode(params))
         driver = self.browser
         driver.get(url)
         self.urls.append(url)
         return self.browser.page_source
 
-    def fantasy_league_rosters(self, league_id):
+    def fantasy_league_rosters(self, league_id, encoding='latin1'):
         '''
         Gets roster for team in ESPN fantasy league
         '''
         url = 'http://games.espn.com/ffl/leaguerosters'
         params = {'leagueId': league_id}
-
-        try:
-            from urllib.parse import urlencode
-        except ImportError:
-            from urllib import urlencode
-
         url = '{}?{}'.format(url, urlencode(params))
+        driver = self.browser
+        driver.get(url)
+        self.urls.append(url)
+        return self.browser.page_source
+
+    def fantasy_league_scoreboard(self, league_id, season):
+        '''
+        Gets scoreboard from ESPN fantasy league
+        '''
+        params = {'leagueId': league_id, 'seasonId': season}
+        url = 'http://games.espn.com/ffl/scoreboard?{}'.format(urlencode(params))
         driver = self.browser
         driver.get(url)
         self.urls.append(url)
@@ -80,17 +86,10 @@ class ESPNFantasyScraper(BrowserScraper):
         '''
         Gets roster for team in ESPN fantasy league
         '''
-        url = 'http://games.espn.com/ffl/clubhouse'
         params = {'leagueId': league_id,
                       'teamId': team_id,
                       'seasonId': season}
-
-        try:
-            from urllib.parse import urlencode
-        except ImportError:
-            from urllib import urlencode
-
-        url = '{}?{}'.format(url, urlencode(params))
+        url = 'http://games.espn.com/ffl/clubhouse?{}'.format(urlencode(params))
         driver = self.browser
         driver.get(url)
         self.urls.append(url)
@@ -109,7 +108,6 @@ class ESPNFantasyScraper(BrowserScraper):
         Gets waiver wire from ESPN fantasy league
         league_id=488173, team_id=12, season=2017
         '''
-
         slot_categories = {
             'qb': 0,
             'rb': 2,
@@ -118,22 +116,13 @@ class ESPNFantasyScraper(BrowserScraper):
             'dst': 16,
             'k': 17
         }
-
         params = {'leagueId': league_id, 'teamId': team_id, 'seasonId': season}
-
         if start_index:
             if start_index not in [0, 50, 100, 150, 200]:
                 raise ValueError('start index invalid: {}'.format(start_index))
             params['startIndex'] = start_index
-
         if position:
             params['slotCategoryId'] = slot_categories[position.lower()]
-
-        try:
-            from urllib.parse import urlencode
-        except ImportError:
-            from urllib import urlencode
-
         url = 'http://games.espn.com/ffl/freeagency?' + urlencode(params)
         self.browser.get(url)
         self.urls.append(url)

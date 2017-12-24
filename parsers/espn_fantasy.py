@@ -4,9 +4,11 @@ import logging
 import re
 
 from bs4 import BeautifulSoup
+import unidecode
 
 from nfl.dates import convert_format
 from nfl.teams import nickname_to_code
+from nfl.utility import merge_two
 
 
 class ESPNFantasyParser(object):
@@ -125,6 +127,52 @@ class ESPNFantasyParser(object):
         for idx, t in enumerate(soup.find_all('table', {'id': re.compile(r'playertable_')})):
             players += self._fantasy_team_roster(t, idx + 1, league_name)
         return players
+
+    def fantasy_league_scoreboard(self, content):
+        '''
+        Gets league scoreboard from espn fantasy football
+                
+        Args:
+            content: 
+
+        Returns:
+            list of dict: in_play, minutes_remaining, proj, team, team_record
+        '''
+        soup = BeautifulSoup(content, 'lxml')
+        scores = []
+        for tbl in soup.find_all('td', class_='matchupContainer'):
+            score = {}
+            for idx, tr in enumerate(tbl.find_all('tr')):
+                # idx 0 is away team, 1 is home team, 2 is matchup information
+                if idx == 0:
+                    a = tr.find('a')
+                    score['away_team'] = a.attrs.get('title')
+                    for div in tr.find_all('div'):
+                        for span in div.find_all('span'):
+                            if span.attrs.get('title') == 'Record':
+                                score['away_team_record'] = span.text.replace(')', '').replace('(', '')
+                elif idx == 1:
+                    a = tr.find('a')
+                    score['home_team'] = a.attrs.get('title')
+                    for div in tr.find_all('div'):
+                        for span in div.find_all('span'):
+                            if span.attrs.get('title') == 'Record':
+                                score['home_team_record'] = span.text.replace(')', '').replace('(', '')
+                elif idx == 2:
+                    # first td is for the away team, second td is for home team
+                    # have td for labels and td for players_played
+                    # four tds in total away, away, home, home
+                    # NOTE: something is not matching up, can't figure out 12/11
+                    labels = [['away_yet_to_play', 'away_in_play', 'away_minutes_remaining', 'away_proj'],
+                              ['home_yet_to_play', 'home_in_play', 'home_minutes_remaining', 'home_proj']]
+                    players_played = [[item.text for item in pp.find_all('div')]
+                                      for pp in tr.find_all('td', class_='playersPlayed')]
+                    players_played = [[subitem.replace(u'\xa0', u' ') for subitem in item] for item in players_played]
+                    for label, pp in zip(labels, players_played):
+                        score = merge_two(score, dict(zip(label, pp)))
+
+            scores.append(score)
+        return scores
 
     def fantasy_team_roster(self, content):
         '''
