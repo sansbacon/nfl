@@ -1,6 +1,0 @@
-agents
-db
-optimizers
-parsers
-player
-scrapers

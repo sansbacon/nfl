@@ -38,6 +38,7 @@ def last_first(name):
 def match_player (to_match, match_from, threshold = .8):
     '''
     Matches player with direct or fuzzy match
+
     Args:
         to_match (str): player name to match
         match_from (list): list of player names to match against
@@ -53,14 +54,6 @@ def match_player (to_match, match_from, threshold = .8):
     # first see if there is a direct match
     if to_match in match_from:
         name = to_match
-
-    # try first last
-    if not name:
-        for mf in match_from:
-            to_match = first_last(to_match)
-            possible_match = first_last(mf)
-            if to_match == possible_match:
-                name = mf
 
     # if still no match, then try fuzzy matching
     if not name:

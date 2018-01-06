@@ -68,20 +68,20 @@ def _insp(db, vals):
         logging.info('inserted into db: {}'.format(pprint.pformat(p)))
 
 @click.command()
-@click.option('--startseason')
-@click.option('--endseason')
-@click.option('--weekstart')
-@click.option('--weekend')
+@click.option('--seasonstart', type=int)
+@click.option('--seasonend', type=int)
+@click.option('--weekstart', type=int)
+@click.option('--weekend', type=int)
 @click.option('--savefile', default=None)
-def run(startseason, endseason, weekstart, weekend, savefile):
+def run(seasonstart, seasonend, weekstart, weekend, savefile):
     db = getdb()
     parser = PfrNFLParser()
     scraper = PfrNFLScraper(cache_name='pfr-fantasy', delay=1)
 
     all_players = []
 
-    for seas in range(startseason, endseason+1):
-        for week in range(weekstart, weekend):
+    for seas in range(seasonstart, seasonend+1):
+        for week in range(weekstart, weekend+1):
             logging.info('starting {}'.format(week))
             for pos in ['QB', 'WR', 'TE', 'RB']:
                 logging.info('starting {}'.format(pos))
@@ -106,7 +106,7 @@ def run(startseason, endseason, weekstart, weekend, savefile):
                     except:
                         pass
     if savefile:
-        with open('/home/sansbacon/fantasy{}-{}_{}-{}.json'.format(startseason, endseason, weekend), 'w') as outfile:
+        with open('/home/sansbacon/fantasy{}-{}_{}-{}.json'.format(seasonstart, seasonend, weekend), 'w') as outfile:
             json.dump(all_players, outfile)
 
     # now update references to nflcom_player_id

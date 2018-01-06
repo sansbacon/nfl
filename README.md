@@ -1,3 +1,0 @@
-# nfl
-
-Initial commit

@@ -10,6 +10,13 @@ from nfl.dates import site_format
 import nfl.seasonsdata
 
 
+def all_seasons():
+    '''
+    Returns all seasons of weeks w/ start & end dates
+    '''
+    return nfl.seasonsdata.SEASONS
+
+
 def current_season_year():
     '''
     Gets current season based on today's date

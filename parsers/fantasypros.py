@@ -260,9 +260,7 @@ class FantasyProsNFLParser(BrowserScraper):
             except:
                 pass
 
-            logging.info(pprint.pformat(player))
             results.append(player)
-
         return results
 
     def weekly_rankings(self, content, fmt, pos, season_year, week):
@@ -310,7 +308,6 @@ class FantasyProsNFLParser(BrowserScraper):
                 pass
 
             results.append(player)
-
         return results
 
 

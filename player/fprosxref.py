@@ -32,6 +32,22 @@ def fpros_player_dict(fmt='ppr'):
     return {'{}_{}'.format(p['source_player_name'], p['pos']): p
             for p in fpros_players}
 
+def fpros_players(db):
+    '''
+    fantasypros players: nflcomid
+
+    Arguments:
+        db: NFLPostgres instance
+
+    Returns:
+        dict
+    '''
+    q = """
+        select source_player_id, nflcom_player_id from extra_misc.player_xref
+        where source = 'fantasypros'
+    """
+    return {p['source_player_id']: p['nflcom_player_id'] for p in db.select_dict(q)}
+
 
 def fpros_xref(nflp, fpros_players):
     '''

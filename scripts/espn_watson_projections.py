@@ -32,4 +32,4 @@ def run(fn=None):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    run('/home/sansbacon/watson/w15projections.json')
+    run('/home/sansbacon/watson/w17projections.json')

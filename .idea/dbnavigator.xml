@@ -27,8 +27,10 @@
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
     <connection id="af5f2d2c-9baf-48a6-9a40-785da8aa082b">
-      <console name="Connection" type="STANDARD" />
-      <console name="Connection 1" type="STANDARD" />
+      <console name="Connection" type="STANDARD"><![CDATA[SELECT *
+FROM information_schema.columns
+WHERE table_name = 'weekly_rankings';]]></console>
+      <console name="Connection 1" type="STANDARD"><![CDATA[select * from public.play limit 25]]></console>
     </connection>
   </component>
   <component name="DBNavigator.Project.EditorStateManager">
@@ -46,8 +48,13 @@
     <last-used-dependency-type value="INCOMING" />
   </component>
   <component name="DBNavigator.Project.ObjectQuickFilterManager">
-    <last-used-operator value="EQUAL" />
-    <filters />
+    <last-used-operator value="NOT_LIKE" />
+    <filters>
+      <filter connection-id="af5f2d2c-9baf-48a6-9a40-785da8aa082b" schema="" object-type="schema" join-type="AND">
+        <condition operator="NOT_LIKE" pattern="pg_" active="true" />
+        <condition operator="NOT_LIKE" pattern="information" active="true" />
+      </filter>
+    </filters>
   </component>
   <component name="DBNavigator.Project.ScriptExecutionManager" clear-outputs="true">
     <recently-used-interfaces />
@@ -56,7 +63,7 @@
     <connections>
       <connection id="af5f2d2c-9baf-48a6-9a40-785da8aa082b" active="true">
         <database>
-          <name value="Connection" />
+          <name value="nfldb" />
           <description value="" />
           <database-type value="POSTGRES" />
           <config-type value="BASIC" />
@@ -67,11 +74,11 @@
           <url-type value="DATABASE" />
           <host value="localhost" />
           <port value="5432" />
-          <database value="nfl" />
+          <database value="nfldb" />
           <os-authentication value="false" />
           <empty-password value="false" />
-          <user value="postgres" />
-          <password value="Y2Z0MDkxMTQ2" />
+          <user value="nfldb" />
+          <password value="Y2Z0MDkxMQ==" />
         </database>
         <properties>
           <auto-commit value="false" />
@@ -90,12 +97,14 @@
           <charset value="UTF-8" />
           <ddl-file-binding value="true" />
           <database-logging value="true" />
+          <connect-automatically value="true" />
+          <restore-workspace value="true" />
+          <restore-workspace-deep value="true" />
           <environment-type value="default" />
           <idle-time-to-disconnect value="30" />
           <password-expiry-time value="10" />
           <max-connection-pool-size value="7" />
           <alternative-statement-delimiter value="" />
-          <connect-automatically value="true" />
         </details>
         <object-filters hide-empty-schemas="false">
           <object-type-filter use-master-settings="true">
@@ -257,6 +266,7 @@
           <content-type name="XHTML" enabled="true" />
           <content-type name="SQL" enabled="true" />
           <content-type name="PL/SQL" enabled="true" />
+          <content-type name="YAML" enabled="true" />
         </content-types>
       </qualified-text-editor>
       <record-navigation>
