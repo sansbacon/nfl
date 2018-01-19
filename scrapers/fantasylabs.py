@@ -12,20 +12,19 @@ class FantasyLabsNFLScraper(FootballScraper):
     '''
     FantasyLabsNFLScraper
     If you don't have a subscription, you can access the information freely-available on the website
-    If you have a subscription, the scraper can use your firefox cookies and access protected content
-    You cannot access protected content if you (a) have not logged in (b) have firefox open
+    If you have a subscription, the scraper can use your browser cookies and access protected content
+    You cannot access protected content if you (a) have not logged in (b) have the browser open
+    
+    Usage:
+        import browser_cookie3
+        cookiefn = FIREFOX_PROFILE_PATH + '/cookies.sqlite'
+        cj = browser_cookie3.firefox(cookie_file=cookiefn)
+        scraper = FantasyLabsNFLScraper(cookies=cj)
     '''
 
     @property
-    def model_urls(selfs):
-        return {
-            'default': 'http://www.fantasylabs.com/api/playermodel/1/{model_date}/?modelId=47139',
-            'levitan': 'http://www.fantasylabs.com/api/playermodel/1/{model_date}/?modelId=524658',
-            'bales': 'http://www.fantasylabs.com/api/playermodel/1/{model_date}/?modelId=170627',
-            'csuram': 'http://www.fantasylabs.com/api/playermodel/1/{model_date}/?modelId=193726',
-            'tournament': 'http://www.fantasylabs.com/api/playermodel/1/{model_date}/?modelId=193746',
-            'cash': 'http://www.fantasylabs.com/api/playermodel/1/{model_date}/?modelId=193745'
-        }
+    def model_url(selfs):
+        return 'https://www.fantasylabs.com/api/playermodel/1/{}/?modelId=1286036&projOnly=true'
 
     def correlations(self):
         '''
@@ -65,23 +64,28 @@ class FantasyLabsNFLScraper(FootballScraper):
         url = 'http://www.fantasylabs.com/api/matchups/1/team/{}/{}'.format(team_name, game_date)
         return self.get_json(url)
 
-    def model(self, model_day, model_name='default'):
+    def model(self, model_day):
         '''
-        TODO: need to see if this still works
         Gets json for model. Stats in most models the same, main difference is the ranking based on weights.
          
         Arguments:
             model_day (str): in mm_dd_yyyy format
-            model_name (str): uses default if not specified
 
         Returns:
-            content (str): is json string
+            dict
+            
         '''
-        url = self.model_urls.get(model_name, None)
-        if not url:
-            logging.error('could not find url for {0} model'.format(model_name))
-            url = self.model_urls.get('default')
-        return self.get_json(url.format(model_date=model_day))
+        self.headers = {
+            'dnt': '1',
+            'accept-encoding': 'gzip, deflate, br',
+            'accept-language': 'en-US,en;q=0.9,ar;q=0.8',
+            'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36',
+            'accept': 'application/json, text/plain, */*',
+            'referer': 'https://www.fantasylabs.com/nfl/player-models/',
+            'authority': 'www.fantasylabs.com',
+        }
+
+        return self.get_json(self.model_url.format(model_day))
 
     def sourcedata(self, game_date):
         '''

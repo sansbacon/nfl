@@ -83,6 +83,8 @@ class FootballScraper(object):
             r = self.s.get(url)
         self.urls.append(r.url)
         r.raise_for_status()
+        logging.debug(r.status_code)
+        logging.debug(r.headers)
         if self.delay:
             time.sleep(self.delay)
         return r.content.decode(encoding)
@@ -125,10 +127,14 @@ class FootballScraper(object):
         '''
         if payload:
             r = self.s.get(url, params={k:payload[k] for k in sorted(payload)})
+            logging.debug(r.status_code)
+            logging.debug(r.headers)
         else:
             r = self.s.get(url, params=None)
         self.urls.append(r.url)
         r.raise_for_status()
+        logging.debug(r.status_code)
+        logging.debug(r.headers)
         if self.delay:
             time.sleep(self.delay)
         if self.as_string:

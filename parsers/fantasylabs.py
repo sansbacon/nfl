@@ -55,95 +55,69 @@ class FantasyLabsNFLParser():
             
         return games
 
-    def model(self, content, site, season_year=None, week=None):
+    def model(self, content, site='dk', season_year=None, week=None):
         '''
         Parses json associated with model (player stats / projections)
-        The model has 3 dicts for each player: DraftKings, FanDuel, Yahoo
-        SourceIds: 4 is DK, 11 is Yahoo, 3 is FD
 
-        Usage:
-            model = p.model(model_json)
-            model = p.model(model_json, site='dk')
+        Args:
+            content (dict): parsed JSON
+            season_year (int): 2018, etc.
+            week (int): 1, etc.
+
         '''
-
         players = {}
-
         omit_properties = ['IsLocked']
-        omit_other = ['ErrorList', 'LineupCount', 'CurrentExposure', 'ExposureProbability', 'IsExposureLocked', 'Positions', 'PositionCount', 'Exposure', 'IsLiked', 'IsExcluded']
-
-        # can process json string or dict
-        if isinstance(content, basestring):
-            try:
-                parsed = json.loads(content)
-
-            except:
-                logging.error('could not parse json')
-                return None
-
-        elif isinstance(content, dict):
-            parsed = content
+        omit_other = ['ErrorList', 'LineupCount', 'CurrentExposure', 'ExposureProbability',
+                      'IsExposureLocked', 'Positions', 'PositionCount', 'Exposure', 'IsLiked', 'IsExcluded']
 
         # models have nested dict in 'Properties'
-        for playerdict in parsed.get('PlayerModels', []):
+        for playerdict in content.get('PlayerModels', []):
             player = {}
-
             if season_year:
                 player['season_year'] = season_year
-
             if week:
                 player['week'] = week
 
             for k,v in playerdict.items():
-
                 if k == 'Properties':
-
                     for k2,v2 in v.items():
-
                         # trying to get integers for ownership %
                         if k2 == 'p_own':
                             try:
                                 minown, maxown = v2.split('-')
                                 player['p_own_min'] = minown
                                 player['p_own_max'] = maxown
-
                             except:
                                 try:
                                     minown = float(v2)
                                     maxown = float(v2)
                                     player['p_own_min'] = minown
                                     player['p_own_max'] = maxown
-
                                 except:
                                     pass
                             player['p_own'] = v2
-
                         elif not k2 in omit_properties:
                             player[k2] = v2
-
                 elif not k in omit_other:
                     player[k] = v
-
             # test if already have this player
             # use list where 0 index is DK, 1 FD, 2 Yahoo
-            # TODO: not sure this is actually working
             pid = player.get('PlayerId', None)
             pid_players = players.get(pid, [])
             pid_players.append(player)
             players[pid] = pid_players
 
+        # The model has 3 dicts for each player: DraftKings, FanDuel, Yahoo
+        # SourceIds: 4 is DK, 11 is Yahoo, 3 is FD
         if site:
             site_players = []
-            
             site_ids = {'dk': 4, 'fd': 3, 'yahoo': 11}               
-
             for pid, player in players.items():
                 for p in player:
                     if p.get('SourceId', 1) == site_ids.get(site, 2):
                         site_players.append(p)
-
-            players = {p['Player_Name']:p for p in site_players if p.has_key('Player_Name')}.values()
-
-        return players
+            players = {p['Player_Name']:p for p in site_players if p.get('Player_Name')}
+        return list(players.values())
 
     def dk_salaries(self, content, season, week, db=True):
         '''

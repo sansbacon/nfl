@@ -9,6 +9,7 @@ import os
 from pyvirtualdisplay import Display
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.remote.errorhandler import WebDriverException
 
 
 class BrowserScraper():
@@ -76,12 +77,27 @@ class BrowserScraper():
         try:
             self.browser.get(url)
             content = self.browser.find_element_by_tag_name('body').text
-            result = json.loads(content)
+            return json.loads(content)
         except:
             logging.error('could not get {}'.format(url))
-            result = None
-        finally:
-            return result
+            return None
+
+    def get_jsvar(self, varname):
+        '''
+        Gets python data structure of javascript variable
+
+        Args:
+            varname (str): name of javascript variable
+
+        Returns:
+            whatever the type of the javascript variable
+
+        '''
+        try:
+            return self.browser.execute_script('return {};'.format(varname))
+        except WebDriverException as e:
+            logging.exception(e)
+            return None
 
 
 if __name__ == "__main__":
