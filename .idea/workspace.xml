@@ -5,37 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="38634580-e7e6-4233-875c-345a3b468268" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/LICENSE" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/models/QBEnsembleModel.R" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/models/googleml.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/models/qbensemble2.R" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/models/qbmodel-tensorflow.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/models/qbmodel.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/nfl.egg-info/PKG-INFO" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/nfl.egg-info/SOURCES.txt" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/nfl.egg-info/dependency_links.txt" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/nfl.egg-info/top_level.txt" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/nflseasons.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/setup.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/todo/fbo-appi.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/todo/fpros-flex.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/todo/fpros-parser-tofix.py" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/nfl.iml" afterPath="$PROJECT_DIR$/.idea/nfl.iml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/names.py" afterPath="$PROJECT_DIR$/names.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/parsers/dk.py" afterPath="$PROJECT_DIR$/parsers/dk.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/parsers/fantasypros.py" afterPath="$PROJECT_DIR$/parsers/fantasypros.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/player/fprosxref.py" afterPath="$PROJECT_DIR$/player/fprosxref.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scripts/dkweek.py" afterPath="$PROJECT_DIR$/scripts/dkweek.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scripts/espn_watson_projections.py" afterPath="$PROJECT_DIR$/scripts/espn_watson_projections.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scripts/fpros_weekly.py" afterPath="$PROJECT_DIR$/scripts/fpros_weekly.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scripts/pfr_fantasy_weekly.py" afterPath="$PROJECT_DIR$/scripts/pfr_fantasy_weekly.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/seasons.py" afterPath="$PROJECT_DIR$/seasons.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utility.py" afterPath="$PROJECT_DIR$/utility.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/parsers/fantasylabs.py" afterPath="$PROJECT_DIR$/parsers/fantasylabs.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scrapers/browser.py" afterPath="$PROJECT_DIR$/scrapers/browser.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scrapers/fantasylabs.py" afterPath="$PROJECT_DIR$/scrapers/fantasylabs.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scrapers/scraper.py" afterPath="$PROJECT_DIR$/scrapers/scraper.py" />
     </list>
     <ignored path="nfl.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -54,7 +28,20 @@
     <favorites_list name="nfl" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf>
+      <file leaf-file-name="browser.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/scrapers/browser.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="690">
+              <caret line="96" column="76" lean-forward="true" selection-start-line="96" selection-start-column="24" selection-end-line="96" selection-end-column="76" />
+              <folding>
+                <element signature="e#25#89#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -65,9 +52,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>_convert_height</find>
-      <find>nbadb</find>
-      <find>self.nbadb</find>
       <find>money</find>
       <find>h3</find>
       <find>self._t</find>
@@ -95,6 +79,9 @@
       <find>on</find>
       <find>on conflict</find>
       <find>endseason</find>
+      <find>p</find>
+      <find>profi</find>
+      <find>profile</find>
     </findStrings>
     <replaceStrings>
       <replace>#@jit</replace>
@@ -133,9 +120,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/scrapers/fftoday.py" />
-        <option value="$PROJECT_DIR$/tests/test_fftoday.py" />
-        <option value="$PROJECT_DIR$/scrapers/footballoutsiders.py" />
         <option value="$PROJECT_DIR$/tests/test_fo.py" />
         <option value="$PROJECT_DIR$/parsers/footballoutsiders.py" />
         <option value="$PROJECT_DIR$/parsers/pfr.py" />
@@ -151,7 +135,6 @@
         <option value="$PROJECT_DIR$/scrapers/nflcom.py" />
         <option value="$PROJECT_DIR$/player/ffnerdtxref.py" />
         <option value="[nfldb] CONSOLE - Connection 1" />
-        <option value="$PROJECT_DIR$/scrapers/fantasylabs.py" />
         <option value="$PROJECT_DIR$/scripts/espn_fantasy_league_transactions.py" />
         <option value="$PROJECT_DIR$/scripts/espn_fantasy_waiver_wire.py" />
         <option value="$PROJECT_DIR$/scripts/espn_projections.py" />
@@ -184,6 +167,10 @@
         <option value="$PROJECT_DIR$/utility.py" />
         <option value="$PROJECT_DIR$/scripts/pfr_fantasy_weekly.py" />
         <option value="$PROJECT_DIR$/seasons.py" />
+        <option value="$PROJECT_DIR$/scrapers/scraper.py" />
+        <option value="$PROJECT_DIR$/scrapers/fantasylabs.py" />
+        <option value="$PROJECT_DIR$/parsers/fantasylabs.py" />
+        <option value="$PROJECT_DIR$/scrapers/browser.py" />
       </list>
     </option>
   </component>
@@ -227,20 +214,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="ProjectPane">
-        <subPane>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="nfl" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="nfl" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-        </subPane>
-      </pane>
       <pane id="Scope">
         <subPane subId="Project Files">
           <PATH>
@@ -283,6 +256,34 @@
             <PATH_ELEMENT USER_OBJECT="scrapers">
               <option name="myItemId" value="" />
               <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
+      <pane id="ProjectPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="nfl" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="nfl" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="nfl" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="nfl" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="agents" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
@@ -340,25 +341,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.espn_watson_projections">
-    <configuration default="false" name="pfr_fantasy_weekly" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="/usr/bin/python2.7" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/scripts" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="nfl" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scripts/pfr_fantasy_weekly.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="Python.fantasylabs">
     <configuration default="false" name="pfr_player_xref" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -426,6 +409,24 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="nfl" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scripts/dkweek.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="fantasylabs" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="/usr/bin/python2.7" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/scrapers" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="nfl" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scrapers/fantasylabs.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -528,19 +529,19 @@
       <method />
     </configuration>
     <list size="5">
-      <item index="0" class="java.lang.String" itemvalue="Python.pfr_fantasy_weekly" />
-      <item index="1" class="java.lang.String" itemvalue="Python.pfr_player_xref" />
-      <item index="2" class="java.lang.String" itemvalue="Python.fpros_weekly" />
-      <item index="3" class="java.lang.String" itemvalue="Python.espn_watson_projections" />
-      <item index="4" class="java.lang.String" itemvalue="Python.dkweek" />
+      <item index="0" class="java.lang.String" itemvalue="Python.pfr_player_xref" />
+      <item index="1" class="java.lang.String" itemvalue="Python.fpros_weekly" />
+      <item index="2" class="java.lang.String" itemvalue="Python.espn_watson_projections" />
+      <item index="3" class="java.lang.String" itemvalue="Python.dkweek" />
+      <item index="4" class="java.lang.String" itemvalue="Python.fantasylabs" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.espn_watson_projections" />
-        <item index="1" class="java.lang.String" itemvalue="Python.dkweek" />
-        <item index="2" class="java.lang.String" itemvalue="Python.fpros_weekly" />
-        <item index="3" class="java.lang.String" itemvalue="Python.pfr_player_xref" />
-        <item index="4" class="java.lang.String" itemvalue="Python.pfr_fantasy_weekly" />
+        <item index="0" class="java.lang.String" itemvalue="Python.fantasylabs" />
+        <item index="1" class="java.lang.String" itemvalue="Python.espn_watson_projections" />
+        <item index="2" class="java.lang.String" itemvalue="Python.dkweek" />
+        <item index="3" class="java.lang.String" itemvalue="Python.fpros_weekly" />
+        <item index="4" class="java.lang.String" itemvalue="Python.pfr_player_xref" />
       </list>
     </recent_temporary>
     <configuration default="true" type="tests" factoryName="Attests">
@@ -622,7 +623,8 @@
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32925585" sideWeight="0.49811321" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32925585" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17574124" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20539084" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.72375125" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3985729" sideWeight="0.49811321" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -633,7 +635,6 @@
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25822103" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection Results" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32969216" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.72375125" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
@@ -685,36 +686,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/scrapers/espn_fantasy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="342">
-          <caret line="82" column="39" lean-forward="true" selection-start-line="82" selection-start-column="39" selection-end-line="82" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/espn_fantasy_league_scoreboards.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="17" column="0" lean-forward="true" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/parsers/espn_fantasy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="438">
-          <caret line="174" column="21" lean-forward="true" selection-start-line="174" selection-start-column="21" selection-end-line="174" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/local/lib/python3.5/dist-packages/joblib/parallel.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="186">
-          <caret line="182" column="0" lean-forward="false" selection-start-line="182" selection-start-column="0" selection-end-line="182" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="db://[nfldb] CONSOLE - Connection" />
-    <entry file="db://[nfldb] CONSOLE - Connection" />
     <entry file="file://$PROJECT_DIR$/scripts/nflcom-players.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="54">
@@ -925,8 +896,57 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="234">
           <caret line="32" column="0" lean-forward="true" selection-start-line="32" selection-start-column="0" selection-end-line="32" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/fantasylabs_matchups.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="288">
+          <caret line="16" column="8" lean-forward="true" selection-start-line="16" selection-start-column="8" selection-end-line="16" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scrapers/scraper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2646">
+          <caret line="147" column="13" lean-forward="true" selection-start-line="147" selection-start-column="13" selection-end-line="147" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scrapers/fantasylabs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="378">
+          <caret line="21" column="8" lean-forward="true" selection-start-line="21" selection-start-column="8" selection-end-line="21" selection-end-column="51" />
           <folding>
-            <element signature="e#73#88#0" expanded="true" />
+            <element signature="e#0#64#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/parsers/fantasylabs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="708">
+          <caret line="119" column="0" lean-forward="false" selection-start-line="119" selection-start-column="0" selection-end-line="119" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scrapers/dk.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="540">
+          <caret line="35" column="0" lean-forward="true" selection-start-line="35" selection-start-column="0" selection-end-line="35" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scrapers/browser.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="690">
+          <caret line="96" column="76" lean-forward="true" selection-start-line="96" selection-start-column="24" selection-end-line="96" selection-end-column="76" />
+          <folding>
+            <element signature="e#25#89#0" expanded="true" />
           </folding>
         </state>
       </provider>

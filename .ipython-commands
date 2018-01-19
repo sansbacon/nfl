@@ -1,0 +1,43 @@
+
+from nfl.db.nflpg import NFLPostgres; db = NFLPostgres(user='nfldb', password='cft0911', database='nfldb')
+import logging; logger = logging.getLogger(); logger.setLevel(logging.INFO)
+import json
+from nfl.scrapers.browser import BrowserScraper
+s = BrowserScraper()
+content = s.get('http://www.google.com')
+exit()
+
+from nfl.db.nflpg import NFLPostgres; db = NFLPostgres(user='nfldb', password='cft0911', database='nfldb')
+import logging; logger = logging.getLogger(); logger.setLevel(logging.INFO)
+import json
+with open('/home/sansbacon/w14projections.pkl', 'r') as infile:
+    watson = json.load(infile)
+    
+watson[0]
+exit()
+
+from nfl.db.nflpg import NFLPostgres; db = NFLPostgres(user='nfldb', password='cft0911', database='nfldb')
+from nba.db.nbapg import NBAPostgres; nbadb = NBAPostgres(user='nbadb', password='cft0911')
+import logging; logger = logging.getLogger(); logger.setLevel(logging.INFO)
+exit()
+
+from nfl.db.nflpg import NFLPostgres; db = NFLPostgres(user='nfldb', password='cft0911', database='nfldb')
+from nba.db.nbapg import NBAPostgres; nbadb = NBAPostgres(user='nbadb', password='cft0911')
+import logging; logger = logging.getLogger(); logger.setLevel(logging.INFO)
+from nfl.scrapers.browser import BrowserScraper
+s = BrowserScraper()
+url = 'https://www.fantasylabs.com/api/playermodel/1/{}/?modelId=1286036&projOnly=true'
+url.format('1_03_2018')
+url = 'https://www.fantasylabs.com/nfl/player-models/'
+content = s.get(url)
+content
+url = 'https://www.fantasylabs.com/api/playermodel/1/{}/?modelId=1286036&projOnly=true'
+s.get_json(url.format('1_03_2018'))
+import requests
+import browser_cookie3
+cj = browser_cookie3.firefox(cookie_file='/home/sansbacon/.mozilla/firefox/6h98gbaj.default')
+cj = browser_cookie3.firefox(cookie_file='/home/sansbacon/.mozilla/firefox/6h98gbaj.default/cookies.sqlite')
+r = requests.get(url=url.format('1_03_2018'), cookies=cj)
+r
+r.content
+exit()
