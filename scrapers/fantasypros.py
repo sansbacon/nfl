@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, print_function, division
-import logging
+
 
 from nfl.scrapers.scraper import FootballScraper
 from nfl.scrapers.wayback import WaybackScraper
@@ -88,6 +88,21 @@ class FantasyProsNFLScraper(FootballScraper):
         url = self._construct_url(pos, fmt, 'rankings')
         return self.get(url)
 
+    def player_weekly_rankings(self, pid, fmt, week):
+        '''
+        
+        Args:
+            pid: 
+            fmt: 
+            week: 
+
+        Returns:
+
+        '''
+        # https://www.fantasypros.com/nfl/rankings/tom-brady.php?type=weekly&week=2&scoring=PPR
+        url = 'https://www.fantasypros.com/nfl/rankings/{}.php?type=weekly&week={}&scoring={}'
+        return self.get(url.format(pid, week, fmt))
+
     def projections(self, pos, fmt, week):
         '''
         Gets rest-of-season rankings page
@@ -156,6 +171,7 @@ class FantasyProsWaybackNFLScraper(WaybackScraper):
         '''
         url = FantasyProsNFLScraper.construct_url(pos, fmt, 'rankings')
         return self.get_wayback(url, d)
+
 
 if __name__ == "__main__":
     pass

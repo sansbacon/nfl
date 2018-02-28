@@ -3,12 +3,13 @@ import itertools
 import logging
 import time
 
-import requests
-import requests_cache
+import pandas as pd
+
 
 from nfl.parsers.fantasypros import FantasyProsNFLParser
-from nfl.scrapers.fpros import FantasyProsNFLScraper
-from nfl.nflseasons import get_season
+from nfl.scrapers.fantasypros import FantasyProsNFLScraper
+from nfl.seasons import get_season
+from nfl.utility import pair_list
 
 
 class FantasyProsNFLAgent(object):
@@ -22,59 +23,10 @@ class FantasyProsNFLAgent(object):
         pickle.dump(players, outfile)
     '''
 
-    def __init__(self, wb=False):
-        self._s = FantasyProsNFLScraper()
+    def __init__(self, cache_name='fpros-nfl-agent'):
+        self._s = FantasyProsNFLScraper(cache_name=cache_name)
         self._p = FantasyProsNFLParser()
-        if wb:
-            requests_cache.install_cache('wb-fpros-cache')
-        else:
-            requests_cache.install_cache('fpros-cache')
 
-    def _wb(self, fpros_url, d):
-        '''
-        Handles the wayback machine API
-        Args:
-            fpros_url (str): url of the page you want to look for
-            d (date): date of beginning of nfl week
-
-        Returns:
-            content (str): the content from the wayback machine
-        '''
-        content = None
-        cached = False
-        base_wb = 'http://archive.org/wayback/available?url={}&timestamp={}'
-        wb_url = base_wb.format(fpros_url, datetime.datetime.strftime(d, '%Y%m%d'))
-        logging.info('wb_url is {}'.format(wb_url))
-
-        r = requests.get(wb_url)
-        r.raise_for_status()
-        wb = r.json()
-
-        # wb API tells if available and gives timestamp of page
-        if wb['archived_snapshots']['closest']['available']:
-            ts = wb['archived_snapshots']['closest']['timestamp']
-            logging.info('ts is {}, t is {}'.format(ts, ts[:8]))
-            ts = datetime.datetime.strptime(ts[:8], '%Y%m%d').date()
-            cl_url = wb['archived_snapshots']['closest']['url']
-
-            # need to match up the dates as best as possible
-            delta = d - ts
-            logging.info('d is {}'.format(datetime.datetime.strftime(d, '%Y-%m-%d')))
-            logging.info('ts is {}'.format(datetime.datetime.strftime(ts, '%Y-%m-%d')))
-            logging.info('delta is {}'.format(delta.days))
-            if abs(delta.days) <= 5:
-                r = requests.get(wb['archived_snapshots']['closest']['url'])
-                r.raise_for_status()
-                content = r.content
-                if r.from_cache:
-                    cached = True
-                logging.info('delta days are {}'.format(delta.days))
-            else:
-                logging.error('page is too old')
-        else:
-            logging.error('url unavailable on wayback machine')
-
-        return content, cached
 
     def weekly_rankings_archived(self):
         '''
@@ -131,6 +83,9 @@ class FantasyProsNFLAgent(object):
         Returns:
             players(list): of player rankings dict
         '''
+        # this doesn't work
+
+        '''
         players = []
         base_fpros = 'https://www.fantasypros.com/nfl/rankings/{}.php'
         positions = ['qb', 'rb', 'wr', 'te', 'flex']
@@ -155,6 +110,72 @@ class FantasyProsNFLAgent(object):
             return list(itertools.chain.from_iterable(players))
         else:
             return list(itertools.chain.from_iterable(players)), flex_players
+        '''
+
+
+    def expert_weekly_rankings(self, season, week, pos, expert):
+        '''
+        Gets weekly rankings from expert
+                
+        Args:
+            season: 
+            week: 
+            pos: 
+            expert:
+
+        Returns:
+            list: of dict
+
+        '''
+        # NOTE: should move this to a function
+        # also need to figure out if can obtain old ones by week
+        # step one: get the fantasypros list of players
+        # then filter out lower-ranked players with ECR threshold
+        posthresh = {'QB': 20, 'RB': 50, 'WR': 70, 'TE': 14, 'DST': 20, 'K': 14}
+        pcontent = self._s.get_json(url='https://www.fantasypros.com/ajax/player-search.php',
+                                    payload={'sport': 'NFL', 'position_id': 'OP'})
+
+        # add positional ranks and then filter by positional threshold
+        playerdf = pd.DataFrame(pcontent)
+        playerdf.drop(['filename', 'value'], axis=1, inplace=True)
+        poscrit = playerdf['position'].isin(posthresh.keys())
+        playerdf = playerdf[poscrit]
+        playerdf.dropna(subset=['ecr'], inplace=True)
+        playerdf['posrk'] = playerdf.groupby("position")["ecr"].rank()
+        playerdf['thresh'] = playerdf['position'].apply(
+            lambda x: posthresh.get(x, None))
+        threshcrit = playerdf['posrk'] <= playerdf['thresh']
+        playerdf = playerdf[threshcrit]
+        playerdf.sort_values(by=['position', 'posrk'], inplace=True)
+
+        # now do pairs of players
+        compare_url = 'https://partners.fantasypros.com/api/v1/compare-players.php?'
+        expert_ranks = []
+
+        for pair in pair_list(playerdf.itertuples()):
+            if (pair[0][4] != pair[1][4]):
+                raise ValueError('pairs have different positions: {}'.format(pair))
+            player_pair = '{}:{}'.format(pair[0][2], pair[1][2])
+            pos = pair[0][4]
+
+            # players are colon-separated ids (13926:16421)
+            # expert 120 is Sean Koerner
+            params = {
+                'players': player_pair,
+                'experts': expert,
+                'position': pos,
+                'ranking_type': '1',
+                'details': 'all',
+                'sport': 'NFL',
+                'callback': 'FPWSIS.compareCallback'
+            }
+
+            content = self._s.get(url=compare_url, payload=params)
+            pair_rank = self._p.expert_rankings(content)
+            expert_ranks.append(pair_rank)
+
+        return expert_ranks
+
 
 if __name__ == '__main__':
     pass

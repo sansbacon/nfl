@@ -3,16 +3,15 @@
 from __future__ import absolute_import, print_function, division
 
 import logging
-import pprint
+import json
 import re
 
 from bs4 import BeautifulSoup
 
-from nfl.scrapers.browser import BrowserScraper
 from nfl.teams import long_to_code
 
 
-class FantasyProsNFLParser(BrowserScraper):
+class FantasyProsNFLParser(object):
     '''
     used to parse Fantasy Pros projections and ADP pages
     '''
@@ -263,6 +262,40 @@ class FantasyProsNFLParser(BrowserScraper):
             results.append(player)
         return results
 
+    def expert_rankings(self, content):
+        '''
+        FantasyPros responds with javascript function 
+        This python function turns that response into a dict    
+
+        Args:
+            content (str): text property of response
+
+        Returns:
+            list: list of dict
+
+        '''
+        results = []
+        patt = re.compile(r'FPWSIS.compareCallback\((.*?)\);')
+        match = re.search(patt, content)
+        if match:
+            rankings = json.loads(match.group(1)).get('rankings')
+            for fmt in ['PPR', 'HALF', 'STD']:
+                if rankings.get(fmt):
+                    ranks = rankings[fmt]
+                    for pid, pidranks in ranks.items():
+                        try:
+                            results.append({'player_id': pid,
+                                            'expert_rank': pidranks[0]['rank'],
+                                            'scoring_fmt': fmt.lower(),
+                                            'expert_id': pidranks[0]['expert_id'],
+                                            'consensus_rank': pidranks[1]['rank']})
+                        except:
+                            logging.exception('could not add {}'.format(pidranks))
+        else:
+            logging.error('could not parse response into JSON: {}'.format(content))
+
+        return results
+
     def weekly_rankings(self, content, fmt, pos, season_year, week):
         '''
         Parses weekly rankings page for specific position
@@ -308,6 +341,74 @@ class FantasyProsNFLParser(BrowserScraper):
                 pass
 
             results.append(player)
+        return results
+
+    def player_weekly_rankings(self, content):
+        '''
+        Parses weekly rankings page for specific player
+
+        Args:
+            content (str): HTML 
+
+        Returns:
+            list of dict
+            
+        '''
+        results = []
+        soup = BeautifulSoup(content, 'lxml')
+        tbl = soup.select('table.expert-ranks')[0]
+
+        # get season
+        season = None
+        for th in [h.text for h in tbl.find_all('th')]:
+            if 'Accuracy' in th:
+                season = re.sub('[^0-9]', '', th)
+                break
+
+        # get week
+        week = re.sub('[^0-9]','', soup.select('div.subhead.pull-left')[0].text)
+
+        # get player slug
+        a = soup.find('a', {'href': re.compile('/nfl/projections/\w+-+\w+.php')})
+        slug = a['href'].split('.php')[0].split('/')[-1]
+
+        # get player id and name
+        h1 = soup.find('h1')
+        source_player_name = h1.text
+        source_player_id = h1['class'][0].split('-')[-1]
+
+        # get player position and team
+        h5 = soup.find('h5')
+        source_player_position, source_player_team = [val.strip() for val in h5.text.split('-')]
+
+        # get format
+        fmt_d = {'Standard': 'std', 'PPR': 'ppr', 'Half PPR': 'hppr'}
+        for div in soup.find_all('div', class_='pull-right'):
+            if 'Half PPR' in div.text:
+                for option in div.find_all('option'):
+                    if option.get('selected') == "" and option.text in fmt_d:
+                        fmt = fmt_d.get(option.string)
+
+        # now loop through rankings
+        for tr in tbl.find('tbody').find_all('tr'):
+            # figure out everything we want here
+            rank = {'source': 'fantasypros', 'season_year': season, 'week': week,
+                    'scoring_format': fmt, 'ranking_type': 'weekly', 'source_player_id': source_player_id,
+                    'source_player_name': source_player_name, 'source_player_team': source_player_team,
+                    'source_player_position': source_player_position, 'source_player_code': slug}
+
+            tds = tr.find_all('td')
+            # tds[0]: expert name
+            rank['expert_name'] = tds[0].text
+            # tds[1]: affiliation
+            rank['expert_affiliation'] = tds[1].text
+            # tds[2]: rank
+            # strip non-numeric characters
+            rank['source_positional_rank'] = re.sub('[^0-9]','', tds[2].text)
+            # tds[3]: rank_vs_ecr
+            rank['source_positional_rank_vs_ecr'] = tds[3].text
+            # all set
+            results.append(rank)
         return results
 
 

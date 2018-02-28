@@ -22,9 +22,10 @@ class TestFantasyProsScraper(unittest.TestCase):
         return random.choice(['rb', 'wr', 'te', 'flex', 'qb-flex'])
 
     def setUp(self):
-        self.s = FantasyProsNFLScraper()
+        self.s = FantasyProsNFLScraper(cache_name='fpros-test')
         self.p = FantasyProsNFLParser()
 
+    @unittest.skip
     def test_adp(self):
         content = self.s.adp(fmt='std')
         players = self.p.adp(content)
@@ -33,6 +34,7 @@ class TestFantasyProsScraper(unittest.TestCase):
         players = self.p.adp(content)
         self.assertIsNotNone(players)
 
+    @unittest.skip
     def test_draft_rankings(self):
         content = self.s.draft_rankings(pos=self.std_positions, fmt='std')
         self.assertIsNotNone(self.p.draft_rankings_overall(content))
@@ -41,6 +43,7 @@ class TestFantasyProsScraper(unittest.TestCase):
         content = self.s.draft_rankings(pos=self.ppr_positions, fmt='hppr')
         self.assertIsNotNone(self.p.draft_rankings_overall(content))
 
+    @unittest.skip
     def test_projections(self):
         pos = self.std_positions
         self.assertIsNotNone(self.p.projections(self.s.projections(pos, fmt='std', week='draft'), pos))
@@ -48,6 +51,7 @@ class TestFantasyProsScraper(unittest.TestCase):
         self.assertIsNotNone(self.p.projections(self.s.projections(pos, fmt='ppr', week='draft'), pos))
         self.assertIsNotNone(self.p.projections(self.s.projections(pos, fmt='hppr', week='draft'), pos))
 
+    @unittest.skip
     def test_ros_rankings(self):
         pass
 
@@ -59,12 +63,24 @@ class TestFantasyProsScraper(unittest.TestCase):
         self.assertIsNotNone(self.p.ros_rankings(self.s.ros_rankings(pos, fmt='hppr', week='draft'), pos))
         '''
 
+    @unittest.skip
     def test_weekly_rankings(self):
         pos = self.std_positions
         self.assertIsNotNone(self.p.weekly_rankings(self.s.weekly_rankings(pos, fmt='std', week=1)))
         pos = self.ppr_positions
         self.assertIsNotNone(self.p.weekly_rankings(self.s.weekly_rankings(pos, fmt='ppr', week=1)))
         self.assertIsNotNone(self.p.weekly_rankings(self.s.weekly_rankings(pos, fmt='hppr', week=1)))
+
+    def test_player_weekly_rankings(self):
+        content = self.s.player_weekly_rankings(pid='tom-brady', week=2, fmt='STD')
+        self.assertIn('Koerner', content, 'content should have Sean Koerners rankings')
+        ranks = self.p.player_weekly_rankings(content)
+        self.assertGreaterEqual(len(ranks), 1)
+        content = self.s.player_weekly_rankings(pid='leonard-fournette', week=2, fmt='PPR')
+        self.assertIn('Paulsen', content, 'content should have John Paulsens rankings')
+        ranks = self.p.player_weekly_rankings(content)
+        self.assertGreaterEqual(len(ranks), 1)
+
 
 if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)

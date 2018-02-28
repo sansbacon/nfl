@@ -28,6 +28,7 @@ def csv_to_dict(fn):
         for row in csv.DictReader(infile, skipinitialspace=True, delimiter=','):
             yield {k: v for k, v in row.items()}
 
+
 def digits(s):
     '''
     Removes non-numeric characters from a string
@@ -40,6 +41,7 @@ def digits(s):
         
     '''
     return ''.join(ch for ch in s if ch.isdigit())
+
 
 def flatten(d):
     '''
@@ -60,6 +62,7 @@ def flatten(d):
             items.append((k, v))
     return dict(items)
 
+
 def flatten_list(l):
     '''
     Flattens list of lists into list
@@ -75,6 +78,7 @@ def flatten_list(l):
         return [item for sublist in l for item in sublist]
     except:
         return l
+
 
 def file_to_ds(fname):
     '''
@@ -96,6 +100,7 @@ def file_to_ds(fname):
         return read_pickle(fname)
     else:
         raise ValueError('{0} is not a supported file extension'.format(ext))
+
 
 def getdb(key='nfldb', configfn=None):
     '''
@@ -122,6 +127,7 @@ def getdb(key='nfldb', configfn=None):
                        password=config.get(key, 'password'),
                        database=config.get(key, 'db'))
 
+
 def isfloat(x):
     '''
     Tests if conversion to float succeeds
@@ -139,6 +145,7 @@ def isfloat(x):
         return False
     else:
         return True
+
 
 def isint(x):
     '''
@@ -159,6 +166,7 @@ def isint(x):
     else:
         return a == b
 
+
 def json_to_dict(json_fname):
     '''
     Takes json file and returns data structure
@@ -175,6 +183,7 @@ def json_to_dict(json_fname):
             return json.load(infile)
     else:
         raise ValueError('{0} does not exist'.format(json_fname))
+
 
 def memoize(function):
     '''
@@ -197,6 +206,7 @@ def memoize(function):
             memo[args] = rv
             return rv
     return wrapper
+
 
 def merge(merge_dico, dico_list):
     '''
@@ -222,6 +232,7 @@ def merge(merge_dico, dico_list):
                 merge_dico[key] = value
     return merge_dico
 
+
 def merge_two(d1, d2):
     '''
     Merges two dictionaries into one. Second dict will overwrite values in first.
@@ -237,6 +248,15 @@ def merge_two(d1, d2):
     context = d1.copy()
     context.update(d2)
     return context    
+
+
+def pair_list(list_):
+        '''
+        Allows iteration over list two items at a time
+        '''
+        list_ = list(list_)
+        return [list_[i:i + 2] for i in range(0, len(list_), 2)]
+
 
 def save_csv(data, csv_fname, fieldnames, sep=';'):
     '''
@@ -278,6 +298,24 @@ def read_pickle(pkl_fname):
         raise ValueError('{0} does not exist'.format(pkl_fname))
 
 
+def read_json(json_fname):
+    '''
+    Reads json file
+
+    Arguments:
+        json_fname (str): name of file to save
+
+    Returns:
+        dict
+
+    '''
+    try:
+        with open(json_fname, 'r') as infile:
+            return json.load(infile)
+    except:
+        logging.exception('{0} does not exist'.format(json_fname))
+
+
 def save_json(data, json_fname):
     '''
     Takes data and saves to json file
@@ -291,7 +329,7 @@ def save_json(data, json_fname):
         
     '''
     try:
-        with open(json_fname, 'wb') as outfile:
+        with open(json_fname, 'w') as outfile:
             json.dump(data, outfile)
     except:
         logging.exception('{0} does not exist'.format(json_fname))
@@ -336,6 +374,7 @@ def save_file(data, fname):
         save_pickle(data, fname)
     else:
         raise ValueError('{0} is not a supported file extension'.format(ext))
+
 
 def url_quote(s):
     '''

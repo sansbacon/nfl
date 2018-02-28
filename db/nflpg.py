@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import subprocess
@@ -175,7 +176,7 @@ class NFLPostgres(object):
         if not dirname or not os.path.exists(dirname):
             dirname = os.path.expanduser('~')
 
-        bdate = dt.datetime.now().strftime('%Y%m%d%H%M')
+        bdate = datetime.datetime.now().strftime('%Y%m%d%H%M')
         bfile = os.path.join(dirname, '{0}_{1}.sql'.format(dbname ,bdate))
 
         cmd = ['pg_dump', "-Upostgres", "--compress=9", "--file=" + bfile, dbname]
@@ -201,7 +202,7 @@ class NFLPostgres(object):
         '''
         if not dirname or not os.path.exists(dirname):
             dirname = os.path.expanduser('~')
-        bdate = dt.datetime.now().strftime('%Y%m%d%H%M')
+        bdate = datetime.datetime.now().strftime('%Y%m%d%H%M')
         bfile = os.path.join(dirname, '{0}_{1}_{2}.sql.gz'.format(dbname, tablename, bdate))
         cmd = ['pg_dump', "--table=" + tablename, "--username=" + username, "--compress=9", "--file=" + bfile, dbname]
         p = subprocess.Popen(cmd)
