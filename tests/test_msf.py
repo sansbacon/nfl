@@ -33,7 +33,7 @@ class TestMSFScraper(unittest.TestCase):
         return random.choice(range(1, 18))
 
     def setUp(self):
-        self.s = MySportsFeedsNFLScraper(username='sansbacon', password='cft091146', cache_name='test-msf-scraper')
+        self.s = MySportsFeedsNFLScraper(username='XXX', password='XXX', cache_name='test-msf-scraper')
 
     def test_boxscore(self):
         # NOTE: this doesn't work with noncommercial account

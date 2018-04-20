@@ -10,11 +10,11 @@ from pyvirtualdisplay import Display
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from nfl.teams import long_to_code 
-from nfl.db.nflpg import NFLPostgres
+from nfl.utility import getdb
  
  
 def run(): 
-    db = NFLPostgres(user='nfldb', password='cft0911', database='nfldb')
+    db = getdb()
     display = Display(visible=0, size=(800, 600))
     display.start()
     caps = DesiredCapabilities.FIREFOX
