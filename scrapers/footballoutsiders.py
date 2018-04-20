@@ -7,6 +7,7 @@ from scraper import FootballScraper
 
 class FootballOutsidersNFLScraper(FootballScraper):
 
+
     def dl(self, season=''):
         '''
         Gets DL stats page
@@ -61,6 +62,28 @@ class FootballOutsidersNFLScraper(FootballScraper):
         '''
         url = 'http://www.footballoutsiders.com/stats/rb{}'
         return self.get(url.format(season))
+
+    def snapcounts(self, season_year, week, pos):
+        '''
+        
+        Args:
+            season: 
+            week: 
+            pos: 
+
+        Returns:
+            str: HTML page
+            
+        '''
+        url = 'https://www.footballoutsiders.com/stats/snapcounts'
+        params = {
+            'team': 'ALL',
+            'week': week,
+            'pos': pos,
+            'year': season_year,
+            'Submit': 'Submit'
+        }
+        return self.post(url, params)
 
     def te(self, season=''):
         '''

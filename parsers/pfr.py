@@ -118,6 +118,29 @@ class PfrNFLParser():
 
         return players
 
+    def playerstats_fantasy_yearly(self, content):
+        '''
+        Takes HTML of rows of yearly results, returns list of players
+
+        Args:
+            content (str): HTML
+
+        Returns:
+            list: of player dict
+            
+        '''
+        players = []
+        soup = BeautifulSoup(content, 'lxml')
+        for tr in soup.find('table', {'id': 'fantasy'}).find('tbody').findAll('tr', class_=None):
+            player = {td['data-stat']: td.text for td in tr.find_all('td')[1:]}
+            a = tr.find('a', {'href': re.compile(r'/players/')})
+            pid = a['href'].split('/')[-1].split('.htm')[0]
+            player['source_player_id'] = pid
+            player['source_player_name'] = a.text
+            player['season_year'] = soup.find('h1').find('span').text
+            players.append(player)
+        return players
+
     def players(self, content):
         '''
         Parses page of players with same last initial (A, B, C, etc.) 

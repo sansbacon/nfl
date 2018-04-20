@@ -21,7 +21,8 @@ class MySportsFeedsNFLScraper(FootballScraper):
 
         Args:
             username: string
-            password: json or xml
+            password
+            response_format: json or xml
             headers: dict of headers
             cookies: cookiejar object
             cache_name: should be full path
@@ -53,6 +54,28 @@ class MySportsFeedsNFLScraper(FootballScraper):
         else:
             return self.get(url.format(season=season, format=self.response_format, game_id=game_id))
 
+    def player_gamelogs(self, team, season='latest'):
+        '''
+        Gets player gamelogs
+        
+        Args:
+            team (str): atl, bos, chi, etc.
+            season (str): latest, 2017-2018-regular, etc. 
+
+        Returns:
+            dict
+            
+        '''
+        teams = ['ari', 'atl', 'bal', 'buf', 'car', 'chi', 'cin', 'cle', 'dal',
+                 'den', 'det', 'gb', 'hou', 'ind', 'jax', 'kc', 'la', 'lac', 'mia', 'min',
+                 'ne', 'no', 'nyg', 'nyj', 'oak', 'phi', 'pit', 'sea', 'sf', 'tb', 'ten', 'was']
+        if team not in teams:
+            raise ValueError('invalid team: {}'.format(team))
+        url = 'https://api.mysportsfeeds.com/v1.2/pull/nfl/{seas}/player_gamelogs.' + self.response_format
+        if self.response_format == 'json':
+            return self.get_json(url.format(season), payload={'team': team})
+        else:
+            return self.get(url, payload={'team': team})
 
     def season_stats(self, season='latest'):
         '''

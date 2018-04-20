@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from bs4 import BeautifulSoup
+from requests_html import HTML
 
 
 class FootballOutsidersNFLParser(object):
@@ -160,6 +161,33 @@ class FootballOutsidersNFLParser(object):
         for tr in soup.select('table.stats tr')[1:]:
             pass
             # Player	Team	DYAR	Rk	YAR	Rk	DVOA	Rk	VOA	QBR	Rk	Pass	Yards	EYds	TD	FK	FL	INT	C%	DPI	ALEX
+
+
+    def snapcounts(self, content, season_year=None, week=None):
+        '''
+        
+        Args:
+            content (str): HTML from snapcounts page 
+            season_year (int): 2017, etc.
+            week (int): 1, 2, etc.
+
+        Returns:
+            list: of dict
+            
+        '''
+        results = []
+        doc = HTML(html=content)
+        t = doc.html.find('#dataTable')[0]
+        hdrs = [th.text.lower().strip().replace(' ', '_') for th in t.find('th')]
+        for tr in t.find('tbody')[0].find('tr'):
+            item = dict(zip(hdrs, [td.text.strip() for td in tr.find('td')]))
+            if season_year:
+                item['season_year'] = season_year
+            if week:
+                item['week'] = week
+            results.append(item)
+        return results
+
 
 if __name__ == "__main__":
     pass

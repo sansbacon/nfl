@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, print_function, division
-
 import logging
 import re
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Tag
 
 from nfl.teams import nickname_to_code
+
 
 class ESPNNFLParser(object):
 
@@ -304,5 +303,108 @@ class ESPNNFLParser(object):
             wanted = ['FULL_NAME', 'FANTASY_PLAYER_ID', 'PLAYERID', 'POSITION', 'TEAM']
         return [{k.lower():v for k,v in p.items() if k in wanted} for p in content]
 
+    def weekly_scoring(self, content):
+        '''
+        Parses weekly scoring page
+        
+        Args:
+            content (str): HTML
+
+        Returns:
+            list: of dict
+            
+        '''
+        results = []
+        headers = ['c_a', 'pass_yds', 'pass_td', 'pass_int', 'rush_att', 'rush_yds', 'rush_td',
+                   'rec_rec', 'rec_yds', 'rec_td', 'rec_tar', 'tpc', 'fumble', 'misc_td', 'fpts']
+        soup = BeautifulSoup(content, 'lxml')
+        tbl = soup.select('table#playertable_0')[0]
+        for tr in tbl.find_all('tr', {'id': re.compile(r'plyr')}):
+            tds = [td.text for td in tr.find_all('td', class_='playertableStat')]
+            if tds:
+                player = dict(zip(headers, tds))
+                # name, team, position
+                nametd = tr.find('td', {'id': re.compile(r'playername')})
+                for child in nametd.children:
+                    if isinstance(child, NavigableString):
+                        player['source_player_team'], player['source_player_position'] = child.string.split()[1:3]
+                    elif isinstance(child, Tag):
+                        player['source_player_name'] = child.string
+                        player['source_player_id'] = child.attrs.get('playerid')
+                results.append(player)
+        return results
+
+    def weekly_scoring_dst(self, content):
+        '''
+        Parses weekly scoring page for dst
+
+        Args:
+            content (str): HTML
+
+        Returns:
+            list: of dict
+
+        '''
+        # TODO: adapt for dst
+        results = []
+        headers = ['c_a', 'pass_yds', 'pass_td', 'pass_int', 'rush_att', 'rush_yds', 'rush_td',
+                   'rec_rec', 'rec_yds', 'rec_td', 'rec_tar', 'tpc', 'fumble', 'misc_td', 'fpts']
+        soup = BeautifulSoup(content, 'lxml')
+        tbl = soup.select('table#playertable_0')[0]
+        for tr in tbl.find_all('tr', {'id': re.compile(r'plyr')}):
+            tds = [td.text for td in tr.find_all('td', class_='playertableStat')]
+            if tds:
+                player = dict(zip(headers, tds))
+                # name, team, position
+                nametd = tr.find('td', {'id': re.compile(r'playername')})
+                for child in nametd.children:
+                    if isinstance(child, NavigableString):
+                        player['source_player_team'], player['source_player_position'] = child.string.split()[1:3]
+                    elif isinstance(child, Tag):
+                        player['source_player_name'] = child.string
+                        player['source_player_id'] = child.attrs.get('playerid')
+                results.append(player)
+        return results
+
+    def weekly_scoring_k(self, content):
+        '''
+        Parses weekly scoring page for kickers
+
+        Args:
+            content (str): HTML
+
+        Returns:
+            list: of dict
+
+        '''
+        # TODO: adapt for kicker
+        results = []
+        headers = ['c_a', 'pass_yds', 'pass_td', 'pass_int', 'rush_att', 'rush_yds', 'rush_td',
+                   'rec_rec', 'rec_yds', 'rec_td', 'rec_tar', 'tpc', 'fumble', 'misc_td', 'fpts']
+        soup = BeautifulSoup(content, 'lxml')
+        tbl = soup.select('table#playertable_0')[0]
+        for tr in tbl.find_all('tr', {'id': re.compile(r'plyr')}):
+            tds = [td.text for td in tr.find_all('td', class_='playertableStat')]
+            if tds:
+                player = dict(zip(headers, tds))
+                # name, team, position
+                nametd = tr.find('td', {'id': re.compile(r'playername')})
+                for child in nametd.children:
+                    if isinstance(child, NavigableString):
+                        player['source_player_team'], player['source_player_position'] = child.string.split()[1:3]
+                    elif isinstance(child, Tag):
+                        player['source_player_name'] = child.string
+                        player['source_player_id'] = child.attrs.get('playerid')
+                results.append(player)
+        return results
+
+
 if __name__ == "__main__":
-    pass
+    #pass
+    import pprint
+    from nfl.scrapers.espn import ESPNNFLScraper
+    s = ESPNNFLScraper()
+    p = ESPNNFLParser()
+    content = s.weekly_scoring(2017, 1, 'qb')
+    players = p.weekly_scoring(content)
+    pprint.pprint(players)

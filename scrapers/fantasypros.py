@@ -152,6 +152,22 @@ class FantasyProsNFLScraper(FootballScraper):
             url = '{}?week={}'.format(url, week)
         return self.get(url)
 
+    def weekly_scoring(self, pos, params, fmt=None):
+        '''
+        
+        Args:
+            pos (str): qb, rb, etc. 
+
+        Returns:
+
+        '''
+        if fmt:
+            url = 'https://www.fantasypros.com/nfl/reports/leaders/{}-{}.php?'
+            return self.get(url.format(fmt, pos.lower()), payload=params)
+        else:
+            url = 'https://www.fantasypros.com/nfl/reports/leaders/{}.php?'
+            return self.get(url.format(pos.lower()), payload=params)
+
 
 class FantasyProsWaybackNFLScraper(WaybackScraper):
     '''

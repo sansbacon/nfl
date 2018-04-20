@@ -10,11 +10,28 @@ from __future__ import absolute_import, print_function, division
 from collections import defaultdict
 import logging
 
-from nfl.utility import memoize
-
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-@memoize
+
+def nflcom_gsis_players(db):
+    '''
+    Creates dictionary of players from player (NFL.com) table    
+
+    Args:
+        db: NFLPostgres object (or subclass)
+
+    Returns:
+        dict
+        
+    '''
+    cp = defaultdict(list)
+    q = """SELECT player_id, uniform_number || '-' || gsis_name as player_gsis_id 
+           FROM player WHERE gsis_name != '' AND uniform_number IS NOT NULL"""
+    for p in db.select_dict(q):
+        cp[p['player_gsis_id']].append(p)
+    return cp
+
+
 def nflcom_names(db):
     '''
     Creates list of names from player (NFL.com) table    
@@ -29,7 +46,7 @@ def nflcom_names(db):
            WHERE full_name IS NOT NULL"""
     return db.select_dict(q)
 
-@memoize
+
 def nflcom_players(db):
     '''
     Creates dictionary of players from player (NFL.com) table    
@@ -53,6 +70,7 @@ def nflcom_players(db):
         cp[pid].append(p)
 
     return cp
+
 
 def nflcom_profiles(db):
     '''

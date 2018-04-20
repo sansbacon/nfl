@@ -156,5 +156,25 @@ class ESPNNFLScraper(FootballScraper):
                'players/players_ESPNFantasyFootball_2017.json')
         return self.get_json(url)
 
+    def weekly_scoring(self, season_year, week, position):
+        '''
+        Gets weekly fantasy scoring page
+
+        Args:
+            season_year (int): 2017, 2016, etc.
+            week (int): 1 through 17
+            position (str): 'qb', 'wr', etc.
+            
+        Returns:
+            str: HTML
+            
+        '''
+        poscode = {'qb': 0, 'rb': 2, 'wr': 4, 'te': 6, 'dst': 16, 'k': 17}
+        if position.lower() not in poscode:
+            raise ValueError('invalid position: {}'.format(position))
+        url = 'http://games.espn.com/ffl/leaders?&'
+        params = {'scoringPeriodId': week, 'seasonId': season_year, 'slotCategoryId': position}
+        return self.get(url, payload=params)
+
 if __name__ == "__main__":
     pass

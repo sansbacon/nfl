@@ -111,7 +111,7 @@ def getdb(key='nfldb', configfn=None):
         configfn (str): filename of configfile 
 
     Returns:
-        NBAPostgres
+        NFLPostgres instance
     
     '''
     try:
@@ -126,6 +126,37 @@ def getdb(key='nfldb', configfn=None):
     return NFLPostgres(user=config.get(key, 'username'),
                        password=config.get(key, 'password'),
                        database=config.get(key, 'db'))
+
+
+def getengine(key='nfldb', configfn=None):
+    '''
+    Gets sqlite engine
+
+    Args:
+        key (str): top-level key in configfile 
+        configfn (str): filename of configfile 
+
+    Returns:
+        sqlalchemy engine
+
+    '''
+    try:
+        import ConfigParser as configparser
+    except ImportError:
+        import configparser
+    config = configparser.ConfigParser()
+    if not configfn:
+        config.read(os.path.join(os.path.expanduser('~'), '.fantasy'))
+    else:
+        config.read(configfn)
+    try:
+        from sqlalchemy import create_engine
+        base_connstr = 'postgresql://{u}:{p}@localhost:5432/{db}'
+        connstr = base_connstr.format(u=config.get(key, 'username'),
+            p=config.get(key, 'password'), db=config.get(key, 'db'))
+        return create_engine(connstr)
+    except:
+        return None
 
 
 def isfloat(x):

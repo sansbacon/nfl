@@ -35,7 +35,7 @@ def last_first(name):
     return '{1}, {0}'.format(hn.first, hn.last) 
 
 
-def match_player (to_match, match_from, threshold = .8):
+def match_player (to_match, match_from, threshold = 80):
     '''
     Matches player with direct or fuzzy match
 
@@ -44,10 +44,11 @@ def match_player (to_match, match_from, threshold = .8):
         match_from (list): list of player names to match against
 
     Returns:
-        name (str): matched name from match_from list
+        str: matched name from match_from list
 
     Example:
         name = match_player(player, players)
+    
     '''
     name = None
 

@@ -38,22 +38,40 @@ class FantasyProsNFLParser(object):
     def std_positions(self):
         return ['qb', 'k', 'dst']
 
-    def adp(self, content):
+    def adp(self, content, season_year, scoring_format):
         '''
         Parses adp page
         
         Args:
-            content: HTML string
+            content (str): HTML
+            season_year (int): 2018, etc.
+            scoring_format (str): 'ppr', 'std', etc.
 
         Returns:
             list of player dict
+            
         '''
         players = []
         soup = BeautifulSoup(content, 'lxml')
         for tr in soup.find('table', {'id': 'data'}).find('tbody').find_all('tr'):
-            player = {'source': 'fantasypros'}
+            player = {'source': 'fantasypros',
+                      'source_league_format': scoring_format,
+                      'season_year': season_year}
             tds = tr.find_all('td')
-            player['source_player_name'] = tds[1].find('a', {'class': 'player-name'}).text
+
+            # exclude stray rows that don't have player data
+            if len(tds) == 1:
+                continue
+
+            # try to find player id, name, and code
+            try:
+                acode, aid = [a for a in tr.find_all('a')
+                              if 'tip' not in a.attrs['class']]
+                player['source_player_code'] = acode['href'].split('/')[-1].split('.php')[0]
+                player['source_player_name'] = acode.text
+                player['source_player_id'] = int(aid.attrs.get('class')[-1].split('-')[-1])
+            except:
+                logging.exception('could not find playerid for {}'.format(player['source_player_name']))
 
             sm = tds[1].find_all('small')
             if sm and len(sm) == 2:
@@ -63,18 +81,11 @@ class FantasyProsNFLParser(object):
             else:
                 player['source_team_code'] = 'UNK'
 
-            # try to find player id
-            try:
-                a = tr.find('a', {'href': '#'})
-                player['source_player_id'] = a.attrs.get('class')[-1].split('-')[-1]
-            except:
-                logging.exception('could not find playerid for {}'.format(player['source_player_name']))
-
             # get remaining stats
             posrk = tds[2].text
-            player['position_rank'] = ''.join([s for s in posrk if s.isdigit()])
+            player['position_rank'] = int(''.join([s for s in posrk if s.isdigit()]))
             player['source_player_position'] = ''.join([s for s in posrk if not s.isdigit()])
-            player['adp'] = tds[-1].text
+            player['adp'] = float(tds[-1].text)
 
             # add to list
             players.append(player)
@@ -409,6 +420,46 @@ class FantasyProsNFLParser(object):
             rank['source_positional_rank_vs_ecr'] = tds[3].text
             # all set
             results.append(rank)
+        return results
+
+    def player_weekly_results(self, content, pos):
+        '''
+        Parses weekly rankings page for specific player
+
+        Args:
+            content (str): HTML 
+            pos (str): qb, rb, etc.
+            
+        Returns:
+            list of dict
+
+        '''
+        results = []
+        soup = BeautifulSoup(content, 'lxml')
+
+        # get season
+        try:
+            season = int(re.search(r'\d+', soup.find('h1').text).group())
+        except:
+            season = None
+
+        # get week
+        try:
+            week = int(re.search(r'\d+', soup.find('h5').text).group())
+        except:
+            week = None
+
+        tbl = soup.select('table#data')[0]
+        for tr in tbl.tbody.find_all('tr'):
+            if pos == 'dst':
+                # get player slug and name
+                a = tr.find('a', {'href': re.compile('/nfl/.*?/(.*?).php')})
+                slug = a['href'].split('.php')[0].split('/')[-1]
+                source_player_name = a.text
+                tds = tr.find_all('td')
+                fpts = float(tds[2].text)
+                results.append((season, week, slug, source_player_name, fpts))
+
         return results
 
 

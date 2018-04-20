@@ -41,7 +41,6 @@ def playerstats_fantasy_weekly_table(players):
     Prepares player dict for insertion into playerstats_fantasy_weekly table
     
     Args:
-        db: NFLPostgres instance
         players: list of dict
 
     Returns:
@@ -67,6 +66,39 @@ def playerstats_fantasy_weekly_table(players):
         player['source'] = 'pfr'
         fixed.append(player)
 
+    return fixed
+
+
+def playerstats_fantasy_yearly_table(players):
+    '''
+    Prepares player dict for insertion into playerstats_fantasy_yearly table
+
+    Args:
+        players: list of dict
+
+    Returns:
+        list of dict
+    '''
+    convert = {
+        'team': 'source_team_code',
+        'source': 'source',
+        'fantasy_pos': 'source_player_position',
+        'source_player_id': 'source_player_id',
+        'source_player_name': 'source_player_name',
+        'source_player_position': 'source_player_position',
+        'source_team_code': 'source_team_code',
+        'season_year': 'season_year',
+        'draftkings_points': 'draftkings_points',
+        'fanduel_points': 'fanduel_points',
+        'fantasy_points': 'fantasy_points_std',
+        'g': 'g',
+        'gs': 'gs'
+    }
+    fixed = []
+    for p in players:
+        player = {convert[k]: valornone(v) for k, v in p.items() if k in convert.keys()}
+        player['source'] = 'pfr'
+        fixed.append(player)
     return fixed
 
 def playerstats_offense_weekly_table(players):

@@ -14,16 +14,10 @@ class FantasyLabsNFLScraper(FootballScraper):
     If you don't have a subscription, you can access the information freely-available on the website
     If you have a subscription, the scraper can use your browser cookies and access protected content
     You cannot access protected content if you (a) have not logged in (b) have the browser open
-    
-    Usage:
-        import browser_cookie3
-        cookiefn = FIREFOX_PROFILE_PATH + '/cookies.sqlite'
-        cj = browser_cookie3.firefox(cookie_file=cookiefn)
-        scraper = FantasyLabsNFLScraper(cookies=cj)
     '''
 
     @property
-    def model_url(selfs):
+    def model_url(self):
         return 'https://www.fantasylabs.com/api/playermodel/1/{}/?modelId=1286036&projOnly=true'
 
     def correlations(self):

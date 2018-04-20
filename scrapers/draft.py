@@ -11,45 +11,77 @@ class DraftNFLScraper(FootballScraper):
     '''
     '''
 
-    def json_file(self, fn):
+    def _json_file(self, fn):
         '''
-        Opens draft JSON player_pool file
+        Opens JSON file from disk
+
         Args:
             fn: 
 
         Returns:
-
+            dict: JSON parsed into dict
+            
         '''
         with open(fn, 'r') as infile:
             return json.load(infile)
 
-    def player_pool(self, sha, token, auth, referer, contest_code):
+    def adp(self, headers=None, fn=None):
         '''
-        TODO: this doesn't really work right now
+
         Args:
-            sha: 
-            token: 
-            auth: 
-            referer: 
+            headers (dict): 
 
         Returns:
+            dict
 
         '''
-        url = 'https://api.playdraft.com/v4/player_pool/{}'
-        headers = {
-            'Host': 'api.playdraft.com',
-            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) Gecko/20100101 Firefox/55.0',
-            'Accept': 'application/json, text/javascript, */*; q=0.01',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'X-Client-Type': 'web',
-            'X-Client-Sha': sha,
-            'X-User-Token': token,
-            'X-User-Auth-Id': auth,
-            'Referer': referer,
-            'Origin': 'https://playdraft.com',
-            'Connection': 'keep-alive',
-        }
-        self.get(url.format(contest_code), headers=headers)
+        if headers and not fn:
+            url = 'https://api.playdraft.com/v4/player_pool/11416'
+            self.headers = headers
+            return self.get_json(url=url)
+        elif fn and not headers:
+            return self._json_file(fn)
+        else:
+            raise ValueError('Must pass headers or fn')
+
+    def complete_cases(self, headers, fn):
+        '''
+    
+        Args:
+            headers (dict): 
+    
+        Returns:
+            dict
+    
+        '''
+        if headers and not fn:
+            url = 'https://api.playdraft.com/v1/window_clusters/2015/complete_contests'
+            self.headers = headers
+            return self.get_json(url=url)
+        elif fn and not headers:
+            return self._json_file(fn)
+        else:
+            raise ValueError('Must pass headers or fn')
+
+    def draft(self, headers, fn):
+        '''
+    
+        Args:
+            headers (dict): 
+    
+        Returns:
+            dict
+    
+        '''
+        if headers and not fn:
+            url = 'https://api.playdraft.com/v1/window_clusters/2015/complete_contests'
+            self.headers = headers
+            return self.get_json(url=url)
+        elif fn and not headers:
+            return self._json_file(fn)
+        else:
+            raise ValueError('Must pass headers or fn')
+
 
 if __name__ == "__main__":
     pass

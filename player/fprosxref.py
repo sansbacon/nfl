@@ -49,6 +49,44 @@ def fpros_players(db):
     return {p['source_player_id']: p['nflcom_player_id'] for p in db.select_dict(q)}
 
 
+def fpros_playercode_playerid(db):
+    '''
+    fantasypros playercode: playerid
+
+    Arguments:
+        db: NFLPostgres instance
+
+    Returns:
+        dict
+
+    '''
+    q = """
+        select source_player_code, source_player_id 
+        from extra_misc.player_xref
+        where source = 'fantasypros'
+    """
+    return {p['source_player_code']: p['source_player_id'] for p in db.select_dict(q)}
+
+
+def fpros_playercode_positions(db):
+    '''
+    fantasypros playercode: position
+
+    Arguments:
+        db: NFLPostgres instance
+
+    Returns:
+        dict
+        
+    '''
+    q = """
+        select source_player_code, source_player_position 
+        from extra_misc.player_xref
+        where source = 'fantasypros'
+    """
+    return {p['source_player_code']: p['source_player_position'] for p in db.select_dict(q)}
+
+
 def fpros_xref(nflp, fpros_players):
     '''
     Cross reference fantasypros players with nfl.com players
