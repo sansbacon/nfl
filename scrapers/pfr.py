@@ -93,7 +93,7 @@ class PfrNFLScraper(FootballScraper):
         '''
         if pos:
             params = self._merge_params({'year_min': season_year, 'year_max': season_year,
-                                         'offset': offset, 'pos': pos})
+                                         'offset': offset, 'pos': pos, 'match': 'single'})
         else:
             params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset})
         return self.get(self.pgl_finder_url, payload=params)
@@ -124,11 +124,11 @@ class PfrNFLScraper(FootballScraper):
         Returns:
             HTML string
         '''
-        params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset,
-                                     'week_num_min': week, 'week_num_max': week})
-        content = self.get(self.pgl_finder_url, payload=params)
-        logging.debug(self.urls[-1])
-        return content
+        return None
+        #url = 'https://www.pro-football-reference.com/play-index/pgl_finder.cgi?&game_type=R&c1stat=fantasy_points&c1comp=gt&match=single&career_game_num_max=499&order_by=game_date&season_start=1&week_num_max=99&career_game_num_min=0&pos=0&year_max={}&c5val=1.0&c1val=-5&year_min={}&request=1&order_by_asc=Y&game_num_max=99&week_num_min=0&season_end=-1&game_num_min=0'
+        #content = self.get(url.format(season_year, offset))
+        #logging.debug(self.urls[-1])
+        #return content
 
     def playerstats_offense_yearly(self, season_year, offset=0):
         '''
@@ -141,7 +141,9 @@ class PfrNFLScraper(FootballScraper):
         Returns:
             HTML string
         '''
-        params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset})
+        params = self._merge_params({'year_min': season_year, 'year_max': season_year,
+                                     'offset': offset, 'match': 'single',
+                                     'c2stat': 'targets', 'c2comp': 'gt', 'c2val': '-1'})
         content = self.get(self.pgl_finder_url, payload=params)
         logging.debug(self.urls[-1])
         return content

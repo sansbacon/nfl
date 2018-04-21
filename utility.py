@@ -10,7 +10,7 @@ try:
 except ImportError:
     import pickle
 
-from nfl.db.nflpg import NFLPostgres
+from nflmisc.nflpg import NFLPostgres
 
 
 def csv_to_dict(fn):

@@ -84,6 +84,95 @@ class PfrNFLParser():
 
         return players
 
+    def player_fantasy_season(self, content, season_year=None):
+        '''
+        Parses player fantasy page for season
+
+        Args:
+            content: HTML string
+            season_year: 2016, etc.
+
+        Returns:
+            list of dict
+        '''
+        players = []
+        soup = BeautifulSoup(content, 'lxml')
+
+        try:
+            for tr in soup.find('table', {'id': 'player_fantasy'}).find('tbody').find_all('tr'):
+                player = {td['data-stat']: td.text for td in tr.find_all('td')}
+                if season_year:
+                    player['season_year'] = season_year
+                players.append(player)
+        except Exception as e:
+            logging.exception(e)
+
+        return players
+
+    def player_page(self, content, pid):
+        '''
+        Parses player page 
+
+        Args:
+            content: HTML string
+
+        Returns:
+            dict: source, source_player_id, source_player_name, 
+                  source_player_position, source_player_dob
+        '''
+        player = {'source': 'pfr', 'source_player_id': pid}
+        soup = BeautifulSoup(content, 'lxml')
+
+        # source_player_name
+        h1 = soup.find('h1', {'itemprop': 'name'})
+        if h1:
+            player['source_player_name'] = h1.text
+
+        # source_player_position
+        try:
+            meta = soup.find('meta', {'name': 'Description'})
+            metac = meta.attrs.get('content')
+            player['source_player_position'] = metac.split(',')[0].split(': ')[-1]
+        except:
+            pass
+
+        # source_player_dob
+        span = soup.find('span', {'id': 'necro-birth'})
+        if span:
+            player['source_player_dob'] = span.attrs.get('data-birth')
+
+        return player
+
+    def players(self, content):
+        '''
+        Parses page of players with same last initial (A, B, C, etc.) 
+
+        Args:
+            content: HTML string
+
+        Returns:
+            list of dict
+        '''
+        results = []
+        soup = BeautifulSoup(content, 'lxml')
+        for p in soup.select('div#div_players p'):
+            try:
+                player = {'source': 'pfr'}
+                name, posyears = p.text.split('(')
+                pos, years = posyears.split(')')
+                player['source_player_name'] = name.strip()
+                player['source_player_position'] = pos.strip()
+                player['source_player_years'] = years.strip()
+                a = p.find('a')
+                if a:
+                    id = a['href'].split('/')[-1].split('.htm')[0]
+                    player['source_player_id'] = id.strip()
+                results.append(player)
+            except:
+                pass
+
+        return results
+
     def playerstats_fantasy_weekly(self, content, season_year=None, pos=None):
         '''
         Takes HTML of 100 rows of weekly results, returns list of players
@@ -127,7 +216,7 @@ class PfrNFLParser():
 
         Returns:
             list: of player dict
-            
+
         '''
         players = []
         soup = BeautifulSoup(content, 'lxml')
@@ -141,94 +230,28 @@ class PfrNFLParser():
             players.append(player)
         return players
 
-    def players(self, content):
+    def playerstats_offense_yearly(self, content):
         '''
-        Parses page of players with same last initial (A, B, C, etc.) 
+        Takes HTML of rows of yearly results, returns list of players
 
         Args:
-            content: HTML string
+            content (str): HTML
 
         Returns:
-            list of dict
-        '''
-        results = []
-        soup = BeautifulSoup(content, 'lxml')
-        for p in soup.select('div#div_players p'):
-            try:
-                player = {'source': 'pfr'}
-                name, posyears = p.text.split('(')
-                pos, years = posyears.split(')')
-                player['source_player_name'] = name.strip()
-                player['source_player_position'] = pos.strip()
-                player['source_player_years'] = years.strip()
-                a = p.find('a')
-                if a:
-                    id = a['href'].split('/')[-1].split('.htm')[0]
-                    player['source_player_id'] = id.strip()
-                results.append(player)
-            except:
-                pass
+            list: of player dict
 
-        return results
-
-    def player_fantasy_season(self, content, season_year=None):
-        '''
-        Parses player fantasy page for season
-        
-        Args:
-            content: HTML string
-            season_year: 2016, etc.
-
-        Returns:
-            list of dict
         '''
         players = []
         soup = BeautifulSoup(content, 'lxml')
-
-        try:
-            for tr in soup.find('table', {'id': 'player_fantasy'}).find('tbody').find_all('tr'):
-                player = {td['data-stat']: td.text for td in tr.find_all('td')}
-                if season_year:
-                    player['season_year'] = season_year
-                players.append(player)
-        except Exception as e:
-            logging.exception(e)
-
+        for tr in soup.find('table', {'id': 'results'}).find('tbody').findAll('tr', class_=None):
+            player = {td['data-stat']: td.text for td in tr.find_all('td')[1:]}
+            a = tr.find('a', {'href': re.compile(r'/players/')})
+            pid = a['href'].split('/')[-1].split('.htm')[0]
+            player['source_player_id'] = pid
+            player['source_player_name'] = a.text
+            player['season_year'] = soup.find('div', {'id': 'form_description'}).text.split(', ')[1].split()[1]
+            players.append(player)
         return players
-
-    def player_page(self, content, pid):
-        '''
-        Parses player page 
-
-        Args:
-            content: HTML string
-
-        Returns:
-            dict: source, source_player_id, source_player_name, 
-                  source_player_position, source_player_dob
-        '''
-        player = {'source': 'pfr', 'source_player_id': pid}
-        soup = BeautifulSoup(content, 'lxml')
-
-        #source_player_name
-        h1 = soup.find('h1', {'itemprop': 'name'})
-        if h1:
-            player['source_player_name'] = h1.text
-
-        #source_player_position
-        try:
-            meta = soup.find('meta', {'name': 'Description'})
-            metac = meta.attrs.get('content')
-            player['source_player_position'] = metac.split(',')[0].split(': ')[-1]
-        except:
-            pass
-
-        # source_player_dob
-        span = soup.find('span', {'id': 'necro-birth'})
-        if span:
-            player['source_player_dob'] = span.attrs.get('data-birth')
-
-        return player
 
     def team_plays(self, content):
         '''

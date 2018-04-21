@@ -53,5 +53,29 @@ class ProFootballReferenceAgent(object):
 
         return results
 
+    def playerstats_offense_yearly(self):
+        '''
+        TODO: fully implement this
+        Returns:
+
+        '''
+        import json
+        from pathlib import Path
+        from nfl.scrapers.pfr import PfrNFLScraper
+        from nfl.parsers.pfr import PfrNFLParser
+
+        pfrs = PfrNFLScraper(cache_name='pfrscraper')
+        pfrp = PfrNFLParser()
+
+        results = []
+        for offset in range(0, 700, 100):
+            content = pfrs.playerstats_offense_yearly(2017, offset)
+            results += pfrp.playerstats_offense_yearly(content)
+            print('finished offset {}'.format(offset))
+
+        pth = Path.home() / 'playerstats_offense_yearly_2017.json'
+        with pth.open('w') as f:
+            json.dump(results, f)
+
 if __name__ == '__main__':
     pass

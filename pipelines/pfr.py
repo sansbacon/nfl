@@ -101,6 +101,7 @@ def playerstats_fantasy_yearly_table(players):
         fixed.append(player)
     return fixed
 
+
 def playerstats_offense_weekly_table(players):
     '''
     Converts offense playerstats for single week
@@ -140,6 +141,48 @@ def playerstats_offense_weekly_table(players):
         fixed.append(p)
 
     return fixed
+
+def playerstats_offense_yearly_table(players):
+    '''
+    Converts offense playerstats for single season
+
+    Args:
+        players: 
+
+    Returns:
+        list of dict
+    '''
+    convert = {
+        'team': 'source_team_code',
+        'pass_att': 'pass_att',
+        'pass_cmp': 'pass_cmp',
+        'pass_int': 'pass_int',
+        'pass_sacked': 'pass_sacked',
+        'pass_sacked_yds': 'pass_sacked_yds',
+        'pass_td': 'pass_td',
+        'pass_yds': 'pass_yds',
+        'player': 'source_player_name',
+        'source_player_name': 'source_player_name',
+        'rec': 'rec',
+        'targets': 'rec_target',
+        'rec_yds': 'rec_yds',
+        'rec_td': 'rec_td',
+        'rush_att': 'rush_att',
+        'rush_td': 'rush_td',
+        'rush_yds': 'rush_yds',
+        'season_year': 'season_year',
+        'year_id': 'season_year',
+        'source_player_id': 'source_player_id',
+        'g': 'g'
+    }
+
+    fixed = []
+    for player in players:
+        p = {convert[k]: valornone(v) for k, v in player.items() if k in convert.keys()}
+        p['source'] = 'pfr'
+        fixed.append(p)
+    return fixed
+
 
 def teamstats_defense_weekly_table(teams):
     '''
