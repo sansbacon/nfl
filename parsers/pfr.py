@@ -65,7 +65,9 @@ class PfrNFLParser():
             if tds:
                 p[tds[0]['data-stat']] = tds[0].text
                 p[tds[1]['data-stat']] = tds[1].text
-
+                p[tds[2]['data-stat']] = tds[2].text
+                p[tds[3]['data-stat']] = tds[3].text
+                p[tds[-2]['data-stat']] = tds[-2].text
                 try:
                     # <td class="left " data-append-csv="RamcRy00" data-stat="player" csk="Ramczyk, Ryan"><a href="/players/R/RamcRy00.htm">Ryan Ramczyk</a></td>
                     p[tds[2]['data-stat']] = tds[2]['csk']
@@ -136,12 +138,29 @@ class PfrNFLParser():
         except:
             pass
 
-        # source_player_dob
-        span = soup.find('span', {'id': 'necro-birth'})
-        if span:
-            player['source_player_dob'] = span.attrs.get('data-birth')
+        # college
+        for p in soup.find_all('p'):
+            if p.find('strong') and p.find('a', {'href': re.compile(r'/schools/')}):
+                player['college'] = p.find('a').text
+        
+        # spans: height and weight and dob
+        for sp in soup.find_all('span'):
+            if sp.attrs.get('itemprop') == 'height':
+                try:
+                    ft, inch = [float(v) for v in sp.string.split('-')][0:2]
+                    player['height'] = 12.0 * ft + inch
+                except Exception as e:
+                    print(e)
+            elif sp.attrs.get('itemprop') == 'weight':
+                try:
+                    player['weight'] = float(sp.string.split('lb')[0])
+                except Exception as e:
+                    print(e)
+            elif sp.attrs.get('itemprop') == 'birthDate':
+                player['source_player_dob'] = sp.attrs.get('data-birth')     
 
         return player
+
 
     def players(self, content):
         '''
@@ -152,6 +171,7 @@ class PfrNFLParser():
 
         Returns:
             list of dict
+
         '''
         results = []
         soup = BeautifulSoup(content, 'lxml')
@@ -331,6 +351,57 @@ class PfrNFLParser():
         for tr in offense.findAll('tr'):
             teams.append({td['data-stat']: td.text for td in tr.find_all('td')})
         return teams
+
+    def team_offense_yearly(self, content, season_year=None):
+        '''
+        Team offense stats for total season
+
+        Args:
+            content(str): HTML page
+
+        Returns:
+            list of dict
+
+        '''
+        teams = []
+        soup = BeautifulSoup(content, 'lxml')
+        off = soup.find('table', {'id': 'team_stats_clone'}).find('tbody')
+        for tr in off.findAll('tr'):
+            team = {td['data-stat']: td.text for td in tr.find_all('td')}
+            if season_year:
+                team['season_year'] = season_year
+            teams.append(team)
+        return teams
+
+    def team_fantasy_weekly(self, content):
+        '''
+        Takes HTML of team weekly results, returns list of players
+
+        Args:
+            content: HTML string
+
+        Returns:
+            list: of dict
+
+        '''
+        players = []
+
+        soup = BeautifulSoup(content, 'lxml')
+        tbl = soup.find('table', {'id': 'results_clone'})
+        if tbl:
+            for tr in tbl.find('tbody').findAll('tr', class_=None):
+                player = {td['data-stat']: td.text for td in tr.find_all('td')}
+                a = tr.find('a', {'href': re.compile(r'/players/')})
+                if a:
+                    try:
+                        pid = a['href'].split('/')[-1].split('.htm')[0]
+                        player['source_player_id'] = pid
+                    except:
+                        pass
+                players.append(player)
+
+        return players
+
 
     def team_season(self, content, season):
         '''

@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, print_function, division
-
-
-from nfl.scrapers.scraper import FootballScraper
+from nflmisc.scraper import FootballScraper
 
 
 class ESPNNFLScraper(FootballScraper):
@@ -80,7 +77,7 @@ class ESPNNFLScraper(FootballScraper):
         url = 'http://www.espn.com/nfl/players?position={}&league=nfl'
         return self.get(url.format(pos), encoding='latin1')
 
-    def projections(self, pos, season_year, week=0, offset=0):
+    def projections(self, pos, season_year=None, week=0, offset=0):
         '''
         Gets page with projections by position
 
@@ -105,11 +102,17 @@ class ESPNNFLScraper(FootballScraper):
             raise ValueError('invalid offset {}'.format(offset))
 
         url = 'http://games.espn.com/ffl/tools/projections?'
-        params = {
-            'slotCategoryId': slot_categories[pos],
-            'startIndex': offset,
-            'seasonId': season_year
-        }
+        if season_year:
+            params = {
+                'slotCategoryId': slot_categories[pos],
+                'startIndex': offset,
+                'seasonId': season_year
+            }
+        else:
+            params = {
+                'slotCategoryId': slot_categories[pos],
+                'startIndex': offset
+            }
 
         if week:
             params['scoringPeriodId'] = week

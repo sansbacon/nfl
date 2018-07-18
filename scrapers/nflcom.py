@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 import logging
 from string import ascii_uppercase
 
-from nfl.scrapers.scraper import FootballScraper
+from nflmisc.scraper import FootballScraper
 
 
 class NFLComScraper(FootballScraper):

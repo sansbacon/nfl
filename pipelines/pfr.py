@@ -3,37 +3,67 @@ pipelines/pfr.py
 functions to transform pfr data for insertion into database, etc.
 '''
 
-# -*- coding: utf-8 -*-
-
-from __future__ import absolute_import, print_function, division
-
 import logging
-from nfl.names import first_last
+import re
+
+from nfl.dates import strtodate
+from nfl.player.playerxref import *
+from nfl.seasons import season_week
+
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-def draft_table(players):
+def draft_table(players, pfrd, db):
     '''
-    Converts data from pfr draft page for insertion into draft table
+    Prepares dict for insertion in draft table
 
-    Arguments:
-        players: list of dict
+    Args:
+        players(list): of dict
+        pfrd(dict): pfr_id: player_id
+        db(NFLPostgres): instance
 
     Returns:
-        list of dict
+        list
+
     '''
-    fixed = []
+    pconv = {
+        'college_id': 'college',
+        'source_player_id': 'pfr_player_id',
+        'pos': 'pos'
+    }
+
+    dconv = {
+        'draft_pick': 'draft_overall_pick',
+        'draft_round': 'draft_round',
+        'draft_year': 'draft_year',
+        'player': 'source_player_name',
+        'team': 'source_team_id',
+        'pos': 'source_player_position',
+        'source_player_id': 'source_player_id'
+    }
+
+    dtoins = []
+
     for p in players:
-        f = p.copy()
-        f['draft_overall_pick'] = p['draft_pick']
-        f.pop('draft_pick', None)
-        f['source_team_code'] = p['team']
-        f.pop('team', None)
-        f['source_player_name'] = first_last(p['player'])
-        f.pop('player', None)
-        fixed.append(f)
-    return fixed
+        logging.info('starting {}'.format(p.get('player')))
+        pfr_id = p.get('source_player_id')
+        player_id = pfrd.get(pfr_id)
+        if not player_id:
+            try:
+                ln, fn = re.split(r',\s*', p.get('player'))[0:2]
+                d = {pconv.get(k): v for k, v in p.items() if k in pconv}
+                d['first_name'] = fn
+                d['last_name'] = ln
+                player_id = db._insert_dict(d, 'base.player')
+            except:
+                logging.exception('could not insert {}'.format(p))
+        d2 = {dconv.get(k): v for k, v in p.items() if k in dconv}
+        d2['source'] = 'pfr'
+        d2['player_id'] = player_id
+        dtoins.append(d2)
+
+    return dtoins
 
 
 def playerstats_fantasy_weekly_table(players):
@@ -292,6 +322,45 @@ def valornone(val):
         return None
     else:
         return val
+
+
+def team_fantasy_week_pipeline(players, year=None, week=None):
+    '''
+
+    '''
+    db = getdb()
+    q = """SELECT * FROM extra_misc.player_xref WHERE source='pfr'"""
+    posd = {p['source_player_id']: p['source_player_position']
+            for p in db.select_dict(q)}
+    results = []
+    tofix = []
+
+    while (type(players[0]) == list):
+        players = flatten_list(players)
+
+    for p in players:
+        if not year:
+            year = season_week(strtodate(p['game_date']))['season']
+        if not week:
+            week = p['week_num']
+        pos = posd.get(p['source_player_id'])
+        d = {'source': 'pfr',
+             'source_player_id': p['source_player_id'],
+             'source_player_name': p['player'],
+             'source_player_position': pos,
+             'source_team_id': p['team'],
+             'week': week,
+             'season_year': year,
+             'fantasy_points_std': p['fantasy_points'],
+             'fantasy_points_ppr': p['fantasy_points_ppr'],
+             'draftkings_points': p['draftkings_points'],
+             'fanduel_points': p['fanduel_points']}
+        d = {k: val_or_none(v) for k, v in d.items()}
+        if pos:
+            results.append(d)
+        else:
+            tofix.append(d)
+    return results, tofix
 
 
 if __name__ == '__main__':

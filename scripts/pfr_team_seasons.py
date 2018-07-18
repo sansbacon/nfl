@@ -24,7 +24,8 @@ def run():
 
     overall_results = []
 
-    for season_year in range(2010, 2016):
+    #    for season_year in range(2010, 2016):
+    for season_year in range(2017, 2018):
         print('starting {}'.format(season_year))
         browser.get(url.format(season_year))
         elem = browser.find_element_by_xpath("//*")
@@ -122,5 +123,5 @@ def run():
 if __name__ == '__main__':
     results = run()
     pprint.pprint(results)
-    with open('results.json', 'wb') as outfile:
+    with open('/home/sansbacon/results.json', 'w') as outfile:
         json.dump(results, outfile)

@@ -4,6 +4,7 @@ from functools import wraps
 import json
 import logging
 import os
+from urllib.parse import urlsplit, parse_qs, urlencode
 
 try:
     import cPickle as pickle
@@ -155,7 +156,8 @@ def getengine(key='nfldb', configfn=None):
         connstr = base_connstr.format(u=config.get(key, 'username'),
             p=config.get(key, 'password'), db=config.get(key, 'db'))
         return create_engine(connstr)
-    except:
+    except Exception as e:
+        logging.exception(e)
         return None
 
 
@@ -287,6 +289,35 @@ def pair_list(list_):
         '''
         list_ = list(list_)
         return [list_[i:i + 2] for i in range(0, len(list_), 2)]
+
+
+def dict_to_qs(d):
+    '''
+    Converts dict into query string for url
+    
+    Args:
+        dict
+        
+    Returns:
+        str
+        
+    '''
+    return urlencode(d)
+
+
+def qs_to_dict(qs):
+    '''
+    Converts query string from url into dict
+    
+    Args:
+        qs(str): url with query string
+        
+    Returns:
+        dict
+        
+    '''
+    query = urlsplit(url).query
+    return parse_qs(query)
 
 
 def save_csv(data, csv_fname, fieldnames, sep=';'):

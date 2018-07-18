@@ -1,12 +1,12 @@
 '''
 PfrNFLScraper
-
+Class to fetch pages from pro-football-reference.com
 '''
 
 import logging
 from string import ascii_uppercase
 
-from nfl.scrapers.scraper import FootballScraper
+from nflmisc.scraper import FootballScraper
 
 
 class PfrNFLScraper(FootballScraper):
@@ -20,15 +20,30 @@ class PfrNFLScraper(FootballScraper):
         return 'https://www.pro-football-reference.com/play-index/tgl_finder.cgi?'
 
     @property
-    def params(self):
+    def pgl_params(self):
+        '''
+        Basic parameters for player gamelog finder
+        
+        Args:
+            None
+            
+        Returns:
+            dict
+        '''
+
         return {
-            'request': 1, 'match': 'game', 'year_min': 2016, 'year_max': 2016,
-            'season_start': 1, 'season_end': -1, 'age_min': 0, 'age_max': 0, 'pos': '', 'game_type': 'R',
-            'career_game_num_min': 0, 'career_game_num_max': 499, 'game_num_min': 0, 'game_num_max': 99,
-            'week_num_min': 1, 'week_num_max': 20, 'c1stat': 'fantasy_points', 'c1comp': 'gt',
-            'c1val': -5, 'c5val': 1.0, 'c2stat': 'choose', 'c2comp': 'gt', 'c3stat': 'choose', 'c3comp': 'gt',
-            'c4stat': 'choose', 'c4comp': 'gt', 'c5comp': 'choose', 'c5gtlt': 'lt', 'c6mult': 1.0,
-            'c6comp': 'choose', 'offset': 0, 'order_by': 'game_date', 'order_by_asc': 'Y'
+            'request': 1, 'season_start': 1, 'season_end': -1,
+            'age_min': 0, 'age_max': 0, 'game_type': 'R',
+            'career_game_num_min': 0, 'career_game_num_max': 499,
+            'game_num_min': 0, 'game_num_max': 99,
+            'week_num_min': 1, 'week_num_max': 20,
+            'c1stat': 'fantasy_points', 'c1comp': 'gt', 'c1val': -5,
+            'c2stat': 'choose', 'c2comp': 'gt',
+            'c3stat': 'choose', 'c3comp': 'gt',
+            'c4stat': 'choose', 'c4comp': 'gt',
+            'c5comp': 'choose', 'c5gtlt': 'lt', 'c5val': 1.0,
+            'c6mult': 1.0, 'c6comp': 'choose',
+            'order_by': 'game_date', 'order_by_asc': 'Y'
         }
 
     def _merge_params(self, params):
@@ -41,7 +56,7 @@ class PfrNFLScraper(FootballScraper):
         Returns:
             dict
         '''
-        context = self.params.copy()
+        context = self.pgl_params.copy()
         context.update(params)
         return context
 
@@ -112,37 +127,45 @@ class PfrNFLScraper(FootballScraper):
         url = 'https://www.pro-football-reference.com/players/{}/{}/fantasy/{}'
         return self.get(url.format(player_id[0], player_id, season_year))
 
-    def playerstats_offense_weekly(self, season_year, week, offset=0):
+    def playerstats_offense_weekly(self, season_year, week, pos='0', offset=0):
         '''
         Gets 100 rows of offense results for specific season and week
 
         Args:
-            season_year: 2016, 2015, etc. 
-            week: 1, 2, 3, etc.
-            offset: 0, 100, 200, etc.
+            season_year (int): 2016, 2015, etc. 
+            week (int): 1, 2, 3, etc.
+            pos (str): '0' (for all) or 'QB', etc.
+            offset (int): 0, 100, 200, etc.
 
         Returns:
             HTML string
+            
         '''
-        return None
-        #url = 'https://www.pro-football-reference.com/play-index/pgl_finder.cgi?&game_type=R&c1stat=fantasy_points&c1comp=gt&match=single&career_game_num_max=499&order_by=game_date&season_start=1&week_num_max=99&career_game_num_min=0&pos=0&year_max={}&c5val=1.0&c1val=-5&year_min={}&request=1&order_by_asc=Y&game_num_max=99&week_num_min=0&season_end=-1&game_num_min=0'
-        #content = self.get(url.format(season_year, offset))
-        #logging.debug(self.urls[-1])
-        #return content
+        params = self._merge_params({'year_min': season_year, 'year_max': season_year,
+                                     'offset': offset, 'match': 'game', 'pos': pos,
+                                     'c2stat': 'targets', 'c2comp': 'gt', 'c2val': '-1'})
+        if week > 0:
+            params['week_num_min'] = week
+            params['week_num_max'] = week
+        content = self.get(self.pgl_finder_url, payload=params)
+        logging.debug(self.urls[-1])
+        return content
 
-    def playerstats_offense_yearly(self, season_year, offset=0):
+    def playerstats_offense_yearly(self, season_year, pos='0', offset=0):
         '''
         Gets 100 rows of offense results for specific season
 
         Args:
-            season_year: 2016, 2015, etc. 
-            offset: 0, 100, 200, etc.
+            season_year (int): 2016, 2015, etc. 
+            pos (str): '0' or 'QB', etc.
+            offset (int): 0, 100, 200, etc.
 
         Returns:
-            HTML string
+            str: HTML page
+            
         '''
         params = self._merge_params({'year_min': season_year, 'year_max': season_year,
-                                     'offset': offset, 'match': 'single',
+                                     'offset': offset, 'match': 'single', 'pos': pos,
                                      'c2stat': 'targets', 'c2comp': 'gt', 'c2val': '-1'})
         content = self.get(self.pgl_finder_url, payload=params)
         logging.debug(self.urls[-1])
@@ -161,7 +184,9 @@ class PfrNFLScraper(FootballScraper):
             HTML string
         '''
         params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset,
-                                     'week_num_min': week, 'week_num_max': week, 'c1stat': 'pass_att', 'c1val': '1'})
+                                     'week_num_min': week, 'week_num_max': week,
+                                     'c1stat': 'pass_att', 'c1val': '1',
+                                     'c2stat': 'targets', 'c2comp': 'gt', 'c2val': '-1'})
         content = self.get(self.pgl_finder_url, payload=params)
         logging.debug(self.urls[-1])
         return content
@@ -386,6 +411,20 @@ class PfrNFLScraper(FootballScraper):
 
         return self.get(self.tgl_finder_url, payload=params)
 
+    def team_offense_yearly(self, season_year):
+        '''
+        Gets total team offense stats for specific season_year
+
+        Args:
+            season_year: 2016, etc.
+
+        Returns:
+            str: HTML page
+
+        '''
+        url = 'https://www.pro-football-reference.com/years/{}'
+        return self.get(url.format(season_year))
+
     def team_offense_weekly(self, season_start, season_end, week):
         '''
         Gets game-by-game offense stats for teams
@@ -417,6 +456,48 @@ class PfrNFLScraper(FootballScraper):
         }
 
         return self.get(self.tgl_finder_url, payload=params)
+
+    def team_fantasy_weekly(self, team_id, week, year):
+        '''
+        Gets one week of fantasy gamelogs for single team
+
+        Args:
+            team_id(str):
+            week(int):
+            year(int):
+
+        Returns:
+            str
+
+        '''
+        url = 'https://www.pro-football-reference.com/play-index/pgl_finder.cgi?'
+        params = {'c1comp': 'gt',
+                  'c1stat': 'fantasy_points',
+                  'c1val': '-5',
+                  'c2comp': 'gt',
+                  'c2stat': 'targets',
+                  'c2val': '0',
+                  'c5val': '1.0',
+                  'career_game_num_max': '400',
+                  'career_game_num_min': '1',
+                  'game_num_max': '99',
+                  'game_num_min': '0',
+                  'game_type': 'R',
+                  'match': 'game',
+                  'order_by': 'game_date',
+                  'order_by_asc': 'Y',
+                  'pos': '0',
+                  'request': '1',
+                  'season_end': '-1',
+                  'season_start': '1',
+                  'team_id': team_id,
+                  'week_num_max': week,
+                  'week_num_min': week,
+                  'year_max': year,
+                  'year_min': year
+                  }
+
+        return self.get(url, payload=params)
 
 if __name__ == "__main__":
     pass
