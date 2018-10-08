@@ -272,6 +272,26 @@ class NFLComParser(object):
 
         return player
 
+    def player_search_name(self, content):
+        '''
+        Parses player search results
+
+        Args:
+            content(str): HTML page
+
+        Returns:
+            tuple - full_name, nfl_name, profile_id
+
+        '''
+        vals = []
+        soup = BeautifulSoup(content, 'lxml')
+        patt = re.compile(r'\/player.*?\d+\/profile', re.IGNORECASE | re.UNICODE)
+
+        for a in soup.find_all('a', {'href': patt}):
+            nfl_name, profile_id = a['href'].split('/')[-3:-1]
+            vals.append((a.text, nfl_name, profile_id))
+        return vals
+
     def position(self, content):
         '''
         Returns player's position from his profile page on nfl.com

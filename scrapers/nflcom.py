@@ -80,19 +80,26 @@ class NFLComScraper(FootballScraper):
         }
         return self.get(url, payload=params)
 
-    def player_profile(self, profile_id):
+    def player_profile(self, profile_path=None, player_name=None, profile_id=None):
         '''
-        TODO: this does not work, need name as well as profile ID to get page
         Gets nfl.com player profile
         
         Args:
-            profile_id: int 25311, etc.
+            profile_path(str): 'adamvinatieri/2503471'
+            player_name(str): 'adamvinatieri'
+            profile_id(int): 2503471
 
         Returns:
-            HTML string
+            str
+
         '''
-        url = 'http://www.nfl.com/player/{}/{}/profile'
-        return self.get(url.format(profile_id))
+        if profile_path:
+            url = 'http://www.nfl.com/player/{}/profile'.format(profile_path)
+        elif player_name and profile_id:
+            url = 'http://www.nfl.com/player/{}/{}/profile'.format(player_name, profile_id)
+        else:
+            raise ValueError('must specify profile_path or player_name and profile_id')
+        return self.get(url)
 
     def players(self, last_initial):
         '''
@@ -101,9 +108,9 @@ class NFLComScraper(FootballScraper):
             last_initial: A, B, C, etc.
 
         Returns:
-            list of dict
-        '''
+            str
 
+        '''
         try:
             last_initial = last_initial.upper()
             if last_initial in ascii_uppercase:
@@ -113,6 +120,23 @@ class NFLComScraper(FootballScraper):
                 raise ValueError('invalid last_initial')
         except Exception as e:
             logging.exception(e)
+
+    def player_search_name(self, player_name, player_type='current'):
+        '''
+
+        Args:
+            player_name(str): 'Jones, Bobby'
+            player_type(str): 'current' or 'historical'
+
+        Returns:
+            str - page of search results
+
+        '''
+        url = 'http://www.nfl.com/players/search?'
+        params = {'category': 'name',
+                  'filter': player_name,
+                  'playerType': player_type}
+        return self.get(url, payload=params)
 
     def schedule_week(self, season, week):
         '''

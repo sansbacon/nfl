@@ -11,6 +11,31 @@ from fuzzywuzzy import process
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
+def dups_query():
+    '''
+    Query for duplicates
+
+    Returns:
+        str
+
+    '''
+    q = """
+        WITH p AS (
+          select *, row_number() OVER(PARTITION BY full_name ORDER BY player_id) as r
+          from base.player 
+        ),
+        
+        d AS (
+          select distinct full_name from p
+          where r > 1
+        )
+        
+        SELECT * FROM base.player
+        WHERE full_name IN (SELECT * FROM d)
+        ORDER BY full_name, player_id   
+    """
+
+
 def player_dict(db):
     '''
     Creates dict of key: id from player table
@@ -86,7 +111,7 @@ def player_match_fuzzy(to_match, match_from):
     return process.extractOne(to_match, match_from)
 
 
-def player_match_interactive(to_match, match_from, choices=5):
+def player_match_interactive(to_match, match_from, choices=2):
     '''
     Matches player with fuzzy match, interactive confirmation
 

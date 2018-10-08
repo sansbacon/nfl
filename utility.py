@@ -4,6 +4,8 @@ from functools import wraps
 import json
 import logging
 import os
+import random
+import sys
 from urllib.parse import urlsplit, parse_qs, urlencode
 
 try:
@@ -11,9 +13,10 @@ try:
 except ImportError:
     import pickle
 
+import pandas as pd
 from nflmisc.nflpg import NFLPostgres
 
-
+ 
 def csv_to_dict(fn):
     '''
     Takes csv filename and returns dicts
@@ -30,6 +33,102 @@ def csv_to_dict(fn):
             yield {k: v for k, v in row.items()}
 
 
+def dict_to_csv(dicts, fn, fields=None):
+    '''
+    Writes list of dict to csv file. Can specify fields or use keys for dicts[0].
+
+    Args:
+        dicts(list): of dict
+        fn(str): name of csvfile
+        fields(list): fieldnames, default None
+    
+    Returns:
+        None
+        
+    '''
+    with open(fn, 'w') as csvfile:
+        if not fields:
+            fields = list(dicts[0].keys())
+        writer = csv.DictWriter(csvfile, fieldnames=fields)
+        writer.writeheader()
+        for d in dicts:
+            writer.writerow(d)
+
+
+def df_to_html(df, sort_index='', sort_type='desc', targets='', fn=None):
+    '''
+    Outputs an html table to disk
+
+    Args:
+        df (DataFrame): the dataframe to create html from
+        sort_index(int): column to sort by
+        sort_type(str): asc or desc
+        targets(str): numeric columns for sorting
+        fn (str): filename to save
+        
+    Returns:
+        str
+
+    '''
+    # using plugin any-number to sort numeric columns - that is the "type" entry in columnDefs
+    # use jquery script to alternate shading rows in white and grey
+    # pandas creates a table that is plugged into the page
+    page = '''<!DOCTYPE html><html>
+              <head>
+                <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.16/datatables.min.css"/>
+              <body>
+                  <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+                  <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.16/datatables.min.js"></script>
+                  <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap.min.js"></script>
+                  <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.18/sorting/any-number.js"></script>
+                  <script type="text/javascript">
+                    $(document).ready(function() {
+                      $('#draft').DataTable( {
+                        "iDisplayLength": 300,
+                        "order": [|INDEX|],
+                        "columnDefs": [
+                            {"className": "dt-center", "targets": "_all"},
+                            {"type": "any-number", "targets": [|TARGETS|]}
+                          ]
+                      } );
+                    } );
+                  </script>
+                  <script type="text/javascript">
+                  $(document).ready(function()
+                    {$("tr:odd").css({
+                     "background-color":"#cacfd2",
+                     "color":"#000"});
+                  });
+                  </script>
+                  |TABLE|
+              </body>
+              </html>'''
+
+    # pandas 0.23 has improved API for generating tables
+    # this code won't work in earlier versions of pandas
+    tbl = df.to_html(border=0,
+                      index=False,
+                      classes=['display'], 
+                      table_id='draft')
+    
+    # insert table into page
+    page = page.replace('|TABLE|', tbl).replace('|TARGETS|', targets)
+    
+    # if sort index, also specify sort type
+    # otherwise, leave sort index blank
+    if sort_index:
+        page = page.replace('|INDEX|', str(sort_index) + ', ' + '"' + sort_type + '"')
+    else:
+        page = page.replace('|INDEX|', str(sort_index))
+
+    # save to file if specify filename
+    if fn:
+        with open(fn, 'w') as outfile:
+            outfile.write(page)
+
+    return page
+    
+            
 def digits(s):
     '''
     Removes non-numeric characters from a string
@@ -103,7 +202,7 @@ def file_to_ds(fname):
         raise ValueError('{0} is not a supported file extension'.format(ext))
 
 
-def getdb(key='nfldb', configfn=None):
+def getdb(key='nfl', configfn=None):
     '''
     Gets database instance
     
@@ -129,7 +228,7 @@ def getdb(key='nfldb', configfn=None):
                        database=config.get(key, 'db'))
 
 
-def getengine(key='nfldb', configfn=None):
+def getengine(key='nfl', configfn=None):
     '''
     Gets sqlite engine
 
@@ -438,6 +537,21 @@ def save_file(data, fname):
         raise ValueError('{0} is not a supported file extension'.format(ext))
 
 
+def sample_dict(d, n=1):
+    '''
+    Gets random sample of dictionary
+    
+    Args:
+        d(dict):
+        
+    Returns:
+        dict
+        
+    '''
+    keys = list(d.keys())
+    return {k:d[k] for k in random.sample(keys, n)}
+    
+    
 def url_quote(s):
     '''
     Python 2/3 url quoting    

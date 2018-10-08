@@ -41,3 +41,306 @@ r = requests.get(url=url.format('1_03_2018'), cookies=cj)
 r
 r.content
 exit()
+
+from nfl.db.nflpg import NFLPostgres; db = NFLPostgres(user='nfldb', password='cft0911', database='nfldb')
+from nba.db.nbapg import NBAPostgres; nbadb = NBAPostgres(user='nbadb', password='cft0911', database='nbadb2')
+import logging; logger = logging.getLogger(); logger.setLevel(logging.INFO)
+from nfl.scrapers.pfr import PfrNFLScraper
+pfrs = PfrNFLScraper()
+from nfl.parsers.pfr import PfrNFLParser
+pfrp = PfrNFLParser()
+get_ipython().run_line_magic('pinfo', 'pfrs')
+get_ipython().run_line_magic('pinfo', 'pfrs.playerstats_offense_weekly')
+get_ipython().run_line_magic('pinfo', 'pfrs.playerstats_offense_yearly')
+content = pfrs.playerstats_offense_weekly(2017, 0)
+results = pfrp.playerstats_fantasy_yearly(content)
+pfrs.urls[-1]
+get_ipython().run_line_magic('rerun', '1-5')
+from nfl.scrapers.pfr import PfrNFLScraper
+pfrs = PfrNFLScraper()
+from nfl.parsers.pfr import PfrNFLParser
+pfrp = PfrNFLParser()
+get_ipython().run_line_magic('pinfo', 'pfrs')
+exit()
+
+from nfl.db.nflpg import NFLPostgres; db = NFLPostgres(user='nfldb', password='cft0911', database='nfldb')
+from nba.db.nbapg import NBAPostgres; nbadb = NBAPostgres(user='nbadb', password='cft0911', database='nbadb2')
+import logging; logger = logging.getLogger(); logger.setLevel(logging.INFO)
+from nfl.scrapers.pfr import PfrNFLScraper
+pfrs = PfrNFLScraper()
+from nfl.parsers.pfr import PfrNFLParser
+pfrp = PfrNFLParser()
+content = pfrs.playerstats_offense_weekly(2017, 0)
+pfrp.playerstats_fantasy_yearly(content)
+pfrs.urls[-1]
+EXIT
+exit()
+
+from nfl.db.nflpg import NFLPostgres; db = NFLPostgres(user='nfldb', password='cft0911', database='nfldb')
+from nba.db.nbapg import NBAPostgres; nbadb = NBAPostgres(user='nbadb', password='cft0911', database='nbadb2')
+import logging; logger = logging.getLogger(); logger.setLevel(logging.INFO)
+from nfl.scrapers.pfr import PfrNFLScraper
+pfrs = PfrNFLScraper()
+from nfl.parsers.pfr import PfrNFLParser
+pfrp = PfrNFLParser()
+content = pfrs.playerstats_offense_weekly(2017, 0)
+pfrp.playerstats_fantasy_yearly(content)
+pfrs.urls[-1]
+exit()
+
+from nfl.db.nflpg import NFLPostgres; db = NFLPostgres(user='nfldb', password='cft0911', database='nfldb')
+from nba.db.nbapg import NBAPostgres; nbadb = NBAPostgres(user='nbadb', password='cft0911', database='nbadb2')
+import logging; logger = logging.getLogger(); logger.setLevel(logging.INFO)
+from nfl.scrapers.pfr import PfrNFLScraper
+pfrs = PfrNFLScraper()
+from nfl.parsers.pfr import PfrNFLParser
+pfrp = PfrNFLParser()
+content = pfrs.playerstats_offense_weekly(2017, 0)
+pfrp.playerstats_fantasy_yearly(content)
+pfrp.playerstats_offense_yearly(content)
+for line in content.split('\n'):
+    if 'form_description' in line:
+        print line
+for line in content.split('\n'):
+    if 'form_description' in line:
+        print (line)
+        
+range(0, 700, 100)
+list(range(0, 700, 100))
+with open('/home/sansbacon/playerstats_offense_yearly_2017.json', 'r') as f:
+    ps = json.load(f)
+    
+import json
+with open('/home/sansbacon/playerstats_offense_yearly_2017.json', 'r') as f:
+    ps = json.load(f)
+    
+from nfl.pipelines.pfr import *
+toins = playerstats_offense_yearly_table(ps)
+toins[0]
+def playerstats_offense_yearly_table(players):
+    '''
+    Converts offense playerstats for single season
+
+    Args:
+        players: 
+
+    Returns:
+        list of dict
+    '''
+    convert = {
+        'team': 'source_team_code',
+        'pass_att': 'pass_att',
+        'pass_cmp': 'pass_cmp',
+        'pass_int': 'pass_int',
+        'pass_sacked': 'pass_sacked',
+        'pass_sacked_yds': 'pass_sacked_yds',
+        'pass_td': 'pass_td',
+        'pass_yds': 'pass_yds',
+        'player': 'source_player_name',
+        'source_player_name': 'source_player_name',
+        'rec': 'rec',
+        'rec_yds': 'rec_yds',
+        'rec_td': 'rec_td',
+        'rush_att': 'rush_att',
+        'rush_td': 'rush_td',
+        'rush_yds': 'rush_yds',
+        'season_year': 'season_year',
+        'year_id': 'season_year',
+        'source_player_id': 'source_player_id',
+    }
+
+    fixed = []
+    for player in players:
+        p = {convert[k]: valornone(v) for k, v in player.items() if k in convert.keys()}
+        p['source'] = 'pfr'
+        fixed.append(p)
+    return fixed
+
+
+toins = playerstats_offense_yearly_table(ps)
+toins[0]
+db.insert_dicts(toins, 'extra_fantasy.playerstats_offense_yearly')
+db.insert_dicts(toins, 'extra.playerstats_offense_yearly')
+q = """SELECT source_player_id, source_player_position FROM extra_misc.player_xref WHERE source='pfr'"""
+pfrplayers = db.select_dict(q)
+pfrplayers = {p['source_player_id']: p['source_player_position'] for p in pfrplayers}
+for idx, p in enumerate(toins):
+    print(pfrplayers.get(p['source_player_id']))
+    
+for idx, p in enumerate(toins):
+    if pfrplayers.get(p['source_player_id']):
+        pass
+    else:
+        print(p['source_player_id'])
+        
+pfrplayers = db.select_dict(q)
+pfrplayers = {p['source_player_id']: p['source_player_position'] for p in pfrplayers}
+for idx, p in enumerate(toins):
+    if pfrplayers.get(p['source_player_id']):
+        pass
+    else:
+        print(p['source_player_id'])
+        
+for idx, p in enumerate(toins):
+    pos = pfrplayers.get(p['source_player_id'])
+    toins[idx]['source_player_position'] = pos
+        
+toins[0]
+db.insert_dicts(toins, 'extra.playerstats_offense_yearly')
+toins[0]
+ps[0]
+pfrs.urls[-1]
+def playerstats_offense_yearly_table(players):
+    '''
+    Converts offense playerstats for single season
+
+    Args:
+        players: 
+
+    Returns:
+        list of dict
+    '''
+    convert = {
+        'team': 'source_team_code',
+        'pass_att': 'pass_att',
+        'pass_cmp': 'pass_cmp',
+        'pass_int': 'pass_int',
+        'pass_sacked': 'pass_sacked',
+        'pass_sacked_yds': 'pass_sacked_yds',
+        'pass_td': 'pass_td',
+        'pass_yds': 'pass_yds',
+        'player': 'source_player_name',
+        'source_player_name': 'source_player_name',
+        'rec': 'rec',
+        'rec_yds': 'rec_yds',
+        'rec_td': 'rec_td',
+        'rush_att': 'rush_att',
+        'rush_td': 'rush_td',
+        'rush_yds': 'rush_yds',
+        'season_year': 'season_year',
+        'year_id': 'season_year',
+        'source_player_id': 'source_player_id',
+        'g': 'g'
+    }
+
+    fixed = []
+    for player in players:
+        p = {convert[k]: valornone(v) for k, v in player.items() if k in convert.keys()}
+        p['source'] = 'pfr'
+        fixed.append(p)
+    return fixed
+db.insert_dicts(playerstats_offense_yearly_table(ps), 'extra.playerstats_offense_yearly')
+db.insert_dicts(toins, 'extra.playerstats_offense_yearly')
+toins = playerstats_offense_yearly_table(ps)
+toins[0]
+for idx, p in enumerate(toins):
+    pos = pfrplayers.get(p['source_player_id'])
+    toins[idx]['source_player_position'] = pos
+        
+toins[0]
+db.insert_dicts(toins, 'extra.playerstats_offense_yearly')
+ps[0]
+ps[0]
+exit()
+
+from nfl.db.nflpg import NFLPostgres; db = NFLPostgres(user='nfldb', password='cft0911', database='nfldb')
+from nba.db.nbapg import NBAPostgres; nbadb = NBAPostgres(user='nbadb', password='cft0911', database='nbadb2')
+import logging; logger = logging.getLogger(); logger.setLevel(logging.INFO)
+import arrow
+import pandas as pd
+import requests
+from requests_html import HTMLSession
+
+s = HTMLSession()
+url = 'http://www.nfl.com/schedules/2018/REG{}'
+
+# scrape schedule from NFL.com
+schedule = []
+url = 'http://www.nfl.com/schedules/2018/REG{}'
+for w in range(1,18):
+    r = s.get(url.format(w))
+    for div in r.html.find('div.schedules-list-content'):
+        g = {'season_year': 2018, 'week': w}
+        g['gsis_id'] = div.attrs.get('data-gameid')
+        g['home_team'] = div.attrs.get('data-home-abbr')
+        g['away_team'] = div.attrs.get('data-away-abbr')
+        tm = div.attrs.get('data-localtime')
+        g['start_time'] = arrow.get(g['gsis_id'][0:8]).datetime
+        schedule.append(g)    
+        print('finished week {}, {} games'.format(w, len([gm for gm in schedule if gm['week'] == w])))
+with open('/home/sansbacon/schedule.json', 'w') as f:
+    json.dump(schedule, f)
+    
+import json
+with open('/home/sansbacon/schedule.json', 'w') as f:
+    json.dump(schedule, f)
+    
+import pickle
+with open('/home/sansbacon/schedule.pkl', 'wb') as f:
+    pickle.dump(schedule, f)
+    
+import pandas as pd
+df = pd.DataFrame(schedule)
+df.head()
+df.groupby('week').agg({'start_time' : ['max', 'min']})
+schedule[0]
+from nfl.dates import strtodate
+for idx, s in enumerate(schedule):
+    schedule[idx]['start_date'] = strtodate(s['gsis_id'][0:8])
+    
+schedule[0]
+df = pd.DataFrame(schedule)
+df.groupby('week').agg({'start_date' : ['max', 'min']})
+df.groupby('week').agg({'start_date' : ['max', 'min']}).reset_index()
+df.T.to_dict().values()
+sched = df.T.to_dict().values()
+for idx, s in enumerate(sched):
+    sched[idx]['start_date'] = s['start_date'].date()
+    
+type(sched)
+sched = list(df.T.to_dict().values())
+for idx, s in enumerate(sched):
+    sched[idx]['start_date'] = s['start_date'].date()
+    
+sched[0]
+df.groupby('week').agg({'start_date' : ['max', 'min']}).reset_index()
+s2018 = {s['week']: {'start': s['min'], 'end': s['max']} for s in sched}
+s2018 = {s['week']: {'start': s['min'], 'end': s['max']} for s in sched}
+sched = list(df.groupby('week').agg({'start_date' : ['max', 'min']}).reset_index().T.to_dict().values())
+sched
+for idx, s in enumerate(sched):
+    sched[idx]['start_date'] = s['start_date'].date()
+    
+from nfl.utility import csv_to_dict
+from nfl.utility import csv_to_dict
+import csv
+def csv_to_dict(fn):
+    '''
+    Takes csv filename and returns dicts
+
+    Arguments:
+        fn (str): name of file to read/parse
+
+    Returns:
+        list: List of dicts
+        
+    '''
+    with open(fn, 'r') as infile:
+        for row in csv.DictReader(infile, skipinitialspace=True, delimiter=','):
+            yield {k: v for k, v in row.items()}
+            
+sched = csv_to_dict('/home/sansbacon/s2018.csv')
+sched
+list(sched)
+s2018 = {s['week']: {'start': s['min'], 'end': s['max']} for s in sched}
+s2018
+s2018 = {s['week']: {'start': s['start'], 'end': s['end']} for s in sched}
+s2018
+s2018 = {s['week']: {'start': s['start'], 'end': s['end']} for s in list(sched)}
+s2018
+s2018 = {s['week']: {'start': s['start'], 'end': s['end']} for s in csv_to_dict('/home/sansbacon/s2018.csv')}
+s2018
+s2018 = {s['week']: {'start': strtodate(s['start']), 'end': strtodate(s['end'])} for s in csv_to_dict('/home/sansbacon/s2018.csv')}
+s2018
+from nfl.seasonsdata import *
+exit()
