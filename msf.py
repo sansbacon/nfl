@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-
-from __future__ import absolute_import, print_function, division
+# msf.py
+# classes to scrape and parse mysportsfeeds.com
+# need an API key, free for personal use
 
 import base64
 import logging

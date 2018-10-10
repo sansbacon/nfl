@@ -1,4 +1,10 @@
+# -*- coding: utf-8 -*-
+# nflcom.py
+# scraper and parser classes for nfl.com website
+
 import logging
+from string import ascii_uppercase
+
 import re
 
 from bs4 import BeautifulSoup, Comment
@@ -6,10 +12,173 @@ import demjson
 
 from nfl.dates import convert_format
 from nfl.names import first_last_pair
-from nfl.utility import merge, digits
+from nfl.utility import *
+from nflmisc.scraper import FootballScraper
 
 
-class NFLComParser(object):
+class Scraper(FootballScraper):
+
+
+    def game(self, gsis_id):
+        '''
+        Gets individual gamecenter page 
+
+        Args:
+            gsis_id: 
+
+        Returns:
+            content: HTML string
+        '''
+        url = 'http://www.nfl.com/liveupdate/game-center/{0}/{0}_gtd.json'
+        return self.get(url.format(gsis_id))
+
+    def gamebook(self, season_year, week, gamekey):
+        '''
+        Gets XML gamebook for individual game
+        
+        Args:
+            season: int 2016, 2015
+            week: int 1-17
+            gamekey: int 56844, etc.
+
+        Returns:
+            HTML string
+        '''
+        url = 'http://www.nflgsis.com/{}/Reg/{}/{}/Gamebook.xml'
+        if week < 10:
+            week = '0{}'.format(week)
+        else:
+            week = str(week)
+        return self.get(url.format(season_year, week, gamekey))
+
+    def injuries(self, week):
+        '''
+        Parses a weekly page with reported player injuries
+
+        Args:
+            week: int 1, 2, 3, etc.
+
+        Returns:
+            content: HTML string
+        '''
+        url = 'http://www.nfl.com/injuries?week={}'
+        return self.get(url.format(week))
+
+    def ol(self, season_year):
+        '''
+        Parses a weekly page with reported player injuries
+
+        Args:
+            week: int 1, 2, 3, etc.
+
+        Returns:
+            content: HTML string
+        '''
+        url = 'http://www.nfl.com/stats/categorystats?'
+        params = {
+          'archive': 'true',
+          'conference': 'null',
+          'role': 'TM',
+          'offensiveStatisticCategory': 'OFFENSIVE_LINE',
+          'defensiveStatisticCategory': 'null',
+          'season': season_year,
+          'seasonType': 'REG',
+          'tabSeq': '2',
+          'qualified': 'false',
+          'Submit': 'Go'
+        }
+        return self.get(url, payload=params)
+
+    def player_profile(self, profile_path=None, player_name=None, profile_id=None):
+        '''
+        Gets nfl.com player profile
+        
+        Args:
+            profile_path(str): 'adamvinatieri/2503471'
+            player_name(str): 'adamvinatieri'
+            profile_id(int): 2503471
+
+        Returns:
+            str
+
+        '''
+        if profile_path:
+            url = 'http://www.nfl.com/player/{}/profile'.format(profile_path)
+        elif player_name and profile_id:
+            url = 'http://www.nfl.com/player/{}/{}/profile'.format(player_name, profile_id)
+        else:
+            raise ValueError('must specify profile_path or player_name and profile_id')
+        return self.get(url)
+
+    def players(self, last_initial):
+        '''
+        
+        Args:
+            last_initial: A, B, C, etc.
+
+        Returns:
+            str
+
+        '''
+        try:
+            last_initial = last_initial.upper()
+            if last_initial in ascii_uppercase:
+                url = 'http://www.nfl.com/players/search?category=lastName&filter={}&playerType=current'
+                return self.get(url.format(last_initial))
+            else:
+                raise ValueError('invalid last_initial')
+        except Exception as e:
+            logging.exception(e)
+
+    def player_search_name(self, player_name, player_type='current'):
+        '''
+
+        Args:
+            player_name(str): 'Jones, Bobby'
+            player_type(str): 'current' or 'historical'
+
+        Returns:
+            str - page of search results
+
+        '''
+        url = 'http://www.nfl.com/players/search?'
+        params = {'category': 'name',
+                  'filter': player_name,
+                  'playerType': player_type}
+        return self.get(url, payload=params)
+
+    def schedule_week(self, season, week):
+        '''
+        Parses a weekly schedule page with links to individual gamecenters
+        Similar to score_week, but does not have scores for each quarter
+
+        Args:
+            season: int 2017, 2016, etc.
+            week: int 1, 2, 3, etc.
+
+        Returns:
+            content: HTML string
+        '''
+        url = 'http://www.nfl.com/schedules/{0}/REG{1}'
+        return self.get(url.format(season, week))
+
+    def score_week(self, season, week):
+        '''
+        Parses a weekly page with links to individual gamecenters
+        Similar to schedule_week, but has scores for each quarter
+
+        Args:
+            season: int 2017, 2016, etc.
+            week: int 1, 2, 3, etc.
+
+        Returns:
+            content: HTML string
+        '''
+        url = 'http://www.nfl.com/scores/{0}/REG{1}'
+        return self.get(url.format(season, week))
+
+
+class Parser(object):
     '''
     Used to parse NFL.com GameCenter pages, which are json documents with game and play-by-play stats
     '''
@@ -363,6 +532,82 @@ class NFLComParser(object):
                 games.append(game)
 
         return games
+
+
+class Agent(object):
+
+    def __init__(self, scraper=None, parser=None, cache_name=None, cj=None):
+        '''
+        
+        Args:
+            scraper: NFLComScraper object
+            parser: NFLComParser object
+            cache_name: string
+            cj: cookiejar object
+        '''
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        if scraper:
+            self._s = scraper
+        else:
+            self._s = NFLComScraper(cache_name=cache_name)
+        if parser:
+            self._p = parser
+        else:
+            self._p = NFLComParser()
+
+
+    def week_games(self, season, week, savedir=None):
+        '''
+        Gets all games from weekly gamecenter page from NFL.com
+        Args:
+            season: int
+            week: int
+
+        Returns:
+            all_games: list of dict
+        '''
+        all_games = []
+        try:
+            for g in self._p.week_page(self._s.week_page(season, week)):
+                url = g.get('url')
+                # need to get the game ID, then can get relevant boxscore data
+                # http://www.nfl.com/widget/gc/2011/tabs/cat-post-boxscore?gameId=2007122000&enableNGS=false
+                if url:
+                    url += '#tab=analyze&analyze=boxscore'
+                    if savedir:
+                        content = self._s.get_filecache(url, savedir)
+                    else:
+                        content = self._s.get(url)
+                    if content:
+                        all_games.append(self._p.game_page(content))
+            logging.info('finished {} week {}'.format(season, week))
+
+        except Exception as e:
+            logging.exception(e)
+
+        return all_games
+
+
+    def week_pages(self, seasons, weeks):
+        '''
+        Gets weekly gamecenter pages from NFL.com
+        Args:
+            seasons: list of int
+            weeks: list of int
+
+        Returns:
+            all_games: list of dict
+        '''
+        all_games = []
+        for season in seasons:
+            for week in weeks:
+                try:
+                    games = self._p.week_page(self._s.week_page(season, week))
+                    all_games += games
+                    logging.info('finished {} week {}'.format(season, week))
+                except Exception as e:
+                    logging.exception(e)
+        return all_games
 
 
 if __name__ == "__main__":

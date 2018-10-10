@@ -1,9 +1,22 @@
 # -*- coding: utf-8 -*-
+# fbd.py
+# classes to scrape and parse footballdatabase.com
+
 
 from bs4 import BeautifulSoup
 
+from nflmisc.scraper import FootballScraper
 
-class FootballDatabaseNFLParser(object):
+
+class Scraper(FootballScraper):
+    '''
+    '''
+    
+    def scrape(self):
+        pass
+
+
+class Parser(object):
     '''
 
     '''
