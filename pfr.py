@@ -26,33 +26,43 @@ class Scraper(FootballScraper):
     def pgl_params(self):
         '''
         Basic parameters for player gamelog finder
-        
+
         Args:
             None
-            
+
         Returns:
             dict
+
         '''
+        return {'c1comp': 'gt',
+                 'c1stat': 'targets',
+                 'c1val': '0',
+                 'c2comp': 'gt',
+                 'c2stat': 'draftkings_points',
+                 'c2val': '0',
+                 'c5val': '1.0',
+                 'career_game_num_max': '400',
+                 'career_game_num_min': '1',
+                 'game_num_max': '99',
+                 'game_num_min': '0',
+                 'game_type': 'R',
+                 'match': 'game',
+                 'opp_id': '',
+                 'order_by': 'game_date',
+                 'order_by_asc': 'Y',
+                 'pos[]': '',
+                 'request': '1',
+                 'season_end': '-1',
+                 'season_start': '1',
+                 'week_num_max': '99',
+                 'week_num_min': '0',
+                 'year_max': '2018',
+                 'year_min': '2018'}
 
-        return {
-            'request': 1, 'season_start': 1, 'season_end': -1,
-            'age_min': 0, 'age_max': 0, 'game_type': 'R',
-            'career_game_num_min': 0, 'career_game_num_max': 499,
-            'game_num_min': 0, 'game_num_max': 99,
-            'week_num_min': 1, 'week_num_max': 20,
-            'c1stat': 'fantasy_points', 'c1comp': 'gt', 'c1val': -5,
-            'c2stat': 'choose', 'c2comp': 'gt',
-            'c3stat': 'choose', 'c3comp': 'gt',
-            'c4stat': 'choose', 'c4comp': 'gt',
-            'c5comp': 'choose', 'c5gtlt': 'lt', 'c5val': 1.0,
-            'c6mult': 1.0, 'c6comp': 'choose',
-            'order_by': 'game_date', 'order_by_asc': 'Y'
-        }
-
-    def _merge_params(self, params):
+    def _merge_pgl_params(self, params):
         '''
         Creates merged set of params, where params overwrites defaults
-        
+
         Args:
             params: dict
 
@@ -71,23 +81,38 @@ class Scraper(FootballScraper):
             season_year: int 2016, 2017, etc.
 
         Returns:
-            content: HTML string of that year's draft page
+            content(str): of that year's draft page
         '''
         url = 'http://www.pro-football-reference.com/years/{season_year}/draft.htm'
         return self.get(url.format(season_year=season_year))
+
+
+    def player_game_finder(self, params):
+        '''
+        Gets matching player games
+
+        Args:
+            params(dict):
+
+        Returns:
+            str
+
+        '''
+        mparams = self._merge_pgl_params(params)
+        return self.get(self.pgl_finder_url, payload=mparams)
 
     def playerstats_fantasy_weekly(self, season_year, week, pos=None, offset=0):
         '''
         Gets 100 rows of fantasy results for specific season and week
 
         Args:
-            season_year: 2016, 2015, etc. 
+            season_year: 2016, 2015, etc.
             week: 1, 2, 3, etc.
             pos: 'qb', 'wr', etc.
             offset: 0, 100, 200, etc.
 
         Returns:
-            HTML string
+            str
         '''
         if pos:
             params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset,
@@ -102,12 +127,12 @@ class Scraper(FootballScraper):
         Gets 100 rows of fantasy results for specific season
 
         Args:
-            season_year: 2016, 2015, etc. 
+            season_year: 2016, 2015, etc.
             pos: 'qb', 'wr', etc.
             offset: 0, 100, 200, etc.
 
         Returns:
-            HTML string
+            str
         '''
         if pos:
             params = self._merge_params({'year_min': season_year, 'year_max': season_year,
@@ -119,12 +144,12 @@ class Scraper(FootballScraper):
     def player_fantasy_season(self, season_year, player_id):
         '''
         Gets fantasy page for individual player
-        
+
         Args:
-            player_id: 
+            player_id:
 
         Returns:
-            HTML string
+            str
         '''
         # https://www.pro-football-reference.com/players/{R}/{RyanMa00}/fantasy/{2016}
         url = 'https://www.pro-football-reference.com/players/{}/{}/fantasy/{}'
@@ -135,14 +160,14 @@ class Scraper(FootballScraper):
         Gets 100 rows of offense results for specific season and week
 
         Args:
-            season_year (int): 2016, 2015, etc. 
+            season_year (int): 2016, 2015, etc.
             week (int): 1, 2, 3, etc.
             pos (str): '0' (for all) or 'QB', etc.
             offset (int): 0, 100, 200, etc.
 
         Returns:
-            HTML string
-            
+            str
+
         '''
         params = self._merge_params({'year_min': season_year, 'year_max': season_year,
                                      'offset': offset, 'match': 'game', 'pos': pos,
@@ -159,13 +184,13 @@ class Scraper(FootballScraper):
         Gets 100 rows of offense results for specific season
 
         Args:
-            season_year (int): 2016, 2015, etc. 
+            season_year (int): 2016, 2015, etc.
             pos (str): '0' or 'QB', etc.
             offset (int): 0, 100, 200, etc.
 
         Returns:
             str: HTML page
-            
+
         '''
         params = self._merge_params({'year_min': season_year, 'year_max': season_year,
                                      'offset': offset, 'match': 'single', 'pos': pos,
@@ -179,12 +204,12 @@ class Scraper(FootballScraper):
         Gets 100 rows of offense results for specific season and week
 
         Args:
-            season_year: 2016, 2015, etc. 
+            season_year: 2016, 2015, etc.
             week: 1, 2, 3, etc.
             offset: 0, 100, 200, etc.
 
         Returns:
-            HTML string
+            str
         '''
         params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset,
                                      'week_num_min': week, 'week_num_max': week,
@@ -199,10 +224,10 @@ class Scraper(FootballScraper):
         Gets passing results for specific season
 
         Args:
-            season_year: 2016, 2015, etc. 
+            season_year: 2016, 2015, etc.
 
         Returns:
-            HTML string
+            str
         '''
         url = 'https://www.pro-football-reference.com/years/{}/passing.htm'
         content = self.get(url.format(season_year))
@@ -214,12 +239,12 @@ class Scraper(FootballScraper):
         Gets 100 rows of receiving results for specific season and week
 
         Args:
-            season_year: 2016, 2015, etc. 
+            season_year: 2016, 2015, etc.
             week: 1, 2, 3, etc.
             offset: 0, 100, 200, etc.
 
         Returns:
-            HTML string
+            str
         '''
         params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset,
                                      'week_num_min': week, 'week_num_max': week, 'c1stat': 'targets', 'c1val': '1'})
@@ -230,12 +255,12 @@ class Scraper(FootballScraper):
     def playerstats_receiving_yearly(self, season_year, offset=0):
         '''
         Gets rushing/receiving results for specific season
-    
+
         Args:
-            season_year: 2016, 2015, etc. 
-    
+            season_year: 2016, 2015, etc.
+
         Returns:
-            HTML string
+            str
         '''
         url = 'https://www.pro-football-reference.com/years/{}/rushing.htm'
         content = self.get(url.format(season_year))
@@ -247,12 +272,12 @@ class Scraper(FootballScraper):
         Gets 100 rows of offense results for specific season and week
 
         Args:
-            season_year: 2016, 2015, etc. 
+            season_year: 2016, 2015, etc.
             week: 1, 2, 3, etc.
             offset: 0, 100, 200, etc.
 
         Returns:
-            HTML string
+            str
         '''
         params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset,
                                      'week_num_min': week, 'week_num_max': week, 'c1stat': 'rush_att', 'c1val': '1'})
@@ -265,10 +290,10 @@ class Scraper(FootballScraper):
         Gets rushing/receiving results for specific season
 
         Args:
-            season_year: 2016, 2015, etc. 
+            season_year: 2016, 2015, etc.
 
         Returns:
-            HTML string
+            str
         '''
         url = 'https://www.pro-football-reference.com/years/{}/rushing.htm'
         content = self.get(url.format(season_year))
@@ -278,12 +303,12 @@ class Scraper(FootballScraper):
     def players(self, last_initial):
         '''
         Gets player page for last initial, such as A, B, C
-        
+
         Args:
-            last_initial: str A, B, C
+            last_initial(str): A, B, C
 
         Returns:
-            HTML string
+            str
         '''
         try:
             last_initial = last_initial.upper()
@@ -306,7 +331,7 @@ class Scraper(FootballScraper):
             offset: int 0, 100, 200, etc.
 
         Returns:
-            content: HTML string of 100 entries
+            content(str): of 100 entries
         '''
         params = {
             'request': '1',
@@ -339,7 +364,7 @@ class Scraper(FootballScraper):
             week: int 1, 2, etc.
 
         Returns:
-            content: HTML string
+            content(str):
         '''
         params = {
             'request': '1',
@@ -362,7 +387,7 @@ class Scraper(FootballScraper):
     def team_defense_yearly(self, season_year):
         '''
         Gets total team defense stats for specific season_year
-        
+
         Args:
             season_year: 2016, etc.
 
@@ -382,7 +407,7 @@ class Scraper(FootballScraper):
             week: int 1, 2, etc.
 
         Returns:
-            content: HTML string
+            content(str):
         '''
         params = {
             'request': '1',
@@ -438,7 +463,7 @@ class Scraper(FootballScraper):
             week: int 1, 2, etc.
 
         Returns:
-            content: HTML string
+            content(str):
         '''
         params = {
             'request': '1',
@@ -536,9 +561,9 @@ class Parser(object):
     def draft(self, content, season_year):
         '''
         Parses page of draft results for single season
-        
+
         Args:
-            content: HTML string of draft page
+            content(str): of draft page
             season_year: int 2017, 2016, etc.
 
         Returns:
@@ -588,7 +613,7 @@ class Parser(object):
         Parses player fantasy page for season
 
         Args:
-            content: HTML string
+            content(str):
             season_year: 2016, etc.
 
         Returns:
@@ -608,15 +633,37 @@ class Parser(object):
 
         return players
 
-    def player_page(self, content, pid):
+    def player_game_finder(self, content):
         '''
-        Parses player page 
+        Parses player game finder search results
 
         Args:
-            content: HTML string
+            content(str):
 
         Returns:
-            dict: source, source_player_id, source_player_name, 
+            list of dict
+
+        '''
+        players = []
+        soup = BeautifulSoup(content, 'lxml')
+        for tr in soup.find('table', {'id': 'results'}).find('tbody').find_all('tr'):
+            player = {td['data-stat']: td.text for td in tr.find_all('td')}
+            try:
+                player['source_player_id'] = tr.find('td').attrs.get('data-append-csv')
+            except AttributeError as ae:
+                logging.exception(ae)
+            players.append(player)
+        return players
+
+    def player_page(self, content, pid):
+        '''
+        Parses player page
+
+        Args:
+            content(str):
+
+        Returns:
+            dict: source, source_player_id, source_player_name,
                   source_player_position, source_player_dob
         '''
         player = {'source': 'pfr', 'source_player_id': pid}
@@ -660,10 +707,10 @@ class Parser(object):
 
     def players(self, content):
         '''
-        Parses page of players with same last initial (A, B, C, etc.) 
+        Parses page of players with same last initial (A, B, C, etc.)
 
         Args:
-            content: HTML string
+            content(str):
 
         Returns:
             list of dict
@@ -692,10 +739,10 @@ class Parser(object):
     def playerstats_fantasy_weekly(self, content, season_year=None, pos=None):
         '''
         Takes HTML of 100 rows of weekly results, returns list of players
-        Use next_page parameter to indicate whether another 
+        Use next_page parameter to indicate whether another
 
         Args:
-            content: HTML string
+            content(str):
 
         Returns:
             (players: list of player dict, next_page: boolean)
@@ -797,7 +844,7 @@ class Parser(object):
         Takes HTML of 100 rows of team plays, returns list of team_plays
 
         Args:
-            content: HTML string
+            content(str):
 
         Returns:
             teams: list of team dict
@@ -823,7 +870,7 @@ class Parser(object):
         Team defense stats for single week
 
         Args:
-            content: HTML string
+            content(str):
 
         Returns:
             teams: list of dict
@@ -840,7 +887,7 @@ class Parser(object):
         Team defense stats for total season
 
         Args:
-            content: HTML string
+            content(str):
 
         Returns:
             teams: list of dict
@@ -857,9 +904,9 @@ class Parser(object):
 
     def team_offense_weekly(self, content):
         '''
-        
+
         Args:
-            content: HTML string
+            content(str):
 
         Returns:
             teams: list of dict
@@ -897,7 +944,7 @@ class Parser(object):
         Takes HTML of team weekly results, returns list of players
 
         Args:
-            content: HTML string
+            content(str):
 
         Returns:
             list: of dict
@@ -942,7 +989,7 @@ class Parser(object):
                     val = ' '.join(val.split('\n'))
                     val = ' '.join(val.split())
 
-                # column headers on page are duplicates (yds, td, etc.)    
+                # column headers on page are duplicates (yds, td, etc.)
                 # data-stat attribute has accurate column name (rush_yds)
                 team[td['data-stat']] = val
 
@@ -955,11 +1002,11 @@ class Agent(object):
 
     def __init__(self, scraper=None, parser=None):
         '''
-        
+
         Args:
             scraper: PfrScraper object
             parser: PfrParser object
-            cache_name: string
+            cache_name(str):
             cj: cookiejar object
         '''
 
