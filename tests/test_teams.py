@@ -1,78 +1,55 @@
 # -*- coding: utf-8 -*-
-# tests/test_dates.py
-# tests for nfl.dates module
+# tests/test_teams.py
+# tests for nfl.teams module
 
-import datetime
 import logging
 import random
 import sys
 import unittest
 
-import nfl.seasons as ns
+import nfl.teams as nt
 
 
-class Seasons_test(unittest.TestCase):
-
-    @property
-    def seas(self):
-        return random.choice(range(2009, 2017))
+class Teams_test(unittest.TestCase):
 
     @property
-    def week(self):
-        return random.choice(range(1, 18))
+    def city(self):
+        return random.choice(('Chicago', 'Arizona'))
 
-    def test_all_seasons(self):
-        seas = ns.all_seasons()
-        self.assertIsInstance(seas, dict)
-        self.assertIn(self.seas, seas.keys())
+    @property
+    def code(self):
+        return random.choice(('CHI', 'WAS'))
 
-    def test_current_season_year(self):
-        y = ns.current_season_year()
-        self.assertLessEqual(y, datetime.datetime.now().year)
+    @property
+    def long(self):
+        return random.choice(('Chicago Bears', 'Tennessee Titans'))
 
-    def test_fantasylabs_week(self):
-        y = self.seas
-        w = self.week
-        self.assertIsNotNone(ns.fantasylabs_week(y, w))
-        self.assertIn('-', ns.fantasylabs_week(y, w))
+    @property
+    def nickname(self):
+        return random.choice(('Bears', 'Titans'))
 
-    def test_get_season(self):
-        s = ns.get_season(self.seas)
-        self.assertIsInstance(s, dict)
+    def test_city_to_code(self):
+        self.assertIsNotNone(nt.city_to_code(self.city))
+        self.assertIsNone(nt.city_to_code('ZAM'))
 
-    def test_season_week(self):
-        d = datetime.datetime.now().date()
-        self.assertIsInstance(ns.season_week(d), dict)
+    def test_long_to_code(self):
+        self.assertIsNotNone(nt.long_to_code(self.long))
+        self.assertIsNone(nt.long_to_code('ZAM'))
 
-        d = datetime.datetime(2018, 10, 13).date()
-        sw = ns.season_week(d)
-        self.assertEqual(sw['season'], 2018)
-        self.assertEqual(sw['week'], 6)
+    def test_nickname_to_code(self):
+        self.assertIsNotNone(nt.nickname_to_code(self.nickname))
+        self.assertIsNone(nt.nickname_to_code('ZAM'))
 
-        d = datetime.datetime(2018, 1, 1).date()
-        sw = ns.season_week(d)
-        self.assertEqual(sw['season'], 2017)
-        self.assertEqual(sw['week'], 17)
+    def test_from_nfl(self):
+        self.assertIsNotNone(nt.from_nfl('CHI', 'rg'))
 
-    def test_week_end(self):
-        y = self.seas
-        w = self.week
-        self.assertIsInstance(ns.week_end(y, w), datetime.date)
+    def test_to_nfl(self):
+        self.assertIsNotNone(nt.to_nfl('CHI', 'rg'))
 
-        y = 2018
-        w = 5
-        self.assertLess(ns.week_end(y, w), datetime.datetime.now().date())
-
-    def test_week_start(self):
-        y = self.seas
-        w = self.week
-        self.assertIsInstance(ns.week_start(y, w), datetime.date)
-
-        y = 2018
-        w = 5
-        self.assertLess(ns.week_start(y, w), datetime.datetime.now().date())
+    def test_espn_teams(self):
+        self.assertIn('chi', nt.espn_teams())
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     unittest.main()

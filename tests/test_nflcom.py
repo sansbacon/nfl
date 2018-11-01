@@ -1,22 +1,19 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, print_function, division
-
 import logging
 import random
 import sys
 import unittest
+from string import ascii_uppercase
 
-from nfl.agents.nflcom import NFLComAgent
-from nfl.scrapers.nflcom import NFLComScraper
-from nfl.parsers.nflcom import NFLComParser
-from nfl.pipelines.nflcom import gamesmeta_table
+import nfl.nflcom as nc
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
-class Nfldotcom_test(unittest.TestCase):
+class Nflcom_test(unittest.TestCase):
     '''
     Tests nfldotcom scraper and parser
-    TODO: these are not fully implemented
     '''
 
     @property
@@ -28,8 +25,17 @@ class Nfldotcom_test(unittest.TestCase):
         return random.choice(vals)
 
     @property
+    def letter(self):
+        x = None
+        while not x:
+            l = random.choice(ascii_uppercase)
+            if l not in ['x', 'y', 'z', 'v']:
+                x = l
+        return x
+
+    @property
     def profile_id(self):
-        vals = ['2553568', '2506122', '2495700', '2555341']
+        vals = ['2495143']
         return random.choice(vals)
 
     @property
@@ -41,10 +47,9 @@ class Nfldotcom_test(unittest.TestCase):
         return random.choice(range(1, 18))
 
     def setUp(self):
-        self.s = NFLComScraper(cache_name='test-nfldotcom-scraper')
-        self.p = NFLComParser()
-        self.a = NFLComAgent(scraper=self.s, parser=self.p)
-        self.stream_handler = logging.StreamHandler(sys.stdout)
+        self.s = nc.Scraper(cache_name='test-nfldotcom-scraper')
+        self.p = nc.Parser()
+        self.a = nc.Agent(scraper=self.s, parser=self.p)
         self.all_games = []
 
     def test_game(self):
@@ -59,19 +64,27 @@ class Nfldotcom_test(unittest.TestCase):
     def test_ol(self):
         self.assertIsNotNone(self.s.ol(self.season))
 
-    def test_player_page(self):
-        content = self.s.player_profile(self.profile_id)
+    def test_player_profile(self):
+        profile_path = 'andydalton/2495143'
+        content = self.s.player_profile(profile_path=profile_path)
         self.assertIsNotNone(content)
-        self.assertIs(self.p.player_page(content, self.profile_id))
 
     def test_schedule_week(self):
-        # season, week):
         self.assertIsNotNone(self.s.schedule_week(self.season, self.week))
 
     def test_score_week(self):
         self.assertIsNotNone(self.s.score_week(self.season, self.week))
 
+    @unittest.skip
+    def test_players(self):
+        content = self.s.players(self.letter)
+        self.assertIsNotNone(self.p.players(content))
 
-if __name__=='__main__':
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    def test_player_search_name(self):
+        content = self.s.player_search_name('Andy Dalton', 'current')
+        self.assertIsNotNone(self.p.player_search_name(content))
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
     unittest.main()

@@ -1,88 +1,114 @@
 # -*- coding: utf-8 -*-
 
+'''
 # espn.py
 # classes for scraping, parsing espn football data
+'''
+
 
 import logging
 import re
 
 from bs4 import BeautifulSoup, NavigableString, Tag
-
-from nflmisc.scraper import FootballScraper
 from nfl.teams import nickname_to_code
-from nfl.utility import *
+from nflmisc.scraper import FootballScraper
 
 
 class Scraper(FootballScraper):
     '''
+    Scrape ESPN.com for football stats
 
     '''
 
     @property
     def fantasy_team_codes(self):
-       return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
-               23, 24, 25, 26, 27, 28, 29, 30, 33, 34]
+        '''
+        Fantasy team codes
+
+        Returns:
+            int
+
+        '''
+        return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+                23, 24, 25, 26, 27, 28, 29, 30, 33, 34]
 
     @property
     def fantasy_teams(self):
+        '''
+        Fantasy team codes and names
+
+        Returns:
+            dict
+
+        '''
         return {
             1: 'Atl', 2: 'Buf', 3: 'Chi', 4: 'Cin', 5: 'Cle', 6: 'Dal', 7: 'Den', 8: 'Det',
             9: 'GB', 10: 'Ten', 11: 'Ind', 12: 'KC', 13: 'Oak', 14: 'LAR', 15: 'Mia', 16: 'Min',
             17: 'NE', 18: 'NO', 19: 'NYG', 20: 'NYJ', 21: 'Phi', 22: 'Ari', 23: 'Pit', 24: 'LAC',
-            25: 'SF', 26: 'Sea', 27: 'TB', 28: 'Wsh', 29: 'Car', 30: 'Jax', 33: 'Bal',34: 'Hou'
+            25: 'SF', 26: 'Sea', 27: 'TB', 28: 'Wsh', 29: 'Car', 30: 'Jax', 33: 'Bal', 34: 'Hou'
         }
 
-    def _check_pos(self, pos):
+    @staticmethod
+    def _check_pos(pos):
         '''
         Makes sure pos is valid and uppercase
+
+        Args:
+            pos(str):
+
+        Returns:
+            str
+
         '''
         if pos in ['qb', 'rb', 'wr', 'te', 'dst', 'd/st', 'k',
-               'QB', 'RB', 'WR', 'TE', 'K', 'D/ST', 'DST']:
+                   'QB', 'RB', 'WR', 'TE', 'K', 'D/ST', 'DST']:
             if pos in ['DST', 'dst']:
-                return 'D/ST'
+                fixed = 'D/ST'
             else:
-                return pos.upper()
+                fixed = pos.upper()
         else:
             raise ValueError('invalid position: {}'.format(pos))
+        return fixed
 
     def adp(self, pos):
         '''
         Gets adp by player position
-        
+
         Args:
-            pos: 'qb', 'rb', etc.
+            pos(str): 'qb', 'rb', etc.
 
         Returns:
-            HTML string
+            str
+
         '''
         pos = self._check_pos(pos)
         url = 'http://games.espn.com/ffl/livedraftresults?position={}'
         return self.get(url.format(pos), encoding='latin1')
 
-    def fantasy_players_team(self, team_code):
+    def fantasy_players_team(self, team_id):
         '''
         Gets page with fantasy players by team
 
         Args:
-            team_code: 1, 2, etc.
+            team_id(int): 1, 2, etc.
 
         Returns:
-            HTML string
+            str: HTML
+
         '''
-        if team_code not in self.fantasy_team_codes:
-            raise ValueError('invalid team_code: {}'.format(team_code))
-        url = 'view-source:http://games.espn.com/ffl/tools/projections?proTeamId={}'
-        return self.get(url.format(team_code), encoding='latin1')
+        url = 'http://games.espn.com/ffl/tools/projections?proTeamId={}'
+        return self.get(url.format(team_id), encoding='latin1')
 
     def players_position(self, pos):
         '''
         Gets page with all players by position
 
         Args:
-            pos: qb, rb, wr, te, k, etc.
+            pos(str): qb, rb, wr, te, k, etc.
 
         Returns:
-            HTML string
+            str
+
         '''
         url = 'http://www.espn.com/nfl/players?position={}&league=nfl'
         return self.get(url.format(pos), encoding='latin1')
@@ -146,7 +172,7 @@ class Scraper(FootballScraper):
 
     def watson(self, pid):
         '''
-        
+
         Args:
             pid: player ID (10000, etc.)
 
@@ -160,7 +186,7 @@ class Scraper(FootballScraper):
     def watson_players(self):
         '''
         Gets list of ESPN fantasy football players for Watson projections
-        
+
         Returns:
             dict - parsed JSON
         '''
@@ -177,10 +203,10 @@ class Scraper(FootballScraper):
             season_year (int): 2017, 2016, etc.
             week (int): 1 through 17
             position (str): 'qb', 'wr', etc.
-            
+
         Returns:
             str: HTML
-            
+
         '''
         poscode = {'qb': 0, 'rb': 2, 'wr': 4, 'te': 6, 'dst': 16, 'k': 17}
         if position.lower() not in poscode:
@@ -190,7 +216,11 @@ class Scraper(FootballScraper):
         return self.get(url, payload=params)
 
 
-class Parser(object):
+class Parser():
+    '''
+    Parse ESPN.com for football stats
+
+    '''
 
     def __init__(self):
         '''
@@ -199,39 +229,54 @@ class Parser(object):
 
     @property
     def fantasy_team_codes(self):
-       return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
-               23, 24, 25, 26, 27, 28, 29, 30, 33, 34]
+        '''
+        Fantasy team codes
+
+        Returns:
+            int
+
+        '''
+        return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+                23, 24, 25, 26, 27, 28, 29, 30, 33, 34]
 
     @property
     def fantasy_teams(self):
+        '''
+        Fantasy team codes to names
+
+        Returns:
+            dict
+
+        '''
         return {
             1: 'Atl', 2: 'Buf', 3: 'Chi', 4: 'Cin', 5: 'Cle', 6: 'Dal', 7: 'Den', 8: 'Det',
             9: 'GB', 10: 'Ten', 11: 'Ind', 12: 'KC', 13: 'Oak', 14: 'LAR', 15: 'Mia', 16: 'Min',
             17: 'NE', 18: 'NO', 19: 'NYG', 20: 'NYJ', 21: 'Phi', 22: 'Ari', 23: 'Pit', 24: 'LAC',
-            25: 'SF', 26: 'Sea', 27: 'TB', 28: 'Wsh', 29: 'Car', 30: 'Jax', 33: 'Bal',34: 'Hou'
+            25: 'SF', 26: 'Sea', 27: 'TB', 28: 'Wsh', 29: 'Car', 30: 'Jax', 33: 'Bal', 34: 'Hou'
         }
 
-    def _val(self, val):
+    @staticmethod
+    def _val(val):
         '''
         Converts non-numeric value to numeric 0
-        
+
         Args:
-            val: 
+            val:
 
         Returns:
             number
         '''
         if '--' in val:
             return 0
-        else:
-            return val
+        return val
 
-    def adp(self, content):
+    @staticmethod
+    def adp(content):
         '''
         Parses season-long ADP
-        
+
         Args:
-            content: 
+            content:
 
         Returns:
             list of dict
@@ -248,17 +293,19 @@ class Parser(object):
 
             # tds[1]: name/team/pos
             try:
-                a, navstr = list(tds[1].children)[0:2]
-                player['source_player_name'] = a.text.replace('*','')
-                player['season_year'] = a.attrs.get('seasonid')
-                player['source_player_id'] = a.attrs.get('playerid')
+                link, navstr = list(tds[1].children)[0:2]
+                player['source_player_name'] = link.text.replace('*', '')
+                player['season_year'] = link.attrs.get('seasonid')
+                player['source_player_id'] = link.attrs.get('playerid')
                 player['source_team_code'] = navstr.split(', ')[-1].strip()
-            except:
-                a = tds[1].find('a')
-                player['source_player_name'] = a.text
-                player['season_year'] = a.attrs.get('seasonid')
-                player['source_player_id'] = a.attrs.get('playerid')
-                player['source_team_code'] = nickname_to_code(a.text.split(' D/ST')[0], int(player['season_year']))
+            except ValueError as valerr:
+                logging.exception(valerr)
+                link = tds[1].find('a')
+                player['source_player_name'] = link.text
+                player['season_year'] = link.attrs.get('seasonid')
+                player['source_player_id'] = link.attrs.get('playerid')
+                player['source_team_code'] = nickname_to_code(link.text.split(' D/ST')[0],
+                                                              int(player['season_year']))
 
             # remaining stats
             player['source_player_position'] = tds[2].text
@@ -268,10 +315,11 @@ class Parser(object):
 
         return players
 
-    def fantasy_players_team(self, content):
+    @staticmethod
+    def fantasy_players_team(content):
         '''
         Parses page of fantasy players
-        
+
         Args:
             content: HTML string
 
@@ -280,29 +328,32 @@ class Parser(object):
         '''
         players = {}
         soup = BeautifulSoup(content, 'lxml')
-        for a in soup.find_all('a', {'class': 'flexpop'}):
-            pid = a.attrs.get('playerid')
-            pname = a.text.strip()
+        for link in soup.find_all('a', {'class': 'flexpop'}):
+            pid = link.attrs.get('playerid')
+            pname = link.text.strip()
             if pid and pname:
                 players[pid] = pname
-
         return players
 
-    def lovehate(self, season, week, lh):
+    @staticmethod
+    def lovehate(season, week, lhdict):
         '''
 
         Args:
             season(int):
             week(int):
-            d(dict): keys are position_love, position_hate
+            lhdict(dict): keys are position_love, position_hate
 
         Returns:
-            players(list): of player dict
+            list: of player dict
+
         '''
 
         players = []
+        if not season or week:
+            raise ValueError('need season and week')
 
-        for poslh, ratings in lh.items():
+        for poslh, ratings in lhdict.items():
             pos = poslh.split('_')[0]
             label = ratings.get('label')
             sublabel = None
@@ -310,12 +361,14 @@ class Parser(object):
             if label in ('favorite', 'bargain', 'desparate'):
                 sublabel = label
                 label = 'love'
+                logging.info('%s', label)
             for link in ratings.get('links'):
+                spid = {}
                 url = link.split('"')[1]
-                site_player_id, site_player_stub = url.split('/')[7:9]
-                site_player_name = link.split('>')[1].split('<')[0]
-
-        #print season, week, pos, label, sublabel, site_player_id, site_player_stub, site_player_name
+                spid['site_player_id'], spid['site_player_stub'] = url.split('/')[7:9]
+                spid['site_player_name'] = link.split('>')[1].split('<')[0]
+                logging.info('%s %s %s', pos, sublabel, spid)
+        return players
 
     def projections(self, content, pos):
         '''
@@ -346,17 +399,17 @@ class Parser(object):
                 player['source_position_rank'] = tds[0].text
 
                 # tds[1]: name/team/pos
-                a, navstr = list(tds[1].children)[0:2]
-                player['source_player_name'] = a.text
+                link, navstr = list(tds[1].children)[0:2]
+                player['source_player_name'] = link.text
                 player['source_player_team'], player['source_player_position'] = navstr.split()[-2:]
-                player['source_player_id'] = a.attrs.get('playerid')
+                player['source_player_id'] = link.attrs.get('playerid')
 
                 # loop through stats
                 # they have attempts/completions in one column so have to remove & split
                 attcmp = tds[2].text
                 vals = [self._val(td.text) for td in tds[3:]]
-                for h, v in zip(headers, attcmp.split('/') + vals):
-                    player[h] = v
+                for header, val in zip(headers, attcmp.split('/') + vals):
+                    player[header] = val
                 players.append(player)
 
         elif pos.lower() == 'k':
@@ -368,10 +421,10 @@ class Parser(object):
                 player['source_position_rank'] = tds[0].text
 
                 # tds[1]: name/team/pos
-                a, navstr = list(tds[1].children)[0:2]
-                player['source_player_name'] = a.text
+                link, navstr = list(tds[1].children)[0:2]
+                player['source_player_name'] = link.text
                 player['source_player_team'], player['source_player_position'] = navstr.split()[-2:]
-                player['source_player_id'] = a.attrs.get('playerid')
+                player['source_player_id'] = link.attrs.get('playerid')
 
                 # loop through stats
                 # they have attempts/completions in one column so have to remove & split
@@ -382,44 +435,44 @@ class Parser(object):
 
         return players
 
-    def players_position(self, content, pos):
+    @staticmethod
+    def players_position(content, pos):
         '''
         Parses page of ESPN players by position
 
         Args:
-            content: 
-            pos: 
+            content:
+            pos:
 
         Returns:
-            list of dict: source, source_player_id, source_player_name
-                          source_team_code, source_team_name, college
+            list: of dict
+
         '''
         players = []
         soup = BeautifulSoup(content, 'lxml')
-        # <tr class="oddrow player-28-2574511"><td><a href="http://www.espn.com/nfl/player/_/id/2574511/brandon-allen">
-        # #Allen, Brandon</a></td><td><a href="http://www.espn.com/nfl/team/_/name/jax/jacksonville-jaguars">
-        # Jacksonville Jaguars</a></td><td>Arkansas</td></tr>
 
-        for tr in soup.find_all('tr'):
+        for row in soup.find_all('tr'):
             class_matches = set(['oddrow', 'evenrow'])
-            classes = set(tr.attrs.get('class', []))
+            classes = set(row.attrs.get('class', []))
             if class_matches.intersection(classes):
                 player = {'source': 'espn', 'source_player_position': pos}
-                tds = tr.find_all('td')
+                tds = row.find_all('td')
 
-                # tds[0]: <a href="http://www.espn.com/nfl/player/_/id/2574511/brandon-allen">Allen, Brandon</a>
+                # tds[0]: <a href="http://www.espn.com/nfl/player/_/id/
+                # 2574511/brandon-allen">Allen, Brandon</a>
                 player['source_player_name'] = tds[0].text
-                a = tr.find('a', {'href': re.compile(r'/player/_/')})
-                if a:
-                    match = re.search(r'\/id\/([0-9]+)', a['href'])
+                link = row.find('a', {'href': re.compile(r'/player/_/')})
+                if link:
+                    match = re.search(r'\/id\/([0-9]+)', link['href'])
                     if match:
                         player['source_player_id'] = match.group(1)
 
-                # tds[1]: <td><a href="http://www.espn.com/nfl/team/_/name/jax/jacksonville-jaguars">Jacksonville Jaguars</a></td>
+                # tds[1]: <td><a href="http://www.espn.com/nfl/team/_/
+                # name/jax/jacksonville-jaguars">Jacksonville Jaguars</a></td>
                 player['source_team_name'] = tds[1].text
-                a = tr.find('a', {'href': re.compile(r'/team/_/name')})
-                if a:
-                    match = re.search(r'name/(\w+)/', a['href'])
+                link = row.find('a', {'href': re.compile(r'/team/_/name')})
+                if link:
+                    match = re.search(r'name/(\w+)/', link['href'])
                     if match:
                         player['source_team_code'] = match.group(1)
 
@@ -431,7 +484,8 @@ class Parser(object):
 
         return players
 
-    def team_roster(self, content):
+    @staticmethod
+    def team_roster(content):
         '''
         Parses team roster page into list of player dict
 
@@ -443,38 +497,43 @@ class Parser(object):
         '''
         players = []
         soup = BeautifulSoup(content, 'lxml')
-        for tr in soup.find_all('tr'):
-            a = tr.find('a', {'href': re.compile(r'/nfl/player/_/id/')})
-            if a:
+        for row in soup.find_all('tr'):
+            link = row.find('a', {'href': re.compile(r'/nfl/player/_/id/')})
+            try:
                 player = {'source': 'espn'}
-                tds = tr.find_all('td')
+                tds = row.find_all('td')
                 player['source_player_position'] = tds[2].text
-                player['source_player_name'] = a.text
-                player['source_player_id'] = a['href'].split('/')[-2]
+                player['source_player_name'] = link.text
+                player['source_player_id'] = link['href'].split('/')[-2]
                 players.append(player)
+            except ValueError:
+                pass
         return players
 
-    def watson(self, content):
+    @staticmethod
+    def watson(content):
         '''
-        
+
         Args:
             content: list of dict - parsed JSON
 
         Returns:
             dict
         '''
-        wanted = ["PLAYERID", "EXECUTION_TIMESTAMP", "DISTRIBUTION_NAME", "SCORE_PROJECTION", "SCORE_DISTRIBUTION",
-                  "LOW_SCORE", "HIGH_SCORE", "OUTSIDE_PROJECTION", "SIMULATION_PROJECTION"]
+        wanted = ["PLAYERID", "EXECUTION_TIMESTAMP", "DISTRIBUTION_NAME",
+                  "SCORE_PROJECTION", "SCORE_DISTRIBUTION", "LOW_SCORE",
+                  "HIGH_SCORE", "OUTSIDE_PROJECTION", "SIMULATION_PROJECTION"]
 
         # have multiple time-stamped projections
         # we want the most recent projection model only
         newest = content[-1]
-        return {k.lower():v for k,v in newest.items() if k in wanted}
+        return {k.lower(): v for k, v in newest.items() if k in wanted}
 
-    def watson_players(self, content, wanted=None):
+    @staticmethod
+    def watson_players(content, wanted=None):
         '''
         Parses list of dict into player
-        
+
         Args:
             content: dict - parsed JSON
 
@@ -483,45 +542,48 @@ class Parser(object):
         '''
         if not wanted:
             wanted = ['FULL_NAME', 'FANTASY_PLAYER_ID', 'PLAYERID', 'POSITION', 'TEAM']
-        return [{k.lower():v for k,v in p.items() if k in wanted} for p in content]
+        return [{k.lower(): v for k, v in p.items() if k in wanted} for p in content]
 
-    def weekly_scoring(self, content):
+    @staticmethod
+    def weekly_scoring(content):
         '''
         Parses weekly scoring page
-        
+
         Args:
             content (str): HTML
 
         Returns:
             list: of dict
-            
+
         '''
         results = []
         headers = ['c_a', 'pass_yds', 'pass_td', 'pass_int', 'rush_att', 'rush_yds', 'rush_td',
                    'rec_rec', 'rec_yds', 'rec_td', 'rec_tar', 'tpc', 'fumble', 'misc_td', 'fpts']
         soup = BeautifulSoup(content, 'lxml')
         tbl = soup.select('table#playertable_0')[0]
-        for tr in tbl.find_all('tr', {'id': re.compile(r'plyr')}):
-            tds = [td.text for td in tr.find_all('td', class_='playertableStat')]
+        for row in tbl.find_all('tr', {'id': re.compile(r'plyr')}):
+            tds = [td.text for td in row.find_all('td', class_='playertableStat')]
             if tds:
                 player = dict(zip(headers, tds))
                 # name, team, position
-                nametd = tr.find('td', {'id': re.compile(r'playername')})
+                nametd = row.find('td', {'id': re.compile(r'playername')})
                 for child in nametd.children:
                     if isinstance(child, NavigableString):
-                        player['source_player_team'], player['source_player_position'] = child.string.split()[1:3]
+                        player['source_player_team'], player['source_player_position'] = \
+                            child.string.split()[1:3]
                     elif isinstance(child, Tag):
                         player['source_player_name'] = child.string
                         player['source_player_id'] = child.attrs.get('playerid')
                 results.append(player)
         return results
 
-    def weekly_scoring_dst(self, content):
+    @staticmethod
+    def weekly_scoring_dst(content):
         '''
         Parses weekly scoring page for dst
 
         Args:
-            content (str): HTML
+            content(str): HTML
 
         Returns:
             list: of dict
@@ -533,22 +595,24 @@ class Parser(object):
                    'rec_rec', 'rec_yds', 'rec_td', 'rec_tar', 'tpc', 'fumble', 'misc_td', 'fpts']
         soup = BeautifulSoup(content, 'lxml')
         tbl = soup.select('table#playertable_0')[0]
-        for tr in tbl.find_all('tr', {'id': re.compile(r'plyr')}):
-            tds = [td.text for td in tr.find_all('td', class_='playertableStat')]
+        for row in tbl.find_all('tr', {'id': re.compile(r'plyr')}):
+            tds = [td.text for td in row.find_all('td', class_='playertableStat')]
             if tds:
                 player = dict(zip(headers, tds))
                 # name, team, position
-                nametd = tr.find('td', {'id': re.compile(r'playername')})
+                nametd = row.find('td', {'id': re.compile(r'playername')})
                 for child in nametd.children:
                     if isinstance(child, NavigableString):
-                        player['source_player_team'], player['source_player_position'] = child.string.split()[1:3]
+                        player['source_player_team'], player['source_player_position'] = \
+                            child.string.split()[1:3]
                     elif isinstance(child, Tag):
                         player['source_player_name'] = child.string
                         player['source_player_id'] = child.attrs.get('playerid')
                 results.append(player)
         return results
 
-    def weekly_scoring_k(self, content):
+    @staticmethod
+    def weekly_scoring_k(content):
         '''
         Parses weekly scoring page for kickers
 
@@ -565,15 +629,16 @@ class Parser(object):
                    'rec_rec', 'rec_yds', 'rec_td', 'rec_tar', 'tpc', 'fumble', 'misc_td', 'fpts']
         soup = BeautifulSoup(content, 'lxml')
         tbl = soup.select('table#playertable_0')[0]
-        for tr in tbl.find_all('tr', {'id': re.compile(r'plyr')}):
-            tds = [td.text for td in tr.find_all('td', class_='playertableStat')]
+        for row in tbl.find_all('tr', {'id': re.compile(r'plyr')}):
+            tds = [td.text for td in row.find_all('td', class_='playertableStat')]
             if tds:
                 player = dict(zip(headers, tds))
                 # name, team, position
-                nametd = tr.find('td', {'id': re.compile(r'playername')})
+                nametd = row.find('td', {'id': re.compile(r'playername')})
                 for child in nametd.children:
                     if isinstance(child, NavigableString):
-                        player['source_player_team'], player['source_player_position'] = child.string.split()[1:3]
+                        player['source_player_team'], player['source_player_position'] = \
+                            child.string.split()[1:3]
                     elif isinstance(child, Tag):
                         player['source_player_name'] = child.string
                         player['source_player_id'] = child.attrs.get('playerid')

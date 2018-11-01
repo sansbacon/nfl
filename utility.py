@@ -1,34 +1,41 @@
+'''
+nfl/utility.py
+
+Utility functions for nfl library
+
+'''
+
 import collections
 import csv
-from functools import wraps
 import json
 import logging
 import os
 import random
-import sys
-from urllib.parse import urlsplit, parse_qs, urlencode
+from functools import wraps
+from urllib.parse import urlsplit, parse_qs, urlencode, quote
 
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
 
-import pandas as pd
 from nflmisc.nflpg import NFLPostgres
 
- 
-def csv_to_dict(fn):
+logger = logging.getLogger(__name__)
+
+
+def csv_to_dict(filename):
     '''
     Takes csv filename and returns dicts
 
     Arguments:
-        fn (str): name of file to read/parse
+        filename (str): name of file to read/parse
 
     Returns:
         list: List of dicts
-        
+
     '''
-    with open(fn, 'r') as infile:
+    with open(filename, 'r') as infile:
         for row in csv.DictReader(infile, skipinitialspace=True, delimiter=','):
             yield {k: v for k, v in row.items()}
 
@@ -41,18 +48,18 @@ def dict_to_csv(dicts, fn, fields=None):
         dicts(list): of dict
         fn(str): name of csvfile
         fields(list): fieldnames, default None
-    
+
     Returns:
         None
-        
+
     '''
     with open(fn, 'w') as csvfile:
         if not fields:
             fields = list(dicts[0].keys())
         writer = csv.DictWriter(csvfile, fieldnames=fields)
         writer.writeheader()
-        for d in dicts:
-            writer.writerow(d)
+        for dict_to_write in dicts:
+            writer.writerow(dict_to_write)
 
 
 def df_to_html(df, sort_index='', sort_type='desc', targets='', fn=None):
@@ -65,22 +72,31 @@ def df_to_html(df, sort_index='', sort_type='desc', targets='', fn=None):
         sort_type(str): asc or desc
         targets(str): numeric columns for sorting
         fn (str): filename to save
-        
+
     Returns:
         str
 
     '''
-    # using plugin any-number to sort numeric columns - that is the "type" entry in columnDefs
+    # using plugin any-number to sort numeric columns -
+    # that is the "type" entry in columnDefs
     # use jquery script to alternate shading rows in white and grey
     # pandas creates a table that is plugged into the page
     page = '''<!DOCTYPE html><html>
               <head>
-                <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.16/datatables.min.css"/>
+                <link rel="stylesheet" type="text/css" 
+                href="https://cdn.datatables.net/v/dt/dt-1.10.16/datatables.min.css"/>
               <body>
-                  <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
-                  <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.16/datatables.min.js"></script>
-                  <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap.min.js"></script>
-                  <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.18/sorting/any-number.js"></script>
+                  <script src="https://code.jquery.com/jquery-3.3.1.js">
+                  </script>
+                  <script type="text/javascript" 
+                  src="https://cdn.datatables.net/v/dt/dt-1.10.16/datatables.min.js">
+                  </script>
+                  <script type="text/javascript" 
+                  src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap.min.js">
+                  </script>
+                  <script type="text/javascript" 
+                  src="https://cdn.datatables.net/plug-ins/1.10.18/sorting/any-number.js">
+                  </script>
                   <script type="text/javascript">
                     $(document).ready(function() {
                       $('#draft').DataTable( {
@@ -107,17 +123,18 @@ def df_to_html(df, sort_index='', sort_type='desc', targets='', fn=None):
     # pandas 0.23 has improved API for generating tables
     # this code won't work in earlier versions of pandas
     tbl = df.to_html(border=0,
-                      index=False,
-                      classes=['display'], 
-                      table_id='draft')
-    
+                     index=False,
+                     classes=['display'],
+                     table_id='draft')
+
     # insert table into page
     page = page.replace('|TABLE|', tbl).replace('|TARGETS|', targets)
-    
+
     # if sort index, also specify sort type
     # otherwise, leave sort index blank
     if sort_index:
-        page = page.replace('|INDEX|', str(sort_index) + ', ' + '"' + sort_type + '"')
+        page = page.replace('|INDEX|', str(sort_index) + ', ' +
+                            '"' + sort_type + '"')
     else:
         page = page.replace('|INDEX|', str(sort_index))
 
@@ -127,18 +144,18 @@ def df_to_html(df, sort_index='', sort_type='desc', targets='', fn=None):
             outfile.write(page)
 
     return page
-    
-            
+
+
 def digits(s):
     '''
     Removes non-numeric characters from a string
 
     Args:
-        s (str): string with non-numeric characters 
+        s (str): string with non-numeric characters
 
     Returns:
         str
-        
+
     '''
     return ''.join(ch for ch in s if ch.isdigit())
 
@@ -152,7 +169,7 @@ def flatten(d):
 
     Returns:
         dict: nested dict flattened into dict
-        
+
     '''
     items = []
     for k, v in d.items():
@@ -172,47 +189,47 @@ def flatten_list(l):
 
     Returns:
         list
-        
+
     '''
     try:
         return [item for sublist in l for item in sublist]
-    except:
+    except TypeError:
         return l
 
 
 def file_to_ds(fname):
     '''
-    Pass filename, it returns data structure. Decides based on file extension.
+    Pass filename, it returns data structure based on file extension.
 
     Args:
         fname (str): filename
-        
+
     Returns:
-        None
-        
+        data structure
+
     '''
     ext = os.path.splitext(fname)[1]
     if ext == '.csv':
-        return csv_to_dict(fname)
+        data_structure = csv_to_dict(fname)
     elif ext == '.json':
-        return json_to_dict(fname)
+        data_structure = json_to_dict(fname)
     elif ext == 'pkl':
-        return read_pickle(fname)
+        data_structure = read_pickle(fname)
     else:
-        raise ValueError('{0} is not a supported file extension'.format(ext))
-
+        raise ValueError('%s is not a supported file extension' % ext)
+    return data_structure
 
 def getdb(key='nfl', configfn=None):
     '''
     Gets database instance
-    
+
     Args:
-        key (str): top-level key in configfile 
-        configfn (str): filename of configfile 
+        key (str): top-level key in configfile
+        configfn (str): filename of configfile
 
     Returns:
         NFLPostgres instance
-    
+
     '''
     try:
         import ConfigParser as configparser
@@ -233,8 +250,8 @@ def getengine(key='nfl', configfn=None):
     Gets sqlite engine
 
     Args:
-        key (str): top-level key in configfile 
-        configfn (str): filename of configfile 
+        key (str): top-level key in configfile
+        configfn (str): filename of configfile
 
     Returns:
         sqlalchemy engine
@@ -249,34 +266,28 @@ def getengine(key='nfl', configfn=None):
         config.read(os.path.join(os.path.expanduser('~'), '.fantasy'))
     else:
         config.read(configfn)
-    try:
-        from sqlalchemy import create_engine
-        base_connstr = 'postgresql://{u}:{p}@localhost:5432/{db}'
-        connstr = base_connstr.format(u=config.get(key, 'username'),
-            p=config.get(key, 'password'), db=config.get(key, 'db'))
-        return create_engine(connstr)
-    except Exception as e:
-        logging.exception(e)
-        return None
+    base_connstr = 'postgresql://{u}:{p}@localhost:5432/{db}'
+    connstr = base_connstr.format(u=config.get(key, 'username'),
+                                  p=config.get(key, 'password'), db=config.get(key, 'db'))
+    from sqlalchemy import create_engine
+    return create_engine(connstr)
 
 
 def isfloat(x):
     '''
     Tests if conversion to float succeeds
-    
+
     Args:
         x: value to test
 
     Returns:
         boolean: True if can convert to float, False if cannot.
-        
+
     '''
     try:
-        a = float(x)
-    except Exception as e:
+        return float(x)
+    except ValueError:
         return False
-    else:
-        return True
 
 
 def isint(x):
@@ -293,10 +304,9 @@ def isint(x):
     try:
         a = float(x)
         b = int(a)
-    except Exception as e:
-        return False
-    else:
         return a == b
+    except ValueError:
+        return False
 
 
 def json_to_dict(json_fname):
@@ -308,7 +318,7 @@ def json_to_dict(json_fname):
 
     Returns:
         dict: Parsed json into dict
-        
+
     '''
     if os.path.exists(json_fname):
         with open(json_fname, 'r') as infile:
@@ -320,30 +330,30 @@ def json_to_dict(json_fname):
 def memoize(function):
     '''
     Memoizes function
-    
+
     Args:
         function (func): the function to memoize
 
     Returns:
         func: A memoized function
-        
+
     '''
     memo = {}
+
     @wraps(function)
     def wrapper(*args):
         if args in memo:
             return memo[args]
-        else:
-            rv = function(*args)
-            memo[args] = rv
-            return rv
+        retval = function(*args)
+        memo[args] = retval
+        return retval
     return wrapper
 
 
 def merge(merge_dico, dico_list):
     '''
     Merges multiple dictionaries into one
-    
+
     Note:
         See http://stackoverflow.com/questions/28838291/merging-multiple-dictionaries-in-python
 
@@ -353,11 +363,11 @@ def merge(merge_dico, dico_list):
 
     Returns:
         dict: merged dictionary
-        
+
     '''
     for dico in dico_list:
         for key, value in dico.items():
-            if type(value) == type(dict()):
+            if isinstance(value, dict):
                 merge_dico.setdefault(key, dict())
                 merge(merge_dico[key], [value])
             else:
@@ -375,48 +385,64 @@ def merge_two(d1, d2):
 
     Returns:
         dict: A merged dictionary
-        
+
     '''
     context = d1.copy()
     context.update(d2)
-    return context    
+    return context
 
 
 def pair_list(list_):
-        '''
-        Allows iteration over list two items at a time
-        '''
-        list_ = list(list_)
-        return [list_[i:i + 2] for i in range(0, len(list_), 2)]
+    '''
+    Allows iteration over list two items at a time
+    '''
+    list_ = list(list_)
+    return [list_[i:i + 2] for i in range(0, len(list_), 2)]
+
+
+def rand_dictitem(d):
+    '''
+    Gets random item from dict
+
+    Args:
+        d(dict):
+
+    Returns:
+        tuple: dict key and value
+
+    '''
+    k = random.choice(list(d.keys()))
+    return (k, d[k])
 
 
 def dict_to_qs(d):
     '''
     Converts dict into query string for url
-    
+
     Args:
         dict
-        
+
     Returns:
         str
-        
+
     '''
     return urlencode(d)
 
 
-def qs_to_dict(qs):
+def qs_to_dict(url):
     '''
-    Converts query string from url into dict
-    
+    Converts query string from url into dict with non-list values
+
     Args:
-        qs(str): url with query string
-        
+        url(str): url with query string
+
     Returns:
         dict
-        
+
     '''
-    query = urlsplit(url).query
-    return parse_qs(query)
+    qsdata = urlsplit(url).query
+    return dict((k, v if len(v) > 1 else v[0])
+                for k, v in parse_qs(qsdata).items())
 
 
 def save_csv(data, csv_fname, fieldnames, sep=';'):
@@ -430,14 +456,14 @@ def save_csv(data, csv_fname, fieldnames, sep=';'):
 
     Returns:
         None
- 
+
     '''
     try:
         with open(csv_fname, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=sep)
             writer.writeheader()
             writer.writerows(data)
-    except:
+    except csv.Error:
         logging.exception('could not save csv file')
 
 
@@ -450,7 +476,7 @@ def read_pickle(pkl_fname):
 
     Returns:
         iterable: python datastructure
-        
+
     '''
     if os.path.exists(pkl_fname):
         with open(pkl_fname, 'rb') as infile:
@@ -473,8 +499,8 @@ def read_json(json_fname):
     try:
         with open(json_fname, 'r') as infile:
             return json.load(infile)
-    except:
-        logging.exception('{0} does not exist'.format(json_fname))
+    except json.JSONDecodeError:
+        logging.exception('%s does not exist', json_fname)
 
 
 def save_json(data, json_fname):
@@ -484,16 +510,16 @@ def save_json(data, json_fname):
     Arguments:
         data (iterable): python data structure
         json_fname (str): name of file to save
-        
+
     Returns:
         None
-        
+
     '''
     try:
         with open(json_fname, 'w') as outfile:
             json.dump(data, outfile)
-    except:
-        logging.exception('{0} does not exist'.format(json_fname))
+    except json.JSONDecodeError:
+        logging.exception('%s does not exist', json_fname)
 
 
 def save_pickle(data, pkl_fname):
@@ -506,23 +532,23 @@ def save_pickle(data, pkl_fname):
 
     Returns:
         None
-        
+
     '''
     try:
         with open(pkl_fname, 'wb') as outfile:
             pickle.dump(data, outfile)
-    except:
-        logging.exception('{0} does not exist'.format(pkl_fname))
+    except pickle.PickleError:
+        logging.exception('%s does not exist', pkl_fname)
 
 
 def save_file(data, fname):
     '''
     Pass filename, it returns datastructure. Decides based on file extension.
-    
+
     Args:
         data (iterable): arbitrary datastructure
         fname (str): filename to save
-    
+
     Returns:
         None
     '''
@@ -534,27 +560,27 @@ def save_file(data, fname):
     elif ext == 'pkl':
         save_pickle(data, fname)
     else:
-        raise ValueError('{0} is not a supported file extension'.format(ext))
+        raise ValueError('{} is not a supported file extension'.format(ext))
 
 
 def sample_dict(d, n=1):
     '''
     Gets random sample of dictionary
-    
+
     Args:
         d(dict):
-        
+
     Returns:
         dict
-        
+
     '''
     keys = list(d.keys())
-    return {k:d[k] for k in random.sample(keys, n)}
-    
-    
+    return {k: d[k] for k in random.sample(keys, n)}
+
+
 def url_quote(s):
     '''
-    Python 2/3 url quoting    
+    Python 3 url quoting
 
     Args:
         s (str): string to quote
@@ -563,12 +589,7 @@ def url_quote(s):
         str: URL quoted string
 
     '''
-    try:
-        import urllib.parse
-        return urllib.parse.quote(s)
-    except:
-        import urllib
-        return urllib.quote(s)
+    return quote(s)
 
 
 if __name__ == '__main__':

@@ -3,43 +3,15 @@
 # classes to scrape and parse profootballfocus.com
 
 import logging
-from bs4 import BeautifulSoup
 
 from nflmisc.browser import BrowserScraper
 
 
-class PFFScraper(BrowserScraper):
+class Scraper(BrowserScraper):
+    """
+    This only works for subscribers. You may have to manually login in the browser before using the library.
 
-
-    #def __init__(self, headers=None, cookies=None, cache_name='fo-api', delay=1, expire_hours=168, as_string=False):
-    #    '''
-    #    Scrape profootballfocus
-    #
-    #    Args:
-    #        headers: dict of headers
-    #        cookies: cookiejar object
-    #        cache_name: should be full path
-    #        delay: int (be polite!!!)
-    #        expire_hours: int - default 168
-    #        as_string: get string rather than parsed json
-    #    '''
-    #    if not cookies:
-    #        try:
-    #            import browser_cookie3
-    #            cookies = browser_cookie3.firefox()
-    #        except:
-    #            try:
-    #                import browsercookie
-    #                cookies = browsercookie.firefox()
-    #            except:
-    #               pass
-    #
-    #    if not headers:
-    #        headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-    #                   'Referer': 'http://www.footballoutsiders.com/premium/index.php', 'DNT': '1'}
-    #
-    #    FootballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name,
-    #                             delay=delay, expire_hours=expire_hours, as_string=as_string)
+    """
 
     def depth_charts(self, team_id):
         '''
@@ -50,20 +22,25 @@ class PFFScraper(BrowserScraper):
 
         Returns:
             dict
+
         '''
         url = 'https://grades.profootballfocus.com/api/offenses/depth_charts?team_id={}'
-        return self.get_json(url.format(team_id))
+        return self.get_json(url.format(team_id))[0]
 
     def position_grades(self, pos):
         '''
         Gets pff grades
 
         Args:
-            pos: 'QB', 'WR', 'TE', 'RB', etc.
+            pos: 'QB', 'WR', 'TE', 'HB', etc.
 
         Returns:
             dict
+
         '''
+        # pff uses HB instead of rb
+        if pos == 'RB':
+            pos == 'HB'
         url = 'https://grades.profootballfocus.com/api/players?position={}'
         return self.get_json(url.format(pos))
 
@@ -76,6 +53,7 @@ class PFFScraper(BrowserScraper):
 
         Returns:
             dict
+
         '''
         url = 'https://grades.profootballfocus.com/api/players/{}/grades_by_season'
         return self.get_json(url.format(player_id))
@@ -89,6 +67,7 @@ class PFFScraper(BrowserScraper):
 
         Returns:
             dict
+
         '''
         url = 'https://grades.profootballfocus.com/api/players/{}/grades_by_week'
         return self.get_json(url.format(player_id))
@@ -102,6 +81,7 @@ class PFFScraper(BrowserScraper):
 
         Returns:
             dict
+
         '''
         url = 'https://grades.profootballfocus.com/api/players/{}/snaps_by_week'
         return self.get_json(url.format(player_id))
@@ -115,6 +95,7 @@ class PFFScraper(BrowserScraper):
             
         Returns:
             dict
+
         '''
         return self.get_json('https://grades.profootballfocus.com/api/players?team_id={}'.format(team_id))
 
@@ -124,12 +105,12 @@ class PFFScraper(BrowserScraper):
         
         Returns:
             dict
+
         '''
         return self.get_json('https://grades.profootballfocus.com/api/teams')
 
 
-class PFFParser():
-
+class Parser(object):
 
     def __init__(self):
         '''
@@ -137,7 +118,7 @@ class PFFParser():
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-    def position_grades(content):
+    def position_grades(self, content):
         '''
         Parses season-ending grades for 
         
@@ -146,21 +127,111 @@ class PFFParser():
 
         Returns:
             players
+
         '''
         players = []
-        keys = ['first_name','last_name', 'franchise_id', 'gsis_id']
+        keys = ['first_name', 'last_name', 'franchise_id', 'gsis_id']
         snap_exclude = ['player_id', 'season', 'week']
 
         for item in content['rosters']:
-            player = {k:v for k,v in item.items() if k in keys}
-            context = player.copy()
+            player = {k: v for k, v in item.items() if k in keys}
             if item.get('grade', None):
-                context.update(item['grade'])
+                player.update(item['grade'])
             if item.get('snapCount', None):
-                context.update({k:v for k,v in item['snapCount'].items() if k not in snap_exclude})
-            players.append(context)
-
+                player.update({k: v for k, v in item['snapCount'].items() if k not in snap_exclude})
+            players.append(player)
         return players
+
+    def depth_charts(self, content, exclude_positions=None):
+        '''
+        Parses pff depth charts
+
+        Args:
+            content(dict): parsed JSON
+            exclude_positions(iterable): positions to exclude
+
+        Returns:
+            list
+
+        '''
+        players = []
+        # positions = ('te', 'swr', 'rwr', 'rt', 'rg', 'qb', 'lwr'
+        #             'lt', 'lg', 'hb', 'c')
+        for k, v in content['positions'].items():
+            players += v
+        return players
+
+    def player_grades_career(self, content):
+        '''
+        Parses pff grades for player each season
+
+        Args:
+            content(list): parsed JSON
+
+        Returns:
+            list
+
+        '''
+        return content
+
+    def player_grades_week(self, content):
+        '''
+        Parses pff grades for player each season
+
+        Args:
+            content(list): parsed JSON
+
+        Returns:
+            list
+
+        '''
+        return content
+
+    def player_snaps_season(self, content):
+        '''
+        Parses pff snap counts for most recent season
+
+        Args:
+            content(list): parsed JSON
+
+        Returns:
+            list
+
+        '''
+        return content
+
+    def players(self, content):
+        '''
+        Parses profootballfocus players for team
+
+        Args:
+            content(dict): parsed JSON
+
+        Returns:
+            list
+
+        '''
+        pl = []
+        team_id = content['teams'][0]['id']
+        team_abbrev = content['teams'][0]['abbreviation']
+        for p in content['rosters']:
+            p['source_team_id'] = team_id
+            p['source_team_code'] = team_abbrev
+            pl.append(p)
+        return pl
+
+    def teams(self, content):
+        '''
+        Parses profootballfocus teams
+
+        Args:
+            content(dict): parsed JSON
+
+        Returns:
+            list
+
+        '''
+        return content['teams']
 
 
 if __name__ == '__main__':

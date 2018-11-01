@@ -3,14 +3,15 @@
 from __future__ import absolute_import, print_function, division
 
 import logging
+import os
 import random
 import sys
 import unittest
 
-from nfl.scrapers.msf import MySportsFeedsNFLScraper
+from nfl.msf import Scraper, Parser
+
 
 class TestMSFScraper(unittest.TestCase):
-
 
     @property
     def game(self):
@@ -22,7 +23,8 @@ class TestMSFScraper(unittest.TestCase):
 
     @property
     def season(self):
-        return 2016 #random.choice(range(2014, 2017))
+        # random.choice(range(2016, 2019))
+        return 2016
 
     @property
     def team(self):
@@ -33,13 +35,20 @@ class TestMSFScraper(unittest.TestCase):
         return random.choice(range(1, 18))
 
     def setUp(self):
-        self.s = MySportsFeedsNFLScraper(username='XXX', password='XXX', cache_name='test-msf-scraper')
+        self.s = Scraper(username=os.getenv('msf_user'),
+                         password=os.getenv('msf_password'),
+                         cache_name='test-msf-scraper')
+        self.p = Parser()
 
+    def test_credentials(self):
+        self.assertIsNotNone(os.getenv('msf_user'))
+        self.assertIsNotNone(os.getenv('msf_password'))
+
+    @unittest.skip
     def test_boxscore(self):
         # NOTE: this doesn't work with noncommercial account
-        #    content = self.s.boxscore(self.game, 2016)
-        #    self.assertIsInstance(content, dict)
-        pass
+        content = self.s.boxscore(self.game, 2016)
+        self.assertIsInstance(content, dict)
 
     def test_season_stats(self):
         content = self.s.season_stats()
@@ -47,6 +56,7 @@ class TestMSFScraper(unittest.TestCase):
         content = self.s.season_stats(self.season)
         self.assertIsInstance(content, dict)
 
+    @unittest.skip
     def test_schedule(self):
         content = self.s.schedule()
         self.assertIsInstance(content, dict)
@@ -55,5 +65,5 @@ class TestMSFScraper(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
     unittest.main()

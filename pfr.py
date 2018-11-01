@@ -4,12 +4,11 @@
 import copy
 import json
 import logging
-import os
 import re
+from pathlib import Path
 from string import ascii_uppercase
 
 from bs4 import BeautifulSoup
-
 from nflmisc.scraper import FootballScraper
 
 
@@ -117,7 +116,7 @@ class Scraper(FootballScraper):
             params = self._merge_params({'year_min': season_year, 'year_max': season_year, 'offset': offset})
         return self.get(self.pgl_finder_url, payload=params)
 
-    def player_fantasy_year(self, season_year, player_id):
+    def player_fantasy_season(self, season_year, player_id):
         '''
         Gets fantasy page for individual player
         
@@ -504,33 +503,32 @@ class Scraper(FootballScraper):
         return self.get(url, payload=params)
 
 
-class Parser():
+class Parser(object):
     '''
     '''
 
-    def __init__(self,**kwargs):
+    def __init__(self, **kwargs):
         '''
 
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-
     def _merge_team_tables(self, offense, passing, rushing):
         '''
         Takes 3 dictionaries (offense, passing, rushing), returns merged dictionary
         '''
-        
+
         teams = copy.deepcopy(offense)
 
         for t in offense:
             p = passing.get(t)
 
-        for k,v in p.items():
+        for k, v in p.items():
             teams[t][k] = v
 
             r = rushing.get(t)
 
-        for k,v in r.items():
+        for k, v in r.items():
             teams[t][k] = v
 
         return teams
@@ -567,7 +565,8 @@ class Parser():
                 p[tds[3]['data-stat']] = tds[3].text
                 p[tds[-2]['data-stat']] = tds[-2].text
                 try:
-                    # <td class="left " data-append-csv="RamcRy00" data-stat="player" csk="Ramczyk, Ryan"><a href="/players/R/RamcRy00.htm">Ryan Ramczyk</a></td>
+                    # <td class="left " data-append-csv="RamcRy00" data-stat="player" csk="Ramczyk,
+                    # Ryan"><a href="/players/R/RamcRy00.htm">Ryan Ramczyk</a></td>
                     p[tds[2]['data-stat']] = tds[2]['csk']
                     p['source_player_id'] = tds[2]['data-append-csv']
                 except:
@@ -640,7 +639,7 @@ class Parser():
         for p in soup.find_all('p'):
             if p.find('strong') and p.find('a', {'href': re.compile(r'/schools/')}):
                 player['college'] = p.find('a').text
-        
+
         # spans: height and weight and dob
         for sp in soup.find_all('span'):
             if sp.attrs.get('itemprop') == 'height':
@@ -655,10 +654,9 @@ class Parser():
                 except Exception as e:
                     print(e)
             elif sp.attrs.get('itemprop') == 'birthDate':
-                player['source_player_dob'] = sp.attrs.get('data-birth')     
+                player['source_player_dob'] = sp.attrs.get('data-birth')
 
         return player
-
 
     def players(self, content):
         '''
@@ -745,6 +743,29 @@ class Parser():
             player['source_player_id'] = pid
             player['source_player_name'] = a.text
             player['season_year'] = soup.find('h1').find('span').text
+            players.append(player)
+        return players
+
+    def playerstats_offense_weekly(self, content):
+        '''
+        Takes HTML of rows of weekly results, returns list of players
+
+        Args:
+            content (str): HTML
+
+        Returns:
+            list: of player dict
+
+        '''
+        players = []
+        soup = BeautifulSoup(content, 'lxml')
+        for tr in soup.find('table', {'id': 'results'}).find('tbody').findAll('tr', class_=None):
+            player = {td['data-stat']: td.text for td in tr.find_all('td')[1:]}
+            a = tr.find('a', {'href': re.compile(r'/players/')})
+            pid = a['href'].split('/')[-1].split('.htm')[0]
+            player['source_player_id'] = pid
+            player['source_player_name'] = a.text
+            player['season_year'] = soup.find('div', {'id': 'form_description'}).text.split(', ')[1].split()[1]
             players.append(player)
         return players
 
@@ -900,32 +921,31 @@ class Parser():
 
         return players
 
-
     def team_season(self, content, season):
         '''
         Takes HTML file of team stats during single season
         Returns dict, key is team_season, value is team
         '''
 
-        soup = BeautifulSoup(content, 'lxml')   
+        soup = BeautifulSoup(content, 'lxml')
         teams = {}
-    
+
         offense = soup.find('table', {'id': 'team_stats'}).find('tbody')
         for tr in offense.findAll('tr'):
             team = {'season': season}
-    
+
             for td in tr.findAll('td'):
                 val = td.text
-            
+
                 # fix team name - has newline and extra space
                 if '\n' in val:
                     val = ' '.join(val.split('\n'))
                     val = ' '.join(val.split())
-                
+
                 # column headers on page are duplicates (yds, td, etc.)    
                 # data-stat attribute has accurate column name (rush_yds)
                 team[td['data-stat']] = val
-        
+
             k = team['team'] + "_" + season
             teams[k] = team
         return teams
@@ -982,13 +1002,13 @@ class Agent(object):
         Returns:
 
         '''
-        import json
-        from pathlib import Path
-        from nfl.scrapers.pfr import PfrNFLScraper
-        from nfl.parsers.pfr import PfrNFLParser
+        # import json
+        # from pathlib import Path
+        # from nfl.scrapers.pfr import PfrNFLScraper
+        # from nfl.parsers.pfr import PfrNFLParser
 
-        pfrs = PfrNFLScraper(cache_name='pfrscraper')
-        pfrp = PfrNFLParser()
+        pfrs = Scraper(cache_name='pfrscraper')
+        pfrp = Parser()
 
         results = []
         for offset in range(0, 700, 100):

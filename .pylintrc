@@ -1,0 +1,8 @@
+[BASIC]
+
+# Good variable names which should always be accepted, separated by a comma
+good-names=i,j,k,ex,Run,_,logger,d,a,df,fn,n,s,v,e,x,l,b,d1,d2,db,q,p,pl
+
+# Bad variable names which should always be refused, separated by a comma
+bad-names=foo,bar,baz,toto,tutu,tata
+

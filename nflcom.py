@@ -2,22 +2,18 @@
 # nflcom.py
 # scraper and parser classes for nfl.com website
 
-import logging
+import re
 from string import ascii_uppercase
 
-import re
-
-from bs4 import BeautifulSoup, Comment
 import demjson
-
+from bs4 import BeautifulSoup, Comment
 from nfl.dates import convert_format
-from nfl.names import first_last_pair
 from nfl.utility import *
 from nflmisc.scraper import FootballScraper
+from playermatcher.name import first_last_pair
 
 
 class Scraper(FootballScraper):
-
 
     def game(self, gsis_id):
         '''
@@ -66,7 +62,7 @@ class Scraper(FootballScraper):
 
     def ol(self, season_year):
         '''
-        Parses a weekly page with reported player injuries
+        Parses a weekly page with offensive line information
 
         Args:
             week: int 1, 2, 3, etc.
@@ -76,16 +72,16 @@ class Scraper(FootballScraper):
         '''
         url = 'http://www.nfl.com/stats/categorystats?'
         params = {
-          'archive': 'true',
-          'conference': 'null',
-          'role': 'TM',
-          'offensiveStatisticCategory': 'OFFENSIVE_LINE',
-          'defensiveStatisticCategory': 'null',
-          'season': season_year,
-          'seasonType': 'REG',
-          'tabSeq': '2',
-          'qualified': 'false',
-          'Submit': 'Go'
+            'archive': 'true',
+            'conference': 'null',
+            'role': 'TM',
+            'offensiveStatisticCategory': 'OFFENSIVE_LINE',
+            'defensiveStatisticCategory': 'null',
+            'season': season_year,
+            'seasonType': 'REG',
+            'tabSeq': '2',
+            'qualified': 'false',
+            'Submit': 'Go'
         }
         return self.get(url, payload=params)
 
@@ -160,7 +156,7 @@ class Scraper(FootballScraper):
             content: HTML string
         '''
         url = 'http://www.nfl.com/schedules/{0}/REG{1}'
-        return self.get(url.format(season, week))
+        return self.get(url.format(season, week), encoding='ISO-8859-1')
 
     def score_week(self, season, week):
         '''
@@ -186,7 +182,6 @@ class Parser(object):
     def __init__(self):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-
     def _gamecenter_team(self, team):
         '''
         Parses home or away team into stats dictionary       
@@ -203,7 +198,6 @@ class Parser(object):
                     players[player_id] = {'player_id': player_id}
                     players[player_id][category] = player_stats
         return players
-
 
     def gamecenter(self, parsed):
         '''
@@ -223,7 +217,7 @@ class Parser(object):
         game_id = parsed.keys()[0]
         home_team_stats = self._gamecenter_team(parsed[game_id]['home']['stats'])
         away_team_stats = self._gamecenter_team(parsed[game_id]['away']['stats'])
-        return merge(dict(),[home_team_stats, away_team_stats])
+        return merge(dict(), [home_team_stats, away_team_stats])
 
     def game_page(self, content):
         '''
@@ -332,6 +326,8 @@ class Parser(object):
 
         Returns:
             list of dict
+
+        TODO: implement this method
         '''
         soup = BeautifulSoup(content, 'lxml')
 
@@ -407,7 +403,7 @@ class Parser(object):
         try:
             # paras[2]: height, weight, age
             parts = paras[2].text.split()
-            feet,inches = parts[1].split('-')
+            feet, inches = parts[1].split('-')
             player['height'] = int(digits(feet)) * 6 + int(digits(inches))
             player['weight'] = digits(parts[3])
             player['age'] = digits(parts[5])
@@ -549,12 +545,11 @@ class Agent(object):
         if scraper:
             self._s = scraper
         else:
-            self._s = NFLComScraper(cache_name=cache_name)
+            self._s = Scraper(cache_name=cache_name)
         if parser:
             self._p = parser
         else:
-            self._p = NFLComParser()
-
+            self._p = Parser()
 
     def week_games(self, season, week, savedir=None):
         '''
@@ -586,7 +581,6 @@ class Agent(object):
             logging.exception(e)
 
         return all_games
-
 
     def week_pages(self, seasons, weeks):
         '''

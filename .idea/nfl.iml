@@ -1,19 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/agents" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/db" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/optimizers" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/parsers" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/pipelines" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/player" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/scrapers" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/scripts" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="false" />
-    </content>
-    <orderEntry type="jdk" jdkName="Python 3.6 (nfl)" jdkType="Python SDK" />
+    <content url="file://$MODULE_DIR$" />
+    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="PackageRequirementsSettings">
+    <option name="requirementsPath" value="" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="myDocStringFormat" value="Google" />

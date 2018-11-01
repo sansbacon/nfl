@@ -1,33 +1,27 @@
 # -*- coding: utf-8 -*-
+# tests/test_dates.py
+# tests for nfl.dates module
 
-from __future__ import absolute_import, print_function, division
-
+import datetime
 import logging
-from string import ascii_uppercase
 import random
 import sys
 import unittest
 
-from nfl.scrapers.pfr import PfrNFLScraper
-from nfl.parsers.pfr import PfrNFLParser
+import nfl.dates as nd
 
 
-class Pfr_test(unittest.TestCase):
-
-    @property
-    def last_initial(self):
-        return random.choice(ascii_uppercase)
+class Dates_test(unittest.TestCase):
 
     @property
-    def offset(self):
-        return random.choice(range(0, 100, 200))
+    def dates(self):
+        _dates = ('2018-10-01', '10/1/2018', '1-2-2018')
+        return random.choice(_dates)
 
     @property
-    def player(self):
-        ids = ['PalmCa00', 'BreeDr00', 'RodgAa00', 'CousKi00', 'StafMa00', 'RivePh00',
-               'TaylTy00', 'CarrDe02', 'SmitAl03', 'BrowAn04', 'DaltAn00', 'FreeDe00',
-               'JoneJu02', 'RyanMa00', 'RoetBe00', 'PeteAd01', 'MarsBr00']
-        return random.choice(ids)
+    def sites(self):
+        _sites = ('fl', 'nfl', 'std', 'odd', 'db', 'bdy')
+        return random.choice(_sites)
 
     @property
     def seas(self):
@@ -37,127 +31,58 @@ class Pfr_test(unittest.TestCase):
     def week(self):
         return random.choice(range(1, 18))
 
-    def setUp(self):
-        self.s = PfrNFLScraper(cache_name='pfr-plays-query')
-        self.p = PfrNFLParser()
+    def test_convert_format(self):
+        d = self.dates
+        site = self.sites
+        self.assertIsNotNone(nd.convert_format(d, site))
 
-    def test_team_plays_query(self):
-        content = self.s.team_plays_query(season_start=2016, season_end=2016, offset=0)
-        self.assertIsNotNone(content)
-        self.assertRegexpMatches(content, r'html')
+    def test_date_list(self):
+        d1 = '2018-01-21'
+        d2 = '2018-01-12'
+        dl = nd.date_list(d1, d2)
+        self.assertIsNotNone(dl)
+        self.assertIsInstance(dl, list)
 
-    def test_draft(self):
-        content = self.s.draft(self.seas)
-        self.assertIsNotNone(content)
-        players = self.p.draft(content, self.seas)
-        self.assertIsNotNone(players)
-        player = random.choice(players)
-        self.assertIn('draft_year', player.keys())
+        d1 = datetime.datetime(2018, 1, 21)
+        d2 = datetime.datetime(2018, 1, 12)
+        dl = nd.date_list(d1, d2)
+        self.assertIsNotNone(dl)
+        self.assertIsInstance(dl, list)
 
-    def test_fantasy_season(self):
-        content = self.s.fantasy_season(self.seas)
-        self.assertIsNotNone(content)
-        self.assertIn('Bell', content)
+        d1 = datetime.datetime(2018, 1, 21)
+        d2 = datetime.datetime(2018, 1, 12)
+        self.assertEqual(nd.date_list(d2, d1), [])
 
-    def test_fantasy_week(self):
-        content = self.s.fantasy_week(self.seas, 9)
-        self.assertIsNotNone(content)
-        self.assertIn('Bell', content)
+    def test_datetostr(self):
+        d = datetime.datetime.now()
+        s = self.sites
+        self.assertIsNotNone(nd.datetostr(d, s))
 
-    def test_players(self):
-        content = self.s.players(self.last_initial)
-        self.assertIsNotNone(content)
+        s = 'nfl'
+        dstr = nd.datetostr(d, s)
+        self.assertEqual(dstr[0:4], str(d.year))
 
-    def test_playerstats_fantasy_weekly(self):
-        content = self.s.playerstats_fantasy_weekly(self.seas, self.week, self.offset)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
+    def test_format_type(self):
+        d = self.dates
+        self.assertIsNotNone(nd.format_type(d))
+        d = '2018-01-01'
+        self.assertEqual(nd.format_type(d), '%Y-%m-%d')
+        d = '2018_1_2'
+        self.assertIsNone(nd.format_type(d))
 
-    def test_playerstats_fantasy_yearly(self):
-        content = self.s.playerstats_fantasy_yearly(self.seas, self.offset)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
+    def test_site_format(self):
+        self.assertEqual('%m-%d-%Y', nd.site_format('std'))
+        self.assertEqual('%Y-%m-%d', nd.site_format('nfl'))
 
-    def test_player_fantasy_year(self):
-        content = self.s.player_fantasy_year(self.seas, self.player)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
+    def test_strtodate(self):
+        self.assertIsInstance(nd.strtodate(self.dates), datetime.datetime)
 
-    def test_playerstats_offense_weekly(self):
-        content = self.s.playerstats_offense_weekly(self.seas, self.week, self.offset)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
+    def test_subtract_datestr(self):
+        d1 = nd.datetostr(datetime.datetime.now(), 'nfl')
+        d2 = self.dates
+        self.assertGreaterEqual(nd.subtract_datestr(d1, d2), 0)
 
-    def test_playerstats_offense_yearly(self):
-        content = self.s.playerstats_offense_yearly(self.seas, self.offset)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
 
-    def test_playerstats_passing_weekly(self):
-        content = self.s.playerstats_offense_weekly(self.seas, self.week, self.offset)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
-
-    def test_playerstats_passing_yearly(self):
-        content = self.s.playerstats_passing_yearly(self.seas, self.offset)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
-
-    def test_playerstats_receiving_weekly(self):
-        content = self.s.playerstats_receiving_weekly(self.seas, self.week, self.offset)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
-
-    def test_playerstats_receiving_yearly(self):
-        content = self.s.playerstats_receiving_yearly(self.seas, self.offset)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
-
-    def test_playerstats_rushing_weekly(self):
-        content = self.s.playerstats_rushing_weekly(self.seas, self.week, self.offset)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
-
-    def test_playerstats_rushing_yearly(self):
-        content = self.s.playerstats_rushing_yearly(self.seas, self.offset)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
-
-    def test_players(self):
-        content = self.s.players(self.last_initial)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
-
-    def test_team_plays_query(self):
-        ## (self, season_start, season_end, offset):
-        season = self.seas
-        content = self.s.team_plays_query(season, season, self.offset)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
-
-    def test_team_passing_weekly(self):
-        season = self.seas
-        content = self.s.team_passing_weekly(season, season, self.week)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
-
-    def test_team_defense_yearly(self):
-        content = self.s.team_passing_weekly(self.season)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
-
-    def test_team_defense_weekly(self):
-        season = self.seas
-        content = self.s.team_defense_weekly(season, season, self.week)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
-
-    def test_team_offense_weekly(self):
-        season = self.seas
-        content = self.s.team_offense_weekly(season, season, self.week)
-        self.assertIsNotNone(content)
-        self.assertNotIn('404 error', content)
-
-if __name__=='__main__':
+if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     unittest.main()

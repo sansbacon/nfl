@@ -8,81 +8,71 @@ import random
 import sys
 import unittest
 
-import nfl.dates as nd
+import nfl.seasons as ns
 
 
-class Dates_test(unittest.TestCase):
-
-    @property
-    def dates(self):
-        _dates = ('2018-10-01', '10/1/2018', '1-2-2018')
-        return random.choice(_dates)
-
-    @property
-    def sites(self):
-        _sites = ('fl', 'nfl', 'std', 'odd', 'db', 'bdy')
-        return random.choice(_sites)
+class Seasons_test(unittest.TestCase):
 
     @property
     def seas(self):
-        return random.choice(range(2002, 2017))
+        return random.choice(range(2009, 2017))
 
     @property
     def week(self):
         return random.choice(range(1, 18))
 
-    def test_convert_format(self):
-        d = self.dates
-        site = self.sites
-        self.assertIsNotNone(nd.convert_format(d, site))
+    def test_all_seasons(self):
+        seas = ns.all_seasons()
+        self.assertIsInstance(seas, dict)
+        self.assertIn(self.seas, seas.keys())
 
-    def test_date_list(self):
-        d1 = '2018-01-21'
-        d2 = '2018-01-12'
-        dl = nd.date_list(d1, d2)
-        self.assertIsNotNone(dl)
-        self.assertIsInstance(dl, list)
+    def test_current_season_year(self):
+        y = ns.current_season_year()
+        self.assertLessEqual(y, datetime.datetime.now().year)
 
-        d1 = datetime.datetime(2018, 1, 21)
-        d2 = datetime.datetime(2018, 1, 12)
-        dl = nd.date_list(d1, d2)
-        self.assertIsNotNone(dl)
-        self.assertIsInstance(dl, list)
+    def test_fantasylabs_week(self):
+        y = self.seas
+        w = self.week
+        self.assertIsNotNone(ns.fantasylabs_week(y, w))
+        self.assertIn('-', ns.fantasylabs_week(y, w))
 
-        d1 = datetime.datetime(2018, 1, 21)
-        d2 = datetime.datetime(2018, 1, 12)
-        self.assertEqual(nd.date_list(d2, d1), [])
+    def test_get_season(self):
+        s = ns.get_season(self.seas)
+        self.assertIsInstance(s, dict)
 
-    def test_datetostr(self):
-        d = datetime.datetime.now()
-        s = self.sites
-        self.assertIsNotNone(nd.datetostr(d, s))
+    def test_season_week(self):
+        d = datetime.datetime.now().date()
+        self.assertIsInstance(ns.season_week(d), dict)
 
-        s = 'nfl'
-        dstr = nd.datetostr(d, s)
-        self.assertEqual(dstr[0:4], str(d.year))
+        d = datetime.datetime(2018, 10, 13).date()
+        sw = ns.season_week(d)
+        self.assertEqual(sw['season'], 2018)
+        self.assertEqual(sw['week'], 6)
 
-    def test_format_type(self):
-        d = self.dates
-        self.assertIsNotNone(nd.format_type(d))
-        d = '2018-01-01'
-        self.assertEqual(nd.format_type(d), '%Y-%m-%d')
-        d = '2018_1_2'
-        self.assertIsNone(nd.format_type(d))
+        d = datetime.datetime(2018, 1, 1).date()
+        sw = ns.season_week(d)
+        self.assertEqual(sw['season'], 2017)
+        self.assertEqual(sw['week'], 17)
 
-    def test_site_format(self):
-        self.assertEqual('%m-%d-%Y', nd.site_format('std'))
-        self.assertEqual('%Y-%m-%d', nd.site_format('nfl'))
+    def test_week_end(self):
+        y = self.seas
+        w = self.week
+        self.assertIsInstance(ns.week_end(y, w), datetime.date)
 
-    def test_strtodate(self):
-        self.assertIsInstance(nd.strtodate(self.dates), datetime.datetime)
+        y = 2018
+        w = 5
+        self.assertLess(ns.week_end(y, w), datetime.datetime.now().date())
 
-    def test_subtract_datestr(self):
-        d1 = nd.datetostr(datetime.datetime.now(), 'nfl')
-        d2 = self.dates
-        self.assertGreaterEqual(nd.subtract_datestr(d1, d2), 0)
+    def test_week_start(self):
+        y = self.seas
+        w = self.week
+        self.assertIsInstance(ns.week_start(y, w), datetime.date)
+
+        y = 2018
+        w = 5
+        self.assertLess(ns.week_start(y, w), datetime.datetime.now().date())
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     unittest.main()

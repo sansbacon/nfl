@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import pprint
 import random
 import sys
 import unittest
 
-from nfl.scrapers.espn import ESPNNFLScraper
-from nfl.parsers.espn import ESPNNFLParser
+import nfl.espn as ne
 from nfl.teams import espn_teams
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -17,6 +15,7 @@ class ESPN_test(unittest.TestCase):
     '''
     Tests nfldotcom scraper and parser
     '''
+
     def offset(self, pos):
         if pos == 'k':
             return 0
@@ -27,7 +26,7 @@ class ESPN_test(unittest.TestCase):
 
     @property
     def pos(self):
-        return random.choice(['qb', 'rb', 'wr', 'k', 'te'])
+        return random.choice(['qb', 'rb', 'wr', 'te'])
 
     @property
     def season(self):
@@ -38,10 +37,9 @@ class ESPN_test(unittest.TestCase):
         return random.choice(espn_teams())
 
     def setUp(self):
-        self.s = ESPNNFLScraper(cache_name='test-espn-scraper')
-        self.p = ESPNNFLParser()
+        self.s = ne.Scraper(cache_name='test-espn-scraper')
+        self.p = ne.Parser()
 
-    @unittest.skip
     def test_adp(self):
         pos = self.pos
         content = self.s.adp(pos)
@@ -50,7 +48,6 @@ class ESPN_test(unittest.TestCase):
         self.assertIsNotNone(players)
         self.assertGreaterEqual(len(players), 10)
 
-    @unittest.skip
     def test_players_position(self):
         pos = self.pos
         content = self.s.players_position(pos)
@@ -65,14 +62,10 @@ class ESPN_test(unittest.TestCase):
         pos = self.pos
         content = self.s.projections(pos, season_year=self.season, offset=self.offset(pos))
         self.assertIn('PLAYERS', content)
-        #self.assertRaises(ValueError, lambda: self.s.projections('nyk', 40))
-        #self.assertRaises(ValueError, lambda: self.s.projections(pos, 500))
         players = self.p.projections(content, pos)
         self.assertIsNotNone(players)
         self.assertIsInstance(players, list)
-        logging.info(pprint.pformat(players))
 
-    @unittest.skip
     def test_team_roster(self):
         content = self.s.team_roster(self.team)
         self.assertIn('Roster', content)
@@ -80,6 +73,34 @@ class ESPN_test(unittest.TestCase):
         self.assertIsNotNone(players)
         self.assertIsInstance(players, list)
 
+    def test_fantasy_players_team(self):
+        tm = self.team
+        content = self.s.fantasy_players_team(random.randint(1, 32))
+        self.assertIsNotNone(content)
+        self.assertIsNotNone(self.p.fantasy_players_team(content))
 
-if __name__=='__main__':
+    def test_watson(self):
+        pid = 14012
+        content = self.s.watson(pid)
+        self.assertIsInstance(self.p.watson(content), dict)
+
+    def test_watson_players(self):
+        content = self.s.watson_players()
+        self.assertGreater(len(self.p.watson_players(content)), 0)
+
+    def test_weekly_scoring(self):
+        content = self.s.weekly_scoring(self.season, 1, self.pos)
+        self.assertIsInstance(self.p.weekly_scoring(content), list)
+
+    def test_weekly_scoring_dst(self):
+        content = self.s.weekly_scoring(self.season, 1, 'dst')
+        self.assertIsInstance(self.p.weekly_scoring_dst(content), list)
+
+    def test_weekly_scoring_k(self):
+        content = self.s.weekly_scoring(self.season, 1, 'k')
+        self.assertIsInstance(self.p.weekly_scoring_k(content), list)
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
     unittest.main()

@@ -15,6 +15,7 @@ class Scraper(FootballScraper):
     
     TODO: change these to params instead of query strings
     '''
+
     @property
     def base_url(self):
         return 'https://www.playerprofiler.com/wp-admin/admin-ajax.php?'
@@ -51,7 +52,8 @@ class Scraper(FootballScraper):
         '''
         Gets current season, dynasty, and weekly rankings from playerprofiler
         '''
-        url = 'https://www.playerprofiler.com/wp-admin/admin-ajax.php?action=playerprofiler_api&endpoint=%2Fplayer-rankings'
+        url = 'https://www.playerprofiler.com/wp-admin/admin-ajax.php?action=playerprofiler_api&endpoint=%2Fplayer' \
+              '-rankings'
         return self.get_json(url)
 
 
@@ -62,7 +64,6 @@ class Parser(object):
 
     def __init__(self):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-
 
     def player_college_performance(self, data):
         '''
@@ -83,7 +84,7 @@ class Parser(object):
                       'College YPR Rank': 'college_ypr_rank', 'Breakout Age': 'breakout_age',
                       'College Target Share': 'college_target_share', 'Breakout Age Rank': 'breakout_age_rank',
                       'College Dominator Rating': 'college_dominator_rating'}
-        cp = {cp_mapping[k]: v for k,v in data['College Performance'].items()if k in cp_mapping.keys()}
+        cp = {cp_mapping[k]: v for k, v in data['College Performance'].items() if k in cp_mapping.keys()}
         context.update(cp)
         return context
 
@@ -101,11 +102,14 @@ class Parser(object):
         player = {'site': 'playerprofiler', 'site_player_id': data['Player_ID']}
         context.update(player)
         core_mapping = {'ADP': 'adp', 'ADP Trend': 'adp_trend', 'ADP Year': 'adp_year', 'Height': 'height',
-                   'Height (Inches)': 'height_inches', 'Weight': 'weight', 'Weight Raw': 'weight_raw', 'BMI': 'bmi',
-                   'BMI Rank': 'bmi_rank', 'Hand Size': 'hand_size', 'Hand Size Rank': 'hand_size_rank',
-                   'Arm Length': 'arm_length', 'Arm Length Rank': 'arm_length_rank', 'College': 'college',
-                   'Draft Year': 'draft_year', 'Draft Pick': 'draft_pick', 'Birth Date': 'birth_date', 'Age': 'age',
-                   'Quality Score': 'quality_score', 'Quality Score Rank': 'quality_score_rank', 'Position': 'position'}
+                        'Height (Inches)': 'height_inches', 'Weight': 'weight', 'Weight Raw': 'weight_raw',
+                        'BMI': 'bmi',
+                        'BMI Rank': 'bmi_rank', 'Hand Size': 'hand_size', 'Hand Size Rank': 'hand_size_rank',
+                        'Arm Length': 'arm_length', 'Arm Length Rank': 'arm_length_rank', 'College': 'college',
+                        'Draft Year': 'draft_year', 'Draft Pick': 'draft_pick', 'Birth Date': 'birth_date',
+                        'Age': 'age',
+                        'Quality Score': 'quality_score', 'Quality Score Rank': 'quality_score_rank',
+                        'Position': 'position'}
         core = {core_mapping[k]: v for k, v in data['Core'].items() if k in core_mapping.keys()}
         context.update(core)
 
@@ -155,7 +159,8 @@ class Parser(object):
         for seas, seaslog in data['Game Logs'].items():
             for week, log in seaslog.items():
                 context = {}
-                player = {'season_year': seas, 'week': week, 'site': 'playerprofiler', 'site_player_id': data['Player_ID']}
+                player = {'season_year': seas, 'week': week, 'site': 'playerprofiler',
+                          'site_player_id': data['Player_ID']}
                 context.update(player)
                 gl = {gl_mapping[k]: v for k, v in log.items() if k in gl_mapping.keys()}
                 context.update(gl)
@@ -309,7 +314,9 @@ class Parser(object):
             logging.exception('could not load content: {}'.format(e))
 
         if data:
-            return [{'site': 'playerprofiler', 'site_player_name': p.get('Full Name'), 'site_player_id': p.get('Player_ID')} for p in data['data']['Players']]
+            return [
+                {'site': 'playerprofiler', 'site_player_name': p.get('Full Name'), 'site_player_id': p.get('Player_ID')}
+                for p in data['data']['Players']]
         else:
             return None
 

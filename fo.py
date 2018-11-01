@@ -3,13 +3,11 @@
 # classes to scrape and parse footballoutsiders.com
 
 from bs4 import BeautifulSoup
-from requests_html import HTML
-
 from nflmisc.scraper import FootballScraper
+from requests_html import HTML
 
 
 class Scraper(FootballScraper):
-
 
     def dl(self, season=''):
         '''
@@ -68,15 +66,15 @@ class Scraper(FootballScraper):
 
     def snapcounts(self, season_year, week, pos):
         '''
-        
+
         Args:
-            season: 
-            week: 
-            pos: 
+            season:
+            week:
+            pos:
 
         Returns:
             str: HTML page
-            
+
         '''
         url = 'https://www.footballoutsiders.com/stats/snapcounts'
         params = {
@@ -120,7 +118,8 @@ class Scraper(FootballScraper):
             HTML string
         '''
         url = 'http://www.footballoutsiders.com/stats/snapcounts'
-        payload = {'team': 'ALL', 'week': week, 'pos': 'ALL', 'year': year, 'Submit': 'Submit'}
+        payload = {'team': 'ALL', 'week': week, 'pos': 'ALL',
+                   'year': year, 'Submit': 'Submit'}
         return self.post(url, payload)
 
     def team_defense(self, season=''):
@@ -156,7 +155,8 @@ class Scraper(FootballScraper):
 
 class APIScraper(FootballScraper):
 
-    def __init__(self, headers=None, cookies=None, cache_name='fo-api', delay=1, expire_hours=168, as_string=False):
+    def __init__(self, headers=None, cookies=None, cache_name='fo-api',
+                 delay=1, expire_hours=168, as_string=False):
         '''
         Scrape FO API
 
@@ -180,8 +180,12 @@ class APIScraper(FootballScraper):
                     pass
 
         if not headers:
-            headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-                       'Referer': 'http://www.footballoutsiders.com/premium/index.php', 'DNT': '1'}
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
+                              '(KHTML, like Gecko) '
+                              'Chrome/55.0.2883.87 Safari/537.36',
+                'Referer': 'http://www.footballoutsiders.com/premium/index.php',
+                'DNT': '1'}
 
         FootballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name,
                                  delay=delay, expire_hours=expire_hours, as_string=as_string)
@@ -193,7 +197,8 @@ class APIScraper(FootballScraper):
         Returns:
             HTML string
         '''
-        url = 'http://www.footballoutsiders.com/premium/weekTeamSeasonDvoa.php?od=O&year={}&team=ARI&week={}'
+        url = ('http://www.footballoutsiders.com/premium/weekTeamSeasonDvoa.php?'
+              'od=O&year={}&team=ARI&week={}')
         return self.get(url.format(season, week))
 
     def team_season(self, season, team):
@@ -271,7 +276,7 @@ class Parser(object):
         '''
 
         Args:
-            content: 
+            content:
 
         Returns:
 
@@ -280,10 +285,11 @@ class Parser(object):
         soup = BeautifulSoup(content, 'lxml')
 
         if offdef == 'off':
-            #headers = ['team', 'team_net', 'yds_dr_net', 'pts_dr_net', 'dsr_off', 'yds_dr_off',
+            # headers = ['team', 'team_net', 'yds_dr_net', 'pts_dr_net', 'dsr_off', 'yds_dr_off',
             #           'yds_dr_off', 'pts_dr_off', 'dsr_def', 'yds_dr_def', 'pts_dr_def', 'dsr']
             headers = [['team', 'drives', 'yds_dr', 'pts_dr', 'tov_dr', 'int_dr', 'fum_dr', 'los_dr',
-                       'plays_dr', 'top_dr', 'dsr'], ['team', 'drives', 'tds_dr', 'fg_dr', 'punts_dr', 'tao_dr', 'los_ko', 'td_fg',
+                        'plays_dr', 'top_dr', 'dsr'],
+                       ['team', 'drives', 'tds_dr', 'fg_dr', 'punts_dr', 'tao_dr', 'los_ko', 'td_fg',
                         'pts_rz', 'tds_rz', 'avg_lead']]
         elif offdef == 'def':
             headers = []
@@ -307,9 +313,9 @@ class Parser(object):
 
     def ol(self, content, season_year):
         '''
-        
+
         Args:
-            content: 
+            content:
 
         Returns:
 
@@ -358,9 +364,9 @@ class Parser(object):
 
     def qb(self, content):
         '''
-        TODO: fix headers        
+        TODO: fix headers
         Args:
-            content: 
+            content:
 
         Returns:
 
@@ -373,20 +379,20 @@ class Parser(object):
         # skip first line
         for tr in soup.select('table.stats tr')[1:]:
             pass
-            # Player	Team	DYAR	Rk	YAR	Rk	DVOA	Rk	VOA	QBR	Rk	Pass	Yards	EYds	TD	FK	FL	INT	C%	DPI	ALEX
-
+            # Player	Team	DYAR	Rk	YAR	Rk	DVOA	Rk	VOA	QBR	Rk	Pass	Yards	EYds	TD	FK	FL	INT
+            # C%	DPI	ALEX
 
     def snapcounts(self, content, season_year=None, week=None):
         '''
-        
+
         Args:
-            content (str): HTML from snapcounts page 
+            content (str): HTML from snapcounts page
             season_year (int): 2017, etc.
             week (int): 1, 2, etc.
 
         Returns:
             list: of dict
-            
+
         '''
         results = []
         doc = HTML(html=content)
@@ -423,5 +429,5 @@ class Agent(object):
         return players
 
 
-if __name__ == '__main__':    
+if __name__ == '__main__':
     pass
