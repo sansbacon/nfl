@@ -592,5 +592,20 @@ def url_quote(s):
     return quote(s)
 
 
+def valornone(val):
+    '''
+
+    Args:
+        val:
+
+    Returns:
+
+    '''
+    if val == '':
+        return None
+    else:
+        return val
+
+
 if __name__ == '__main__':
     pass

@@ -1,28 +1,35 @@
+#!/usr/bin/env python3
 # nfl/pgf.py
 # interactive search of player_game_finder
 
 from cmd import Cmd
 import itertools
+import json
 import logging
-import time
+import os
+import inspect
+from pathlib import Path
 
 import pandas as pd
 
 from nfl.pfr import Scraper, Parser
+from nfl.utility import flatten_list
 
-class MyPrompt(Cmd):
+
+class PlayerGameFinder(Cmd):
 
     prompt = 'player_game_finder> '
     intro = 'Welcome to Player Game Finder! Type ? to list commands'
 
     def __init__(self):
-        super(MyPrompt, self).__init__()
+        super(PlayerGameFinder, self).__init__()
         self._s = Scraper('pgf')
         self._p = Parser()
-        self.logger = logging.getLogger('__name__')
         self.opp = None
         self.pos = None
+        self.sort_key = None
         self.thresh = 0
+        self.data = None
 
     @property
     def positions(self):
@@ -41,12 +48,55 @@ class MyPrompt(Cmd):
     def valid_tc(self, tc):
         return tc in self.team_codes
 
+    def do_load(self, inp):
+        '''
+
+        Args:
+            inp:
+
+        Returns:
+
+        '''
+        pth = Path(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
+        with open (str(pth / 'data' / 'pgf.json'), 'r') as f:
+            self.data = json.load(f)
+
+    def help_load(self):
+        msg = '\nLoads data from json file\n'
+        print(msg)
+        return msg
+
+    def do_sort(self, inp):
+        self.sort_key = inp
+
+    def help_sort(self):
+        msg = '\nSets sort key for dataframe\n'
+        print(msg)
+        return msg
+
     def do_exit(self, inp):
         print('Bye')
         return True
 
     def help_exit(self):
         print('exit the application. Shorthand: x q Ctrl-D.')
+
+    def _conv_col(self, v):
+        '''
+        Converts value to float or zero
+
+        Args:
+            v:
+
+        Returns:
+            float
+
+        '''
+        try:
+            v = float(v)
+        except:
+            v = 0.0
+        return v
 
     def _dump_search(self, df, pos):
         '''
@@ -56,49 +106,64 @@ class MyPrompt(Cmd):
         if pos == 'QB':
             cols = []
             for col in ['player', 'pos', 'week_num', 'team', 'pass_att', 'pass_cmp',
-                        'pass_yds', 'pass_td', 'draftkings_points']:
+                        'pass_yds', 'pass_td', 'rush_att', 'rush_yds', 'rush_td', 'draftkings_points']:
                 if col in df.columns:
                     cols.append(col)
         elif pos in ['RB', 'WR', 'TE']:
             cols = []
-            for col in ['player', 'pos', 'week_num', 'team', 'targets' 'rec', 'rec_yds', 'rec_td',
-                        'rush_att', 'rush_yds', 'rush_tds', 'draftkings_points']:
+            for col in ['player', 'pos', 'week_num', 'team', 'targets', 'rec', 'rec_yds', 'rec_td',
+                        'rush_att', 'rush_yds', 'rush_td', 'draftkings_points']:
                 if col in df.columns:
                     cols.append(col)
         else:
             cols = df.columns
-        df = df.dropna(axis=0, how='all')
-        print(df[cols])
 
-    def _try_search(self, params):
-        content = self._s.player_game_finder(params)
-        vals = self._p.player_game_finder(content)
-        return pd.DataFrame(vals)
+        df.dropna(axis=0, how='all', inplace=True)
+        df.drop_duplicates(subset=['player', 'week_num', 'team'], keep='first', inplace=True)
+
+        try:
+            dfr = df[cols].copy()
+            dfr.rename(columns={'week_num': 'week', 'draftkings_points': 'dkpts'},
+                       inplace=True)
+            dfr['dkpts'] = dfr['dkpts'].apply(lambda x: self._conv_col(x))
+            dfr = dfr.query('dkpts >= 1')
+            if self.sort_key in ['dkpts', 'draftkings_points', 'points', 'pts']:
+                print(dfr.sort_values('dkpts', ascending=False))
+            else:
+                print(dfr)
+        except Exception as e:
+            print(e)
+        return df
 
     def do_search(self, inp):
         if '|' in inp:
             params = dict(itertools.zip_longest(*[iter(inp.split('|'))] * 2, fillvalue=''))
         else:
             params = {'opp_id': self.opp, 'pos[]': self.pos.upper(), 'c2val': str(self.thresh)}
+        if self.data:
+            key = params['opp_id'] + '_' + params['pos{}']
+            vals = flatten_list([v for k,v in self.data.items if key in k])
+        else:
+            try:
+                content = self._s.player_game_finder(params)
+                vals = self._p.player_game_finder(content)
+            except Exception as e:
+                print(e)
+                print(self._s.urls[-1])
         try:
-            df = self._try_search(params)
+            df = pd.DataFrame(vals)
             self._dump_search(df, self.pos)
         except:
-            print('trying search again')
-            time.sleep(2)
-            try:
-                df = self._try_search(params)
-                self._dump_search(df, self.pos)
-                return
-            except:
-                print(self._s.urls[-1])
-        return None
+            pass
+        finally:
+            return None
 
     def help_search(self):
         msg = ('Searches pfr for positional results vs. team',
                'Can use opp, pos, and thresh and pass no parameters',
                'Or can pass parameters as pipe-delimited string, e.g. opp|car|pos[]|QB')
         print('\n', '\n'.join(msg), '\n')
+        return msg
 
     def do_merge(self, inp):
         params = dict(itertools.zip_longest(*[iter(inp.split('|'))] * 2, fillvalue=''))
@@ -107,6 +172,7 @@ class MyPrompt(Cmd):
     def help_merge(self):
         msg = ('Shows dict output of pipe-delimited string, e.g. opp|car|pos[]|QB')
         print('\n', msg, '\n')
+        return msg
 
     def do_opp(self, inp):
         tc = inp.lower()
@@ -120,6 +186,7 @@ class MyPrompt(Cmd):
     def help_opp(self):
         msg = ('Sets opponent or shows valid opponents, e.g. car')
         print('\n', msg, '\n')
+        return msg
 
     def do_pos(self, inp):
         pos = inp.upper()
@@ -133,6 +200,7 @@ class MyPrompt(Cmd):
     def help_pos(self):
         msg = ('Sets position or shows valid positions, e.g. QB')
         print('\n', msg, '\n')
+        return msg
 
     def do_thresh(self, inp):
         try:
@@ -144,6 +212,7 @@ class MyPrompt(Cmd):
     def help_thresh(self):
         msg = ('Sets threshold fantasy points to display player, e.g. 5')
         print('\n', msg, '\n')
+        return msg
 
     def do_settings(self, inp):
         print(self.__dict__)
@@ -151,10 +220,17 @@ class MyPrompt(Cmd):
     def help_settings(self):
         msg =  'Shows current settings, such as opp, pos, and thresh'
         print('\n', msg, '\n')
+        return msg
 
     do_EOF = do_exit
     help_EOF = help_exit
 
 
 if __name__ == '__main__':
-    MyPrompt().cmdloop()
+    logger = logging.getLogger(__name__)
+    hdlr = logging.FileHandler('/tmp/pgf.log')
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.ERROR)
+    PlayerGameFinder().cmdloop()

@@ -70,6 +70,60 @@ def get_season(year):
     return nfl.seasonsdata.SEASONS.get(year)
 
 
+def salary_week(dtobj=None):
+    '''
+    Takes date and figures out season and upcoming week.
+
+    Arguments:
+        dtobj(datetime.date): the day of the game, default today
+
+    Returns:
+        tuple: int, int
+        
+    '''
+    if not dtobj:
+        dtobj = datetime.datetime.now().date()
+    elif isinstance(dtobj, datetime.datetime):
+        dtobj = dtobj.date()
+        
+    # get the year and month
+    # infer which season based on these
+    year = dtobj.year
+    month = dtobj.month
+
+    # year is 1 above season if january/february
+    if month < 3:
+        seas_year = year - 1
+    else:
+        seas_year = year
+
+    # guess the week to start with
+    guess_week = 1
+    season = get_season(seas_year)
+    if month < 3:
+        guess_week = 15
+    elif month == 10:
+        guess_week = 2
+    elif month == 11:
+        guess_week = 6
+    elif month == 12:
+        guess_week = 10
+
+    # loop from guess
+    for week in range(guess_week, 18):
+        seas_week = season.get(week)
+        start = seas_week.get('start')
+        end = seas_week.get('end')
+        if start <= dtobj <= end:
+            # we want to get the upcoming week, 
+            # so if we are on a sunday or monday, 
+            # will add 1 to week
+            if dtobj.weekday() in [0, 6]:
+                return seas_year, week + 1
+            return seas_year, week
+    return None
+
+
 def season_week(dtobj):
     '''
     Takes date and figures out season and week

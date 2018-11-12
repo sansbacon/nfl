@@ -38,6 +38,12 @@ class Pfr_test(unittest.TestCase):
         self.s = pfr.Scraper(cache_name='pfr-plays-query')
         self.p = pfr.Parser()
 
+    def test_player_game_finder(self):
+        params = {'opp_id': 'car', 'pos[]': 'RB'}
+        content = self.s.player_game_finder(params)
+        players = self.p.player_game_finder(content)
+        self.assertGreater(len(players), 0, 'should have some players')
+
     def test_team_plays_query(self):
         content = self.s.team_plays_query(season_start=2016, season_end=2016, offset=0)
         self.assertNotIn('404 error', content)
@@ -155,7 +161,6 @@ class Pfr_test(unittest.TestCase):
         content = self.s.team_offense_weekly(season, season, self.week)
         self.assertGreater(len(self.p.team_offense_weekly(content)), 0)
         self.assertNotIn('404 error', content)
-
 
 if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)

@@ -10,6 +10,7 @@ from string import ascii_uppercase
 
 from bs4 import BeautifulSoup
 from nflmisc.scraper import FootballScraper
+from nfl.utility import dict_to_qs, merge_two
 
 
 class Scraper(FootballScraper):
@@ -59,19 +60,20 @@ class Scraper(FootballScraper):
                  'year_max': '2018',
                  'year_min': '2018'}
 
-    def _merge_pgl_params(self, params):
+    def pgl_url(self, params):
         '''
-        Creates merged set of params, where params overwrites defaults
+        Forms search URL with query string
 
         Args:
-            params: dict
+            params(dict):
 
         Returns:
-            dict
+            str: URL with query string
+
         '''
-        context = self.pgl_params.copy()
-        context.update(params)
-        return context
+        qs = dict_to_qs(merge_two(self.pgl_params, params))
+        url = self.pgl_finder_url + qs
+        return url
 
     def draft(self, season_year):
         '''
@@ -86,7 +88,6 @@ class Scraper(FootballScraper):
         url = 'http://www.pro-football-reference.com/years/{season_year}/draft.htm'
         return self.get(url.format(season_year=season_year))
 
-
     def player_game_finder(self, params):
         '''
         Gets matching player games
@@ -98,8 +99,7 @@ class Scraper(FootballScraper):
             str
 
         '''
-        mparams = self._merge_pgl_params(params)
-        return self.get(self.pgl_finder_url, payload=mparams)
+        return self.get(self.pgl_url(params))
 
     def playerstats_fantasy_weekly(self, season_year, week, pos=None, offset=0):
         '''
@@ -647,11 +647,11 @@ class Parser(object):
         players = []
         soup = BeautifulSoup(content, 'lxml')
         for tr in soup.find('table', {'id': 'results'}).find('tbody').find_all('tr'):
-            player = {td['data-stat']: td.text for td in tr.find_all('td')}
-            try:
-                player['source_player_id'] = tr.find('td').attrs.get('data-append-csv')
-            except AttributeError as ae:
-                logging.exception(ae)
+            tds = tr.find_all('td')
+            if tds:
+                player = {td['data-stat']: td.text for td in tds}
+                if tds[0].has_attr('data-append-csv'):
+                    player['source_player_id'] = tds[0].attrs.get('data-append-csv')
             players.append(player)
         return players
 
