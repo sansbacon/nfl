@@ -1,6 +1,0 @@
-
-from nflmisc.nflpg import NFLPostgres; from nfl.utility import *; db = getdb()
-import logging; logger = logging.getLogger(); logger.setLevel(logging.INFO)
-l = [1, 2]
-[item for sublist in l for item in sublist]
-exit()
