@@ -40,6 +40,7 @@ class TestMSFScraper(unittest.TestCase):
                          cache_name='test-msf-scraper')
         self.p = Parser()
 
+    @unittest.skip
     def test_credentials(self):
         self.assertIsNotNone(os.getenv('msf_user'))
         self.assertIsNotNone(os.getenv('msf_password'))
@@ -50,6 +51,7 @@ class TestMSFScraper(unittest.TestCase):
         content = self.s.boxscore(self.game, 2016)
         self.assertIsInstance(content, dict)
 
+    @unittest.skip
     def test_season_stats(self):
         content = self.s.season_stats()
         self.assertIsInstance(content, dict)

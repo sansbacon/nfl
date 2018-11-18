@@ -502,6 +502,8 @@ class Parser():
             try:
                 player = {'source': 'espn'}
                 tds = row.find_all('td')
+                if len(tds) != 8:
+                    continue
                 player['source_player_position'] = tds[2].text
                 player['source_player_name'] = link.text
                 player['source_player_id'] = link['href'].split('/')[-2]

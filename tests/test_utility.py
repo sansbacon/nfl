@@ -63,7 +63,7 @@ class Utility_test(unittest.TestCase):
 
     def test_qs_to_dict(self):
         qs = 'https://www.google.com?a=1&b=2'
-        d = {'a': ['1'], 'b': ['2']}
+        d = {'a': '1', 'b': '2'}
         self.assertEqual(nu.qs_to_dict(qs), d)
 
     def test_sample_dict(self):

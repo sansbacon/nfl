@@ -5,15 +5,14 @@ from __future__ import absolute_import, print_function, division
 import logging
 import unittest
 
-from nfl.scrapers.playerprofiler import PlayerProfilerNFLScraper
-from nfl.parsers.playerprofiler import PlayerProfilerNFLParser
+from nfl.pp import Scraper, Parser
 
 
 class TestPlayerProfiler(unittest.TestCase):
 
     def setUp(self):
-        self.s = PlayerProfilerNFLScraper()
-        self.p = PlayerProfilerNFLParser()
+        self.s = Scraper()
+        self.p = Parser()
 
     def test_player_page(self):
         content = self.s.player_page('TT-0500')

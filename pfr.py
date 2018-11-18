@@ -60,6 +60,31 @@ class Scraper(FootballScraper):
                  'year_max': '2018',
                  'year_min': '2018'}
 
+    @property
+    def params(self):
+        return {
+            'request': 1, 'match': 'game', 'year_min': 2016, 'year_max': 2016,
+            'season_start': 1, 'season_end': -1, 'age_min': 0, 'age_max': 0, 'pos': '', 'game_type': 'R',
+            'career_game_num_min': 0, 'career_game_num_max': 499, 'game_num_min': 0, 'game_num_max': 99,
+            'week_num_min': 1, 'week_num_max': 20, 'c1stat': 'fantasy_points', 'c1comp': 'gt',
+            'c1val': -5, 'c5val': 1.0, 'c2stat': 'choose', 'c2comp': 'gt', 'c3stat': 'choose', 'c3comp': 'gt',
+            'c4stat': 'choose', 'c4comp': 'gt', 'c5comp': 'choose', 'c5gtlt': 'lt', 'c6mult': 1.0,
+            'c6comp': 'choose', 'offset': 0, 'order_by': 'game_date', 'order_by_asc': 'Y'
+        }
+
+    def _merge_params(self, params):
+        '''
+        Creates merged set of params, where params overwrites defaults
+
+        Args:
+            params: dict
+        Returns:
+            dict
+        '''
+        context = self.params.copy()
+        context.update(params)
+        return context
+
     def pgl_url(self, params):
         '''
         Forms search URL with query string

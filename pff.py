@@ -3,6 +3,7 @@
 # classes to scrape and parse profootballfocus.com
 
 import logging
+import time
 
 from nflmisc.browser import BrowserScraper
 
@@ -25,7 +26,70 @@ class Scraper(BrowserScraper):
 
         '''
         url = 'https://grades.profootballfocus.com/api/offenses/depth_charts?team_id={}'
+        content = self.get('https://grades.profootballfocus.com/api/teams')
+        time.sleep(.5)
         return self.get_json(url.format(team_id))[0]
+
+    def player_grades_career(self, player_id):
+        '''
+        Gets pff grades for player each season
+
+        Args:
+            player_id: int
+
+        Returns:
+            dict
+
+        '''
+        url = 'https://grades.profootballfocus.com/api/players/{}/grades_by_season'
+        content = self.get('https://grades.profootballfocus.com/api/teams')
+        time.sleep(.5)
+        return self.get_json(url.format(player_id))
+
+    def player_grades_week(self, player_id):
+        '''
+        Gets pff grades for player each season
+
+        Args:
+            player_id: int
+
+        Returns:
+            dict
+
+        '''
+        url = 'https://grades.profootballfocus.com/api/players/{}/grades_by_week'
+        content = self.get('https://grades.profootballfocus.com/api/teams')
+        time.sleep(.5)
+        return self.get_json(url.format(player_id))
+
+    def player_snaps_season(self, player_id):
+        '''
+        Gets pff snap counts for most recent season
+
+        Args:
+            player_id: int
+
+        Returns:
+            dict
+
+        '''
+        url = 'https://grades.profootballfocus.com/api/players/{}/snaps_by_week'
+        content = self.get('https://grades.profootballfocus.com/api/teams')
+        time.sleep(.5)
+        return self.get_json(url.format(player_id))
+
+    def players(self, team_id):
+        '''
+        Gets profootballfocus players for team
+
+        Args:
+            team_id: int 1, 2, etc.
+
+        Returns:
+            dict
+
+        '''
+        return self.get_json('https://grades.profootballfocus.com/api/players?team_id={}'.format(team_id))
 
     def position_grades(self, pos):
         '''
@@ -42,67 +106,14 @@ class Scraper(BrowserScraper):
         if pos == 'RB':
             pos == 'HB'
         url = 'https://grades.profootballfocus.com/api/players?position={}'
+        content = self.get('https://grades.profootballfocus.com/api/teams')
+        time.sleep(.5)
         return self.get_json(url.format(pos))
-
-    def player_grades_career(self, player_id):
-        '''
-        Gets pff grades for player each season
-
-        Args:
-            player_id: int
-
-        Returns:
-            dict
-
-        '''
-        url = 'https://grades.profootballfocus.com/api/players/{}/grades_by_season'
-        return self.get_json(url.format(player_id))
-
-    def player_grades_week(self, player_id):
-        '''
-        Gets pff grades for player each season
-
-        Args:
-            player_id: int
-
-        Returns:
-            dict
-
-        '''
-        url = 'https://grades.profootballfocus.com/api/players/{}/grades_by_week'
-        return self.get_json(url.format(player_id))
-
-    def player_snaps_season(self, player_id):
-        '''
-        Gets pff snap counts for most recent season
-
-        Args:
-            player_id: int
-
-        Returns:
-            dict
-
-        '''
-        url = 'https://grades.profootballfocus.com/api/players/{}/snaps_by_week'
-        return self.get_json(url.format(player_id))
-
-    def players(self, team_id):
-        '''
-        Gets profootballfocus players for team
-
-        Args:
-            team_id: int 1, 2, etc.
-            
-        Returns:
-            dict
-
-        '''
-        return self.get_json('https://grades.profootballfocus.com/api/players?team_id={}'.format(team_id))
 
     def teams(self):
         '''
         Gets profootballfocus teams
-        
+
         Returns:
             dict
 
@@ -120,8 +131,8 @@ class Parser(object):
 
     def position_grades(self, content):
         '''
-        Parses season-ending grades for 
-        
+        Parses season-ending grades for
+
         Args:
             content: dict with keys teams, rosters
 

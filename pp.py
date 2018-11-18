@@ -6,13 +6,13 @@ import datetime
 import json
 import logging
 
-from nfl.scrapers.scraper import FootballScraper
+from nflmisc.scraper import FootballScraper
 
 
 class Scraper(FootballScraper):
     '''
     For use by subscribers
-    
+
     TODO: change these to params instead of query strings
     '''
 
@@ -68,7 +68,7 @@ class Parser(object):
     def player_college_performance(self, data):
         '''
         Takes player dict, returns college performance
-        
+
         Args:
             player: dict
 
@@ -93,7 +93,7 @@ class Parser(object):
         Takes player dict, returns core
 
         Args:
-            player: 
+            player:
 
         Returns:
             dict
@@ -134,7 +134,7 @@ class Parser(object):
         Takes player data, returns gamelogs
 
         Args:
-            data: 
+            data:
 
         Returns:
             list of dict
@@ -173,7 +173,7 @@ class Parser(object):
         Takes player data, returns medical history
 
         Args:
-            data: 
+            data:
 
         Returns:
             list of dict
@@ -206,7 +206,7 @@ class Parser(object):
         Takes player dict, returns performance metrics
 
         Args:
-            player: 
+            player:
 
         Returns:
             dict
@@ -274,7 +274,7 @@ class Parser(object):
         Takes player dict, returns workout metrics
 
         Args:
-            player: 
+            player:
 
         Returns:
             dict
