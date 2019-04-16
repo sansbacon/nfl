@@ -63,7 +63,7 @@ class Pgf_test(unittest.TestCase):
                 print(self._s.urls[-1])
         try:
             df = pd.DataFrame(vals)
-            self._dump_search(df, self.pos)
+            self.print_results(df, self.pos)
         except:
             pass
         finally:
