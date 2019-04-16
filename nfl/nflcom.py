@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+
 # nflcom.py
 # scraper and parser classes for nfl.com website
 
+"""
+import logging
 import re
 from string import ascii_uppercase
 
@@ -11,10 +15,14 @@ from bs4 import BeautifulSoup, Comment
 from playermatcher.name import first_last_pair
 from sportscraper.dates import convert_format
 from sportscraper.scraper import RequestScraper
-from sportscraper.utility import *
+from sportscraper.utility import digits, merge_two
 
 
 class Scraper(RequestScraper):
+    '''
+    Scrapes nfl.com resources
+
+    '''
     def game(self, gsis_id):
         """
         Gets individual gamecenter page
@@ -23,7 +31,8 @@ class Scraper(RequestScraper):
             gsis_id:
 
         Returns:
-            content: HTML string
+            str
+
         """
         url = "http://www.nfl.com/liveupdate/game-center/{0}/{0}_gtd.json"
         return self.get(url.format(gsis_id))
@@ -39,6 +48,7 @@ class Scraper(RequestScraper):
 
         Returns:
             HTML string
+
         """
         url = "http://www.nflgsis.com/{}/Reg/{}/{}/Gamebook.xml"
         if week < 10:
@@ -55,7 +65,8 @@ class Scraper(RequestScraper):
             week: int 1, 2, 3, etc.
 
         Returns:
-            content: HTML string
+            str
+
         """
         url = "http://www.nfl.com/injuries?week={}"
         return self.get(url.format(week))
@@ -68,7 +79,8 @@ class Scraper(RequestScraper):
             week: int 1, 2, 3, etc.
 
         Returns:
-            content: HTML string
+            str
+
         """
         url = "http://www.nfl.com/stats/categorystats?"
         params = {
@@ -131,7 +143,7 @@ class Scraper(RequestScraper):
                 return self.session.get(url, params=params)
             else:
                 raise ValueError("invalid last_initial")
-        except Exception as e:
+        except ValueError as e:
             logging.exception(e)
 
     def player_search_name(self, player_name, player_type="current"):
@@ -186,7 +198,8 @@ class Scraper(RequestScraper):
             week: int 1, 2, 3, etc.
 
         Returns:
-            content: HTML string
+            str
+
         """
         url = "http://www.nfl.com/schedules/{0}/REG{1}"
         return self.get(url.format(season, week), encoding="ISO-8859-1")
@@ -201,15 +214,18 @@ class Scraper(RequestScraper):
             week: int 1, 2, 3, etc.
 
         Returns:
-            content: HTML string
+            str
+
         """
         url = "http://www.nfl.com/scores/{0}/REG{1}"
         return self.get(url.format(season, week))
 
 
-class Parser(object):
+class Parser():
     """
-    Used to parse NFL.com GameCenter pages, which are json documents with game and play-by-play stats
+    Used to parse NFL.com GameCenter pages,
+    which are json documents with game and play-by-play stats
+
     """
 
     def __init__(self):
@@ -218,10 +234,13 @@ class Parser(object):
     def _gamecenter_team(self, team):
         """
         Parses home or away team into stats dictionary
+
         Args:
             team: dictionary representing home or away team
+
         Returns:
-            players: dictionary of team stats
+            dict
+
         """
         categories = [
             "passing",
@@ -243,10 +262,13 @@ class Parser(object):
     def gamecenter(self, parsed):
         """
         Parses gamecenter (json document)
+
         Args:
             content: parsed json document
+
         Returns:
             dict
+
         Misc:
             puntret: avg, lng, lngtd, name, ret, tds
             fumbles: lost, name, rcv, tot, trcv, yds
@@ -254,6 +276,7 @@ class Parser(object):
             rushing: att, lng.lngtd, name, tds, twopta, twoptm, yds
             receiving: lng, lngtd, name, rec, tds, twopta, twoptm, yds
             passing: att, cmp, ints, name, tds, twopta, twoptm, yds
+
         """
         game_id = parsed.keys()[0]
         home_team_stats = self._gamecenter_team(parsed[game_id]["home"]["stats"])
@@ -268,7 +291,8 @@ class Parser(object):
             content:
 
         Returns:
-            teams: list of dict
+            list: of dict
+
         """
         games = []
         soup = BeautifulSoup(content, "lxml")
@@ -293,10 +317,13 @@ class Parser(object):
     def injuries(self, content, season, week):
         """
         Returns injured players from injruies page
+
         Args:
-            content: HTML string
+            str
+
         Returns:
-            list of player dict
+            list: of player dict
+
         """
         players = []
         away_patt = re.compile(
@@ -358,10 +385,11 @@ class Parser(object):
         Parses offensive line stats page on nfl.com
 
         Args:
-            content: HTML string
+            content(str): HTML page
 
         Returns:
-            teams
+            list
+
         """
         soup = BeautifulSoup(content, "lxml")
         headers = [
@@ -429,10 +457,11 @@ class Parser(object):
         Gets player esb_id
 
         Args:
-            content:
+            content(str):
 
         Returns:
-            esb_id
+            str
+
         """
         soup = BeautifulSoup(content, "lxml")
         # GSIS ID and ESB ID are buried in the comments
@@ -447,10 +476,12 @@ class Parser(object):
         Returns data from individual player page
 
         Args:
-            content: HTML string
+            content(str):
+            profile_id(str):
 
         Returns:
             dict
+
         """
         soup = BeautifulSoup(content, "lxml")
         player = {}
@@ -489,7 +520,7 @@ class Parser(object):
 
             # paras[1]: team
             player["team"] = paras[1].find("a")["href"].split("=")[-1]
-        except Exception as e:
+        except ValueError as e:
             logging.exception(e)
             return None
 
@@ -500,21 +531,21 @@ class Parser(object):
             player["height"] = int(digits(feet)) * 6 + int(digits(inches))
             player["weight"] = digits(parts[3])
             player["age"] = digits(parts[5])
-        except Exception as e:
+        except ValueError as e:
             logging.exception(e)
 
         try:
             # birthdate
             parts = paras[3].text.split()
             player["birthdate"] = parts[1].strip()
-        except Exception as e:
+        except ValueError as e:
             logging.exception(e)
 
         try:
             # college
             parts = paras[4].text.split()
             player["college"] = parts[1].strip()
-        except Exception as e:
+        except ValueError as e:
             logging.exception(e)
 
         try:
@@ -522,7 +553,7 @@ class Parser(object):
             parts = paras[5].text.split()
             ordinal = parts[1].strip()
             player["years_pro"] = "".join(ch for ch in ordinal if ch.isdigit())
-        except Exception as e:
+        except ValueError as e:
             logging.exception(e)
 
         # status
@@ -553,10 +584,13 @@ class Parser(object):
     def position(self, content):
         """
         Returns player's position from his profile page on nfl.com
+
         Args:
-            content: HTML string
+            content(str): HTML page
+
         Returns:
-            pos: 'QB', 'RB', 'WR', 'TE', 'UNK'
+            str: 'QB', 'RB', 'WR', 'TE', 'UNK'
+
         """
         allowed = [
             "C",
@@ -599,8 +633,7 @@ class Parser(object):
             pos = match.group(1)
             if pos in allowed:
                 return pos
-            else:
-                return xref.get(pos, "UNK")
+            return xref.get(pos, "UNK")
         except:
             return "UNK"
 
@@ -609,10 +642,11 @@ class Parser(object):
         Parses upcoming week page for 2017 season
 
         Args:
-            content:
+            content(str): HTML page
 
         Returns:
-            result: list of game dict
+            list: of game dict
+
         """
         games = []
         wanted = [
@@ -633,16 +667,18 @@ class Parser(object):
         Parses weekly scoreboard page from NFL.com
 
         Args:
-            content:
+            content(str):
 
         Returns:
-            games: dict of gsis_id and dict
+            dict: of gsis_id and dict
+
         """
         games = []
         soup = BeautifulSoup(content, "lxml")
 
         # weekly page will have links to individual games in format:
-        # <a href="/gamecenter/2014090400/2014/REG1/packers@seahawks" class="game-center-link" . . . </a>
+        # <a href="/gamecenter/2014090400/2014/REG1/packers@seahawks"
+        # class="game-center-link" . . . </a>
         for a in soup.findAll("a", {"class": "game-center-link"}):
             game = {}
             pattern = re.compile(
@@ -662,15 +698,21 @@ class Parser(object):
         return games
 
 
-class Agent(object):
-    def __init__(self, scraper=None, parser=None, cache_name=None, cj=None):
+class Agent():
+    '''
+    Combines common scraping/parsing tasks
+
+    '''
+    def __init__(self, scraper=None, parser=None, cache_name=None):
         """
+        Creates Agent object
 
         Args:
             scraper: NFLComScraper object
             parser: NFLComParser object
             cache_name: string
             cj: cookiejar object
+
         """
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         if scraper:
@@ -686,18 +728,20 @@ class Agent(object):
         """
         Gets all games from weekly gamecenter page from NFL.com
         Args:
-            season: int
-            week: int
+            season(int): 2018, etc.
+            week(int): 1, etc.
 
         Returns:
-            all_games: list of dict
+            list of dict
+
         """
         all_games = []
         try:
             for g in self._p.week_page(self._s.week_page(season, week)):
                 url = g.get("url")
                 # need to get the game ID, then can get relevant boxscore data
-                # http://www.nfl.com/widget/gc/2011/tabs/cat-post-boxscore?gameId=2007122000&enableNGS=false
+                # http://www.nfl.com/widget/gc/2011/tabs/cat-post-boxscore?
+                # gameId=2007122000&enableNGS=false
                 if url:
                     url += "#tab=analyze&analyze=boxscore"
                     if savedir:
@@ -716,12 +760,14 @@ class Agent(object):
     def week_pages(self, seasons, weeks):
         """
         Gets weekly gamecenter pages from NFL.com
+
         Args:
-            seasons: list of int
-            weeks: list of int
+            seasons(list): of int
+            weeks(list): of int
 
         Returns:
-            all_games: list of dict
+            list of dict
+
         """
         all_games = []
         for season in seasons:

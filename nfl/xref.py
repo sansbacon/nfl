@@ -28,6 +28,16 @@ class Site(metaclass=abc.ABCMeta):
         self.db = db
 
     @abc.abstractmethod
+    def add_xref(self, *players):
+        """
+        Interface
+
+        Returns:
+
+        """
+        raise NotImplementedError("users must define add_xref to use this base class")
+
+    @abc.abstractmethod
     def get_mfld(self, first):
         """
         Interface
@@ -52,9 +62,9 @@ class Site(metaclass=abc.ABCMeta):
     def get_playersd(
         self,
         dict_key="name",
-        id_key="nflcom_player_id",
-        name_key="full_name",
-        pos_key="primary_pos",
+        id_key="source_player_id",
+        name_key="source_player_name",
+        pos_key="source_player_position",
     ):
         """
         Gets site players by key
@@ -90,7 +100,6 @@ class Site(metaclass=abc.ABCMeta):
         mfl_players,
         id_key="source_player_id",
         name_key="source_player_name",
-        pos_key="source_player_position",
         interactive=False,
     ):
         """
@@ -145,7 +154,7 @@ class NFL(Site):
 
         """
         # TODO: implement this
-        pass
+        return None
 
     def get_mfld(self, first="mfl"):
         """
@@ -179,12 +188,28 @@ class NFL(Site):
                WHERE nflcom_player_id IS NOT NULL"""
         return self.db.select_dict(q)
 
+    def get_playersd(self,
+                     dict_key="name",
+                     id_key="nflcom_player_id",
+                     name_key="full_name",
+                     pos_key="primary_pos",):
+        """
+        Gets players by key
+
+        Args:
+            key(str):
+
+        Returns:
+            dict
+
+        """
+        return super().get_playersd(dict_key, id_key, name_key, pos_key)
+
     def match_mfl(
         self,
         mfl_players,
         id_key="nflcom_player_id",
         name_key="full_name",
-        pos_key="primary_pos",
         interactive=False,
     ):
         """
@@ -201,28 +226,7 @@ class NFL(Site):
             list: of player
 
         """
-        d = self.get_mfld(first="mfl")
-        nfld = self.get_playersd("name")
-        nfl_playernames = list(nfld.keys())
-
-        for idx, p in enumerate(mfl_players):
-            # first option is to see if already in database
-            if d.get(p[id_key]):
-                mfl_players[idx][id_key] = d[p[id_key]]
-                continue
-
-            # if not in database, use matcher
-            # player
-            match_name = player_match(
-                first_last(p[name_key]),
-                nfl_playernames,
-                thresh=90,
-                interactive=interactive,
-            )
-            match = nfld.get(match_name)
-            if match and len(match) == 1:
-                mfl_players[idx][id_key] = match[0][id_key]
-        return mfl_players
+        return super().match_mfl(mfl_players, id_key, name_key, interactive)
 
 
 class PFF(Site):
@@ -230,16 +234,6 @@ class PFF(Site):
     Used to cross-reference PFF players
 
     """
-
-    def __init__(self, db):
-        """
-
-        Args:
-            db(NFLPostgres): instance
-
-        """
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
-        self.db = db
 
     def add_xref(self, *players):
         """
@@ -253,7 +247,7 @@ class PFF(Site):
 
         """
         # TODO: implement this
-        pass
+        return None
 
     def get_mfld(self, first="mfl"):
         """
@@ -282,33 +276,6 @@ class PFF(Site):
         """
         q = """SELECT * FROM base.player_xref WHERE source = 'pff'"""
         return self.db.select_dict(q)
-
-    def get_playersd(self, key="name"):
-        """
-        Gets PFF players by key
-
-        Args:
-            key(str):
-
-        Returns:
-            dict
-
-        """
-        players = self.get_players()
-        if key == "name":
-            playersd = defaultdict(list)
-            for p in players:
-                playersd[p["source_player_name"]].append(p)
-        elif key == "namepos":
-            playersd = defaultdict(list)
-            for p in players:
-                k = (p["source_player_name"], p["source_player_position"])
-                playersd[k].append(p)
-        elif key == "id":
-            playersd = {p["source_player_id"]: p for p in players}
-        else:
-            raise ValueError("invalid key %s", key)
-        return playersd
 
 
 if __name__ == "__main__":

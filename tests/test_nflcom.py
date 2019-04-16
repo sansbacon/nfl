@@ -63,7 +63,7 @@ class Nflcom_test(unittest.TestCase):
     def test_gamebook(self):
         content = self.s.gamebook(2016, 1, 56905)
         self.assertIsNotNone(content)
-        self.assertIn(content, 'Gamebook')
+        self.assertIn('Gamebook', content)
 
     def test_injuries(self):
         season = self.season
@@ -121,5 +121,5 @@ class Nflcom_test(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
+    #logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
     unittest.main()

@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
+'''
+
 # pp.py
 # classes to scrape and parse plyr proflr dot com
+
+'''
 
 import json
 import logging
@@ -170,20 +174,20 @@ class Parser(object):
 
         ## Core has nested data as well
         try:
-            context["site_team_name"] = data["Core"]["Team"]["Name"]
-        except:
+            context["site_team_name"] = \
+                data["Core"]["Team"]["Name"]
+        except (ValueError, KeyError):
             pass
         try:
-            context["site_team_id"] = data["Core"]["Team"]["Team_ID"]
-        except:
+            context["site_team_id"] = \
+                data["Core"]["Team"]["Team_ID"]
+        except (ValueError, KeyError):
             pass
         try:
-            context["best_comparable"] = data["Core"]["Best Comparable Player"][
-                "Player_ID"
-            ]
-        except:
+            context["best_comparable"] = \
+                data["Core"]["Best Comparable Player"]["Player_ID"]
+        except (ValueError, KeyError):
             pass
-
         return context
 
     def player_game_logs(self, data):
@@ -463,13 +467,12 @@ class Parser(object):
         else:
             return None
 
-    def rankings(self, content, ranking_type=None):
+    def rankings(self, content):
         """
         Parses current season, dynasty, and weekly rankings from playerprofiler
 
         Args:
             content(dict)
-            ranking_type(str)
 
         Returns:
             list: of dict
@@ -478,7 +481,7 @@ class Parser(object):
         vals = []
         positions = ["QB", "RB", "WR", "TE"]
         rtypes = ["Dynasty", "Rookie", "Seasonal", "Weekly"]
-        rankings = p["data"]
+        rankings = content["data"]
         for rt in rtypes:
             for pos in positions:
                 vals.append(rankings[rt][pos])

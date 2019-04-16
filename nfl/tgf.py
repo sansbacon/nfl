@@ -2,8 +2,8 @@
 
 '''
 
-# nfl/pgf.py
-# interactive search of player_game_finder
+# nfl/tgf.py
+# interactive search of team-level stats allowed
 
 '''
 
@@ -25,16 +25,15 @@ from nfl.pfr import Scraper, Parser
 from nfl.seasons import current_season_year
 
 
-class PlayerGameFinder(Cmd):
+class TeamGameFinder(Cmd):
     '''
     Interactive command line app
 
     '''
 
-    prompt = "player_game_finder> "
-    intro = "Welcome to Player Game Finder! Type ? to list commands"
-
-    histfile = os.path.expanduser('~/.pgf_history')
+    prompt = "team_game_finder> "
+    intro = "Welcome to Team Game Finder! Type ? to list commands"
+    histfile = os.path.expanduser('~/.tgf_history')
     histfile_size = 1000
 
     def __init__(self):
@@ -42,22 +41,33 @@ class PlayerGameFinder(Cmd):
         Creates interactive app
 
         '''
-        super(PlayerGameFinder, self).__init__()
+        super(TeamGameFinder, self).__init__()
         self._s = Scraper(cache_name="pgf")
         self._p = Parser()
-        self.cache = FileCache('pgf', flag='cs')
+        self.cache = FileCache('tgf', flag='cs')
         self.opp = self.cache.get('opp')
         self.pos = self.cache.get('pos')
         self.seas = self.cache.get('seas')
-        self.thresh = self.cache.setdefault('thresh', 0)
 
     @property
     def basecols(self):
         return [
-            "player",
             "pos",
             "week_num",
             "team",
+        ]
+
+    @property
+    def qbcols(self):
+        return [
+            "pass_att",
+            "pass_cmp",
+            "pass_yds",
+            "pass_td",
+            "rush_att",
+            "rush_yds",
+            "rush_td",
+            "draftkings_points",
         ]
 
     @property
@@ -85,19 +95,6 @@ class PlayerGameFinder(Cmd):
             "TE": "TE",
             "WR": "WR"
         }
-
-    @property
-    def qbcols(self):
-        return [
-            "pass_att",
-            "pass_cmp",
-            "pass_yds",
-            "pass_td",
-            "rush_att",
-            "rush_yds",
-            "rush_td",
-            "draftkings_points",
-        ]
 
     @property
     def team_codes(self):
@@ -195,20 +192,20 @@ class PlayerGameFinder(Cmd):
 
         if pos == "QB":
             df[self.qbcols] = df[self.qbcols].apply(pd.to_numeric, errors='coerce')
-            df = df[self.basecols + self.qbcols]
+            agg_df = df.groupby(self.basecols)[self.qbcols].sum().reset_index()
         elif pos in ["RB", "WR", "TE"]:
             df[self.flexcols] = df[self.flexcols].apply(pd.to_numeric, errors='coerce')
             df['pos'] = df['pos'].replace({'HB': 'RB', 'FB': 'RB'})
-            df = df[self.basecols + self.flexcols]
+            agg_df = df.groupby(self.basecols)[self.flexcols].sum().reset_index()
 
         # cleanup resuls
-        if 'week_num' in df.columns:
-            df = df.rename(columns={'week_num': 'week'})
-        if 'draftkings_points' in df.columns:
-            df = df.rename(columns={'draftkings_points': 'dkpts'})
+        if 'week_num' in agg_df.columns:
+            agg_df = agg_df.rename(columns={'week_num': 'week'})
+        if 'draftkings_points' in agg_df.columns:
+            agg_df = agg_df.rename(columns={'draftkings_points': 'dkpts'})
 
         # sort values
-        print(df.sort_values(['week', 'dkpts'], ascending=[True, False]))
+        print(agg_df.sort_values('week'))
 
     def do_exit(self, inp):
         '''
@@ -275,7 +272,6 @@ class PlayerGameFinder(Cmd):
         extra_params = {
             "opp_id": self.opp,
             "pos[]": self.pos.upper(),
-            "c2val": self.thresh,
             "year_min": self.seas,
             "year_max": self.seas
         }
@@ -288,9 +284,10 @@ class PlayerGameFinder(Cmd):
             print(self._s.urls[-1])
         try:
             df = pd.DataFrame(vals)
+            df.to_csv('tgf.csv', index=False)
             self._dump_search(df, self.pos)
-        except:
-            pass
+        except Exception as e:
+            print(e)
         finally:
             return None
 
@@ -322,24 +319,7 @@ class PlayerGameFinder(Cmd):
         Returns:
 
         '''
-        pprint(self.__dict__)
-
-    def do_thresh(self, inp):
-        '''
-        Set threshold for fantasy points
-
-        Args:
-            inp:
-
-        Returns:
-
-        '''
-        try:
-            self.thresh = int(inp)
-            self.cache['thresh'] = self.thresh
-            print("Set thresh to {}".format(self.thresh))
-        except ValueError:
-            print(f"invalid threshold {inp}")
+        pprint({k:v for k,v in self.__dict__.items() if not '_' in k})
 
     def help_exit(self):
         '''
@@ -408,18 +388,7 @@ class PlayerGameFinder(Cmd):
 
         '''
         msg = "Shows current settings, such as opp, pos, and thresh"
-        self._dump_msg(msg)
-        return msg
-
-    def help_thresh(self):
-        '''
-        Help for thresh command
-
-        Returns:
-
-        '''
-        msg = "Sets threshold fantasy points to display player, e.g. 5"
-        self._dump_msg(msg)
+        print("\n", msg, "\n")
         return msg
 
     def preloop(self):
@@ -452,4 +421,4 @@ if __name__ == "__main__":
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
     logger.setLevel(logging.ERROR)
-    PlayerGameFinder().cmdloop()
+    TeamGameFinder().cmdloop()
