@@ -6,6 +6,8 @@ import sys
 import unittest
 from string import ascii_uppercase
 
+from requests import Response
+
 import nfl.nflcom as nc
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -53,36 +55,69 @@ class Nflcom_test(unittest.TestCase):
         self.all_games = []
 
     def test_game(self):
-        self.assertIsNotNone(self.s.game(self.gsis_id))
+        content = self.s.game(self.gsis_id)
+        self.assertIsNotNone(content)
+        game = self.p.game_page(content)
+        self.assertIsNotNone(game)
 
     def test_gamebook(self):
-        self.assertIsNotNone(self.s.gamebook(2016, 1, 56905))
+        content = self.s.gamebook(2016, 1, 56905)
+        self.assertIsNotNone(content)
+        self.assertIn(content, 'Gamebook')
 
     def test_injuries(self):
-        self.assertIsNotNone(self.s.injuries(self.week))
+        season = self.season
+        week = self.week
+        content = self.s.injuries(week)
+        self.assertIsNotNone(content)
+        injuries = self.p.injuries(content, season, week)
+        self.assertIsNotNone(injuries)
 
     def test_ol(self):
-        self.assertIsNotNone(self.s.ol(self.season))
+        content = self.s.ol(self.season)
+        self.assertIsNotNone(content)
+        ol = self.p.ol(content)
+        self.assertIsInstance(ol, list)
 
     def test_player_profile(self):
         profile_path = 'andydalton/2495143'
+        player_id, profile_id = profile_path.split('/')
         content = self.s.player_profile(profile_path=profile_path)
-        self.assertIsNotNone(content)
+        self.assertIn(profile_path, content)
+        player = self.p.player_page(content, profile_id)
+        self.assertIsInstance(player, dict)
+
+    def test_player_search_name(self):
+        pname = 'Dalton, Andy'
+        profile_path = 'andydalton/2495143'
+        pid, prid = profile_path.split('/')
+        search_result = self.s.player_search_name(pname)
+        name, player_id, profile_id = self.p.player_search_name(search_result)[0]
+        self.assertEqual(name, pname)
+        self.assertEqual(pid, player_id)
+        self.assertEqual(prid, profile_id)
+
+    def test_player_search_web(self):
+        name = 'Andy Dalton'
+        profile_path = 'andydalton/2495143'
+        player_id, profile_id = profile_path.split('/')
+        search_result = self.s.player_search_web(name)
+        self.assertIn(profile_path, search_result)
+        content = self.s.get(search_result)
+        player = self.p.player_page(content, profile_id)
+        self.assertIsInstance(player, dict)
+
+    def test_players(self):
+        response = self.s.players(self.letter)
+        self.assertIsInstance(response, Response)
+        players = self.p.players(response)
+        self.assertIsInstance(players, list)
 
     def test_schedule_week(self):
         self.assertIsNotNone(self.s.schedule_week(self.season, self.week))
 
     def test_score_week(self):
         self.assertIsNotNone(self.s.score_week(self.season, self.week))
-
-    @unittest.skip
-    def test_players(self):
-        content = self.s.players(self.letter)
-        self.assertIsNotNone(self.p.players(content))
-
-    def test_player_search_name(self):
-        content = self.s.player_search_name('Andy Dalton', 'current')
-        self.assertIsNotNone(self.p.player_search_name(content))
 
 
 if __name__ == '__main__':

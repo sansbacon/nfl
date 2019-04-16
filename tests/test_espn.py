@@ -41,12 +41,12 @@ class ESPN_test(unittest.TestCase):
         self.p = ne.Parser()
 
     def test_adp(self):
-        pos = self.pos
-        content = self.s.adp(pos)
-        self.assertIn('Live Draft Results', content)
+        content = self.s.adp(2019)
+        self.assertIsInstance(content, dict)
+        self.assertEqual(list(content.keys())[0], 'players')
         players = self.p.adp(content)
         self.assertIsNotNone(players)
-        self.assertGreaterEqual(len(players), 10)
+        self.assertGreaterEqual(len(players), 1)
 
     def test_players_position(self):
         pos = self.pos
@@ -56,6 +56,7 @@ class ESPN_test(unittest.TestCase):
         self.assertIsNotNone(players)
         self.assertIsInstance(players, list)
 
+    @unittest.skip
     def test_projections(self):
         content = self.s.projections(self.pos, self.season)
         self.assertIn('PLAYERS', content)
@@ -79,23 +80,17 @@ class ESPN_test(unittest.TestCase):
         self.assertIsNotNone(content)
         self.assertIsNotNone(self.p.fantasy_players_team(content))
 
-    def test_watson(self):
-        pid = 14012
-        content = self.s.watson(pid)
-        self.assertIsInstance(self.p.watson(content), dict)
-
-    def test_watson_players(self):
-        content = self.s.watson_players()
-        self.assertGreater(len(self.p.watson_players(content)), 0)
-
+    @unittest.skip
     def test_weekly_scoring(self):
         content = self.s.weekly_scoring(self.season, 1, self.pos)
         self.assertIsInstance(self.p.weekly_scoring(content), list)
 
+    @unittest.skip
     def test_weekly_scoring_dst(self):
         content = self.s.weekly_scoring(self.season, 1, 'dst')
         self.assertIsInstance(self.p.weekly_scoring_dst(content), list)
 
+    @unittest.skip
     def test_weekly_scoring_k(self):
         content = self.s.weekly_scoring(self.season, 1, 'k')
         self.assertIsInstance(self.p.weekly_scoring_k(content), list)

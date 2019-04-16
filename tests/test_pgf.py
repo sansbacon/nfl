@@ -21,10 +21,6 @@ class Pgf_test(unittest.TestCase):
         self.assertTrue(self.pgf.valid_tc('car'))
         self.assertFalse(self.pgf.valid_tc('lar'))
 
-    def test_do_load(self):
-        self.pgf.do_load('')
-        self.assertIsNotNone(self.pgf.data)
-
     def test_help_load(self):
         msg = self.pgf.help_load()
         self.assertIsNotNone(msg)

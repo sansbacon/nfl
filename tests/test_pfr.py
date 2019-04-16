@@ -97,11 +97,9 @@ class Pfr_test(unittest.TestCase):
         self.assertGreater(len(self.p.playerstats_offense_weekly(content)), 0)
         self.assertNotIn('404 error', content)
 
-    @unittest.skip
     def test_playerstats_passing_yearly(self):
-        # TODO: this test is not passing
         content = self.s.playerstats_passing_yearly(self.seas, self.offset)
-        self.assertGreater(len(self.p.playerstats_offense_yearly(content)), 0)
+        self.assertGreater(len(self.p.playerstats_passing_yearly(content)), 0)
         self.assertNotIn('404 error', content)
 
     def test_playerstats_receiving_weekly(self):
@@ -109,25 +107,19 @@ class Pfr_test(unittest.TestCase):
         self.assertGreater(len(self.p.playerstats_offense_weekly(content)), 0)
         self.assertNotIn('404 error', content)
 
-    @unittest.skip
     def test_playerstats_receiving_yearly(self):
-        # TODO: this test is not passing
         content = self.s.playerstats_receiving_yearly(self.seas, self.offset)
-        self.assertGreater(len(self.p.playerstats_offense_yearly(content)), 0)
+        self.assertGreater(len(self.p.playerstats_receiving_yearly(content)), 0)
         self.assertNotIn('404 error', content)
 
-    @unittest.skip
     def test_playerstats_rushing_weekly(self):
-        # TODO: this test is not passing
         content = self.s.playerstats_rushing_weekly(self.seas, self.week, self.offset)
         self.assertGreater(len(self.p.playerstats_offense_weekly(content)), 0)
         self.assertNotIn('404 error', content)
 
-    @unittest.skip
     def test_playerstats_rushing_yearly(self):
-        # TODO: this test is not passing
         content = self.s.playerstats_rushing_yearly(self.seas, self.offset)
-        self.assertGreater(content)
+        self.assertGreater(len(self.p.playerstats_rushing_yearly(content)), 0)
         self.assertNotIn('404 error', content)
 
     def test_team_plays_query(self):
@@ -136,9 +128,7 @@ class Pfr_test(unittest.TestCase):
         self.assertGreater(len(self.p.team_plays(content)), 0)
         self.assertNotIn('404 error', content)
 
-    @unittest.skip
     def test_team_passing_weekly(self):
-        # TODO: this test is not passing
         season = self.seas
         content = self.s.team_passing_weekly(season, season, self.week)
         self.assertGreater(len(self.p.team_offense_weekly(content)), 0)
@@ -161,6 +151,7 @@ class Pfr_test(unittest.TestCase):
         content = self.s.team_offense_weekly(season, season, self.week)
         self.assertGreater(len(self.p.team_offense_weekly(content)), 0)
         self.assertNotIn('404 error', content)
+
 
 if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)

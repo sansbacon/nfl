@@ -41,9 +41,6 @@ class Seasons_test(unittest.TestCase):
         self.assertIsInstance(s, dict)
 
     def test_season_week(self):
-        d = datetime.datetime.now().date()
-        self.assertIsInstance(ns.season_week(d), dict)
-
         d = datetime.datetime(2018, 10, 13).date()
         sw = ns.season_week(d)
         self.assertEqual(sw['season'], 2018)
