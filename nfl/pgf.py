@@ -7,7 +7,7 @@
 
 import pandas as pd
 from fcache.cache import FileCache
-from nfl.gf import GameFinder
+from .gf import GameFinder
 
 
 class PlayerGameFinder(GameFinder):

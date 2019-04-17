@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 '''
 
 # nfl/tgf.py
@@ -9,7 +7,8 @@
 
 from fcache.cache import FileCache
 import pandas as pd
-from nfl.gf import GameFinder
+from .gf import GameFinder
+
 
 class TeamGameFinder(GameFinder):
     '''
