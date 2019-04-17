@@ -5,7 +5,6 @@
 
 '''
 
-from fcache.cache import FileCache
 import pandas as pd
 from .gf import GameFinder
 
@@ -18,14 +17,6 @@ class TeamGameFinder(GameFinder):
 
     prompt = "team_game_finder> "
     intro = "Welcome to Team Game Finder! Type ? to list commands"
-
-    def __init__(self, *args):
-        '''
-        Creates interactive app
-
-        '''
-        super(TeamGameFinder, self).__init__(*args)
-        self.cache = FileCache('tgf', flag='cs')
 
     @property
     def basecols(self):
@@ -47,20 +38,7 @@ class TeamGameFinder(GameFinder):
             None
 
         '''
-        extra_params = {
-            "opp_id": self.opp,
-            "pos[]": self.pos.upper(),
-            "c2val": self.thresh,
-            "year_min": self.seas,
-            "year_max": self.seas
-        }
-
-        try:
-            content = self._s.player_game_finder(extra_params)
-            vals = self._p.player_game_finder(content)
-        except Exception as e:
-            print(e)
-            print(self._s.urls[-1])
+        vals = self.gf_search(inp)
         try:
             df = pd.DataFrame(vals)
             df = self.clean_results(df, self.pos)

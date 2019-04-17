@@ -19,8 +19,8 @@ from fcache.cache import FileCache
 
 import pandas as pd
 
-from nfl.pfr import Scraper, Parser
-from nfl.seasons import current_season_year
+from .pfr import Scraper, Parser
+from .seasons import current_season_year
 
 
 class GameFinder(Cmd):
@@ -29,43 +29,49 @@ class GameFinder(Cmd):
 
     '''
 
-    prompt = "game_finder> "
-    intro = "Welcome to Game Finder! Type ? to list commands"
-
-    histfile = str(Path.home() / '.gf_history')
+    histfile = str(Path.home() / f'.{__name__}_history')
     histfile_size = 1000
 
-    def __init__(self, seas=None, pos=None, opp=None, thresh=None,
-                 stdin=None, stdout=None):
+    def __init__(self, **kwargs):
         '''
         Creates interactive app
 
+        # pylint: disable=too-many-instance-attributes
         '''
-        super(GameFinder, self).__init__(stdin=stdin, stdout=stdout)
+        super(GameFinder, self).__init__()
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-        self._s = Scraper(cache_name="gf")
+        self._s = Scraper(cache_name=__name__)
         self._p = Parser()
-        self.cache = FileCache('gf', flag='cs')
+        self.cache = FileCache(__name__, flag='cs')
         self.dfs = self.cache.setdefault('dfs', {})
-        if opp:
-            self.opp = opp
+
+        if 'opp' in kwargs:
+            self.opp = kwargs['opp']
         else:
             self.opp = self.cache.get('opp')
-        if pos:
-            self.pos = self.positions.get(pos)
-        if not pos:
-            self.pos = self.cache.setdefault('pos', 'QB')
-        if seas:
-            self.seas = seas
+
+        if 'pos' in kwargs:
+            self.pos = self.positions.get(kwargs['pos'])
+        else:
+            self.pos = self.positions.get(self.cache.get('pos'))
+
+        if 'seas' in kwargs:
+            self.seas = kwargs['seas']
         else:
             self.seas = self.cache.get('seas')
-        if thresh:
-            self.thresh = thresh
+
+        if 'thresh' in kwargs:
+            self.thresh = kwargs['thresh']
         else:
             self.thresh = self.cache.setdefault('thresh', 0)
 
     @property
     def basecols(self):
+        '''
+
+        Returns:
+
+        '''
         return [
             "player",
             "pos",
@@ -75,6 +81,11 @@ class GameFinder(Cmd):
 
     @property
     def flexcols(self):
+        '''
+
+        Returns:
+
+        '''
         return [
                 "targets",
                 "rec",
@@ -88,6 +99,11 @@ class GameFinder(Cmd):
 
     @property
     def positions(self):
+        '''
+
+        Returns:
+
+        '''
         return {
             "qb": "QB",
             "rb": "RB",
@@ -101,6 +117,11 @@ class GameFinder(Cmd):
 
     @property
     def qbcols(self):
+        '''
+
+        Returns:
+
+        '''
         return [
             "pass_att",
             "pass_cmp",
@@ -114,6 +135,11 @@ class GameFinder(Cmd):
 
     @property
     def team_codes(self):
+        '''
+
+        Returns:
+
+        '''
         return {
             'ari': 'crd',
             'crd': 'crd',
@@ -258,19 +284,6 @@ class GameFinder(Cmd):
         else:
             print(f"Invalid position: {inp}")
 
-    def do_search(self, inp):
-        '''
-        Search for stats
-
-        Args:
-            None
-
-        Returns:
-            None
-
-        '''
-        pass
-
     def do_seas(self, inp):
         '''
         Sets season
@@ -318,6 +331,33 @@ class GameFinder(Cmd):
         except ValueError as ve:
             logging.exception(ve)
             print(f"Invalid threshold {inp}")
+
+    def gf_search(self):
+        '''
+        Search for stats
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        '''
+        extra_params = {
+            "opp_id": self.opp,
+            "pos[]": self.pos,
+            "c2val": self.thresh,
+            "year_min": self.seas,
+            "year_max": self.seas
+        }
+
+        try:
+            content = self._s.player_game_finder(extra_params)
+            return self._p.player_game_finder(content)
+        except Exception as e:
+            print(e)
+            print(self._s.urls[-1])
+            return None
 
     def help_exit(self):
         '''

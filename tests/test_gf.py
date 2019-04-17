@@ -12,6 +12,9 @@ from nfl.gf import GameFinder
 from nfl.seasons import current_season_year
 
 
+logger = logging.getLogger(__name__)
+
+
 class Gf_test(unittest.TestCase):
     '''
     Test methods based on https://stackoverflow.com/questions/34500249/
@@ -46,6 +49,25 @@ class Gf_test(unittest.TestCase):
         # test invalid position
         # list function then arguments rather than calling function
         self.assertRaises(AttributeError, cli.clean_results, df, 0.0)
+
+    @unittest.skip
+    def test_gf_search(self):
+        '''
+
+        Returns:
+
+        '''
+        cli = self.create()
+        if not cli.seas:
+            cli.seas = 2018
+        if not cli.opp:
+            cli.opp = 'CHI'
+        if not cli.pos:
+            cli.pos = 'TE'
+        vals = cli.gf_search()
+        self.assertIsInstance(vals, list)
+        logger.info(vals)
+        #self.assertIsInstance(vals[0], dict)
 
     def test_opp(self):
         """
@@ -165,5 +187,5 @@ class Gf_test(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     unittest.main()

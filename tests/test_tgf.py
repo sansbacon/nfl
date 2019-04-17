@@ -1,27 +1,43 @@
-# -*- coding: utf-8 -*-
+# tests/test_tgf.py
 
+from io import StringIO
 import logging
-import random
 import sys
 import unittest
+from unittest.mock import patch
 
 from nfl.tgf import TeamGameFinder
 
 
-class Tgf_test(unittest.TestCase):
+class Pgf_test(unittest.TestCase):
+    '''
+    Test methods based on https://stackoverflow.com/questions/34500249/
+                          writing-unittest-for-python3-shell-based-on-cmd-module
+    '''
 
-    def setUp(self):
-        self.tgf = TeamGameFinder()
+    def create(self):
+        '''
 
-    def test_help_load(self):
-        msg = self.tgf.help_load()
-        self.assertIsNotNone(msg)
+        '''
+        return TeamGameFinder()
 
-    def test_conv_col(self):
-        self.assertIsInstance(self.tgf._conv_col(1.0), float)
-        self.assertEqual(self.tgf._conv_col('x'), 0.0)
+    @unittest.skip
+    def test_do_search(self):
+        '''
+
+        Returns:
+
+        '''
+        cli = self.create()
+
+        # valid season
+        with patch('sys.stdout', new=StringIO()) as fakeOutput:
+            self.assertFalse(cli.onecmd('settings'))
+        return_value = fakeOutput.getvalue().strip()
+        self.assertIsNotNone(return_value)
 
 
 if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     unittest.main()
+

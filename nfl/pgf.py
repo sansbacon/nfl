@@ -6,7 +6,6 @@
 '''
 
 import pandas as pd
-from fcache.cache import FileCache
 from .gf import GameFinder
 
 
@@ -19,14 +18,6 @@ class PlayerGameFinder(GameFinder):
     prompt = "player_game_finder> "
     intro = "Welcome to Player Game Finder! Type ? to list commands"
 
-    def __init__(self, *args):
-        '''
-        Creates interactive app
-
-        '''
-        super(PlayerGameFinder, self).__init__(*args)
-        self.cache = FileCache('pgf', flag='cs')
-
     def do_search(self, inp):
         '''
         Search for stats
@@ -38,20 +29,7 @@ class PlayerGameFinder(GameFinder):
             None
 
         '''
-        extra_params = {
-            "opp_id": self.opp,
-            "pos[]": self.pos,
-            "c2val": self.thresh,
-            "year_min": self.seas,
-            "year_max": self.seas
-        }
-
-        try:
-            content = self._s.player_game_finder(extra_params)
-            vals = self._p.player_game_finder(content)
-        except Exception as e:
-            print(e)
-            print(self._s.urls[-1])
+        vals = self.gf_search(inp)
         try:
             df = pd.DataFrame(vals)
             df = self.clean_results(df, self.pos)
@@ -61,7 +39,7 @@ class PlayerGameFinder(GameFinder):
                 cols = self.basecols + self.flexcols
             self.print_results(df[cols])
         except:
-            print('could not get dataframe')
+            print('could not convert to dataframe')
             self.do_settings('')
 
 

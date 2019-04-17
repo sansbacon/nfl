@@ -207,9 +207,9 @@ class Scraper(RequestScraper):
 
         if pos not in slot_categories.keys():
             raise ValueError("invalid pos {}".format(pos))
-        elif offset > max_offset.get(pos):
+        if offset > max_offset.get(pos):
             raise ValueError("invalid offset {}".format(offset))
-        elif offset % 40 > 0:
+        if offset % 40 > 0:
             raise ValueError("invalid offset {}".format(offset))
 
         url = "http://games.espn.com/ffl/tools/projections?"
@@ -265,7 +265,7 @@ class Scraper(RequestScraper):
             "seasonId": season_year,
             "slotCategoryId": position,
         }
-        return self.get(url, payload=params)
+        return self.get(url, params=params)
 
 
 class Parser:
@@ -410,7 +410,7 @@ class Parser:
                         api_player[key] = item["player"]["draftRanksByRankType"][
                             scoring_type
                         ][rank_type]
-                    except:
+                    except KeyError:
                         api_player[key] = None
             vals.append(api_player)
         return vals
@@ -517,9 +517,8 @@ class Parser:
 
                 # loop through stats
                 # they have attempts/completions in one column so have to remove & split
-                attcmp = tds[2].text
                 vals = [self._val(td.text) for td in tds[3:]]
-                for header, val in zip(headers, attcmp.split("/") + vals):
+                for header, val in zip(headers, tds[2].text.split("/") + vals):
                     player[header] = val
                 players.append(player)
 
