@@ -4,6 +4,7 @@
 # interactive search of player_game_finder
 
 '''
+import logging
 
 import pandas as pd
 from .gf import GameFinder
@@ -23,24 +24,27 @@ class PlayerGameFinder(GameFinder):
         Search for stats
 
         Args:
-            None
+            inp(str):
 
         Returns:
             None
 
         '''
-        vals = self.gf_search(inp)
-        try:
+        logging.debug(inp)
+        file_name = self.path / f'{self.seas}_{self.opp}_{self.pos}.csv'
+        if file_name.is_file():
+            df = self.read_csv(file_name)
+            self.print_results(df)
+        else:
+            vals = self.gf_search()
             df = pd.DataFrame(vals)
             df = self.clean_results(df, self.pos)
             if self.pos == 'QB':
                 cols = self.basecols + self.qbcols
             else:
                 cols = self.basecols + self.flexcols
+            self.to_csv(df[cols], file_name)
             self.print_results(df[cols])
-        except:
-            print('could not convert to dataframe')
-            self.do_settings('')
 
 
 if __name__ == "__main__":

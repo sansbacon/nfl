@@ -22,14 +22,19 @@ from nfl.pgf import PlayerGameFinder
                  help='Team code')
 @click.option('-t', '--thresh', type=click.FloatRange(0, 20), default=0,
                  help='Fantasy points threshold')
-def run(seas, pos, opp, thresh):
+@click.option('-h', '--path', type=str, default='/tmp',
+                 help='Save path')
+@click.option('-c', '--cache_name', type=str, default='pgf-cli',
+                 help='Name for cache')
+def run(seas, pos, opp, thresh, path, cache_name):
     logger = logging.getLogger(__name__)
-    hdlr = logging.FileHandler("/tmp/gf.log")
+    hdlr = logging.FileHandler(f"{path}/pgf.log")
     formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
     logger.setLevel(logging.ERROR)
-    pgf = PlayerGameFinder(seas, pos, opp, thresh)
+    pgf = PlayerGameFinder(seas=seas, pos=pos, opp=opp,
+                           thresh=thresh, path=path, cache_name=cache_name)
     pgf.cmdloop()
 
 

@@ -7,11 +7,11 @@
 # shows defense vs. position (team totals)
 
 '''
+
 import logging
-
 import click
-
 from nfl.tgf import TeamGameFinder
+
 
 @click.command()
 @click.option('-y', '--seas', default=None, type=click.IntRange(2010, 2021),
@@ -22,14 +22,20 @@ from nfl.tgf import TeamGameFinder
                  help='Team code')
 @click.option('-t', '--thresh', type=click.FloatRange(0, 20), default=0,
                  help='Fantasy points threshold')
-def run(seas, pos, opp, thresh):
+@click.option('-h', '--path', type=str, default='/tmp',
+                 help='Save path')
+@click.option('-c', '--cache_name', type=str, default='pgf-cli',
+                 help='Name for cache')
+def run(seas, pos, opp, thresh, path, cache_name):
     logger = logging.getLogger(__name__)
-    hdlr = logging.FileHandler("/tmp/tgf.log")
+    hdlr = logging.FileHandler(f"{path}/tgf.log")
     formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
     logger.setLevel(logging.ERROR)
-    tgf = TeamGameFinder(seas, pos, opp, thresh)
+    tgf = TeamGameFinder(seas=seas, pos=pos, opp=opp,
+                         thresh=thresh, path=path,
+                         cache_name=cache_name)
     tgf.cmdloop()
 
 

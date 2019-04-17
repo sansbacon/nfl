@@ -40,30 +40,45 @@ class GameFinder(Cmd):
         '''
         super(GameFinder, self).__init__()
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-        self._s = Scraper(cache_name=__name__)
-        self._p = Parser()
-        self.cache = FileCache(__name__, flag='cs')
-        self.dfs = self.cache.setdefault('dfs', {})
 
-        if 'opp' in kwargs:
+
+        if kwargs.get('cache_name'):
+            self.cache = FileCache(kwargs['cache_name'], flag='cs')
+            self._s = Scraper(cache_name=kwargs['cache_name'])
+        else:
+            self.cache = FileCache('gf', flag='cs')
+            self._s = Scraper(cache_name='gf')
+
+        if kwargs.get('opp'):
             self.opp = kwargs['opp']
         else:
             self.opp = self.cache.get('opp')
 
-        if 'pos' in kwargs:
+        if kwargs.get('pos'):
             self.pos = self.positions.get(kwargs['pos'])
         else:
             self.pos = self.positions.get(self.cache.get('pos'))
 
-        if 'seas' in kwargs:
+        if kwargs.get('seas'):
             self.seas = kwargs['seas']
         else:
             self.seas = self.cache.get('seas')
 
-        if 'thresh' in kwargs:
+        if kwargs.get('thresh'):
             self.thresh = kwargs['thresh']
         else:
             self.thresh = self.cache.setdefault('thresh', 0)
+
+        if kwargs.get('path'):
+            try:
+                self.path = Path(kwargs['path'])
+            except:
+                self.path = Path('/tmp')
+        else:
+            self.path = Path('/tmp')
+
+        self.dfs = self.cache.setdefault('dfs', {})
+        self._p = Parser()
 
     @property
     def basecols(self):
@@ -475,6 +490,41 @@ class GameFinder(Cmd):
         if readline:
             readline.set_history_length(self.histfile_size)
             readline.write_history_file(self.histfile)
+
+    def read_csv(self, path):
+        '''
+
+        Returns:
+
+        '''
+        # Read types first line of csv
+        dtypes = {key: value for (key, value) in
+                  pd.read_csv(path, nrows=1).iloc[0].to_dict().items() if
+                  'date' not in value}
+
+        parse_dates = [key for (key, value) in
+                       pd.read_csv(path, nrows=1).iloc[0].to_dict().items() if
+                       'date' in value]
+
+        # Read the rest of the lines with the types from above
+        return pd.read_csv(path, dtype=dtypes, parse_dates=parse_dates, skiprows=[1])
+
+    def to_csv(self, df, path):
+        '''
+
+        Args:
+            path:
+
+        Returns:
+
+        '''
+        # Prepend dtypes to the top of df
+        df2 = df.copy()
+        df2.loc[-1] = df2.dtypes
+        df2.index = df2.index + 1
+        df2.sort_index(inplace=True)
+        # Then save it to a csv
+        df2.to_csv(path, index=False)
 
     do_EOF = do_exit
     help_EOF = help_exit

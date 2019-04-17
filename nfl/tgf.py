@@ -5,6 +5,7 @@
 
 '''
 
+import logging
 import pandas as pd
 from .gf import GameFinder
 
@@ -38,19 +39,19 @@ class TeamGameFinder(GameFinder):
             None
 
         '''
-        vals = self.gf_search(inp)
-        try:
+        logging.debug(inp)
+        file_name = self.path / f'{self.seas}_{self.opp}_{self.pos}.csv'
+        if file_name.is_file():
+            df = self.read_csv(file_name)
+        else:
+            vals = self.gf_search()
             df = pd.DataFrame(vals)
             df = self.clean_results(df, self.pos)
-            if self.pos == "QB":
-                agg_df = df.groupby(self.basecols)[self.qbcols].sum().reset_index()
-            else:
-                agg_df = df.groupby(self.basecols)[self.flexcols].sum().reset_index()
-            self.print_results(agg_df)
-        except Exception as e:
-            print('could not get dataframe')
-            print(e)
-            self.do_settings('')
+        if self.pos == "QB":
+            agg_df = df.groupby(self.basecols)[self.qbcols].sum().reset_index()
+        else:
+            agg_df = df.groupby(self.basecols)[self.flexcols].sum().reset_index()
+        self.print_results(agg_df)
 
 
 if __name__ == "__main__":
