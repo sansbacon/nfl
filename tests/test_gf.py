@@ -2,10 +2,11 @@
 
 from io import StringIO
 import logging
-import pickle
 import sys
 import unittest
 from unittest.mock import patch
+
+import pandas as pd
 
 from nfl.gf import GameFinder
 from nfl.seasons import current_season_year
@@ -30,8 +31,7 @@ class Gf_test(unittest.TestCase):
 
         '''
         cli = self.create()
-        with open('../data/gf_dataframe.pkl', 'rb') as f:
-            df = pickle.load(f)
+        df = pd.read_json('../data/gf_dataframe.json')
 
         # test qb columns
         clean_df = cli.clean_results(df, 'qb')
