@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 '''
 
 # nfl/gf.py
@@ -9,9 +7,8 @@
 
 from cmd import Cmd
 import logging
-from pprint import pprint
-
 from pathlib import Path
+from pprint import pprint
 
 try:
     import readline
@@ -38,12 +35,13 @@ class GameFinder(Cmd):
     histfile = str(Path.home() / '.gf_history')
     histfile_size = 1000
 
-    def __init__(self, seas, pos, opp, thresh):
+    def __init__(self, seas=None, pos=None, opp=None, thresh=None,
+                 stdin=None, stdout=None):
         '''
         Creates interactive app
 
         '''
-        super(GameFinder, self).__init__()
+        super(GameFinder, self).__init__(stdin=stdin, stdout=stdout)
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         self._s = Scraper(cache_name="gf")
         self._p = Parser()
@@ -199,10 +197,13 @@ class GameFinder(Cmd):
         subset_cols = ['player', 'week', 'team']
         df = df.drop_duplicates(subset=subset_cols, keep='first')
         df['week'] = df['week'].astype(int)
+
+        # fix position & relevant columns
+        pos = pos.upper()
         if pos == "QB":
             df[self.qbcols] = df[self.qbcols].apply(pd.to_numeric, errors='coerce')
             df = df[self.basecols + self.qbcols]
-        elif pos in ["RB", "WR", "TE"]:
+        else:
             df[self.flexcols] = df[self.flexcols].apply(pd.to_numeric, errors='coerce')
             df['pos'] = df['pos'].replace({'HB': 'RB', 'FB': 'RB'})
             df = df[self.basecols + self.flexcols]
@@ -238,7 +239,6 @@ class GameFinder(Cmd):
             print(f"Set opp to {self.opp}")
         else:
             print(f"Invalid team code: {inp}")
-            print(f"Valid codes are: \n{self.team_codes.keys()}")
 
     def do_pos(self, inp):
         '''
@@ -257,7 +257,6 @@ class GameFinder(Cmd):
             print(f"Set pos to {self.pos}")
         else:
             print(f"Invalid position: {inp}")
-            print(f"Valid positions are: \n{self.positions}")
 
     def do_search(self, inp):
         '''
@@ -288,7 +287,7 @@ class GameFinder(Cmd):
             self.seas = current_season_year()
         finally:
             self.cache['seas'] = self.seas
-            print(f'set seas to {self.seas}')
+            print(f'Set seas to {self.seas}')
 
     def do_settings(self, inp):
         '''
@@ -313,11 +312,12 @@ class GameFinder(Cmd):
 
         '''
         try:
-            self.thresh = int(inp)
+            self.thresh = float(inp.strip())
             self.cache['thresh'] = self.thresh
             print("Set thresh to {}".format(self.thresh))
-        except ValueError:
-            print(f"invalid threshold {inp}")
+        except ValueError as ve:
+            logging.exception(ve)
+            print(f"Invalid threshold {inp}")
 
     def help_exit(self):
         '''
