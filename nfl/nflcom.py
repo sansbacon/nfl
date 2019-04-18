@@ -5,13 +5,16 @@
 # scraper and parser classes for nfl.com website
 
 """
+from datetime import datetime
 import logging
 import re
 from string import ascii_uppercase
 
 import demjson
 from bs4 import BeautifulSoup, Comment
+import pendulum
 
+from drbb.orm.base import drbb_setup
 from playermatcher.name import first_last_pair
 from sportscraper.dates import convert_format
 from sportscraper.scraper import RequestScraper
@@ -201,8 +204,8 @@ class Scraper(RequestScraper):
             str
 
         """
-        url = "http://www.nfl.com/schedules/{0}/REG{1}"
-        return self.get(url.format(season, week), encoding="ISO-8859-1")
+        url = f"http://www.nfl.com/schedules/{season}/REG{week}"
+        return self.get(url, encoding="ISO-8859-1")
 
     def score_week(self, season, week):
         """
@@ -258,6 +261,25 @@ class Parser():
                     players[player_id] = {"player_id": player_id}
                     players[player_id][category] = player_stats
         return players
+
+    def esb_id(self, content):
+        """
+        Gets player esb_id
+
+        Args:
+            content(str):
+
+        Returns:
+            str
+
+        """
+        soup = BeautifulSoup(content, "lxml")
+        # GSIS ID and ESB ID are buried in the comments
+        for c in soup.find_all(string=lambda text: isinstance(text, Comment)):
+            if "GSIS" in c:
+                parts = [part.strip() for part in c.split("\n")]
+                return parts[2].split(":")[-1].strip()
+        return None
 
     def gamecenter(self, parsed):
         """
@@ -452,25 +474,6 @@ class Parser():
                 players.append(player)
         return players
 
-    def esb_id(self, content):
-        """
-        Gets player esb_id
-
-        Args:
-            content(str):
-
-        Returns:
-            str
-
-        """
-        soup = BeautifulSoup(content, "lxml")
-        # GSIS ID and ESB ID are buried in the comments
-        for c in soup.find_all(string=lambda text: isinstance(text, Comment)):
-            if "GSIS" in c:
-                parts = [part.strip() for part in c.split("\n")]
-                return parts[2].split(":")[-1].strip()
-        return None
-
     def player_page(self, content, profile_id):
         """
         Returns data from individual player page
@@ -639,7 +642,7 @@ class Parser():
 
     def upcoming_week_page(self, content):
         """
-        Parses upcoming week page for 2017 season
+        Parses upcoming week page (before games played)
 
         Args:
             content(str): HTML page
@@ -649,17 +652,35 @@ class Parser():
 
         """
         games = []
+        etz = 'America/New_York'
+        soup = BeautifulSoup(content, "lxml")
+        patt = re.compile(r'(game[.]+week.*?homeCityName:.*?[-]+[>]+)',
+                          re.MULTILINE | re.DOTALL)
+        subpatt = re.compile(r'formattedDate: (.*?)\s+[-]+[>]+.*?formattedTime: (\d+:\d+ [AP]+M)',
+                          re.MULTILINE | re.DOTALL)
+
+        # get game data from comments
+        start_times = []
+        for match in re.finditer(patt, content):
+            submatch = re.search(subpatt, match.group(1))
+            dtstr = f'{submatch.group(1)} {submatch.group(2)}'
+            parsed = pendulum.parse(dtstr, tz=etz)
+            start_times.append((parsed.in_tz('UTC'), parsed.date().strftime('%A')))
+
         wanted = [
-            "data-game-id",
+            "data-gameid",
             "data-away-abbr",
             "data-home-abbr",
-            "data-gc-url",
             "data-localtime",
             "data-site",
         ]
-        soup = BeautifulSoup(content, "lxml")
-        for div in soup.select("div.schedules-list-content"):
-            games.append({att: div[att] for att in div.attrs if att in wanted})
+
+        for start_time, div in zip(start_times, soup.select("div.schedules-list-content")):
+            game = {att: div[att].strip() for att in div.attrs if att in wanted}
+            game['start_time'] = start_time[0]
+            game['day_of_week'] = start_time[1]
+            games.append(game)
+
         return games
 
     def week_page(self, content):
@@ -694,7 +715,6 @@ class Parser():
                 game["url"] = "http://www.nfl.com{}" + a["href"]
             if game:
                 games.append(game)
-
         return games
 
 
@@ -703,7 +723,7 @@ class Agent():
     Combines common scraping/parsing tasks
 
     '''
-    def __init__(self, scraper=None, parser=None, cache_name=None):
+    def __init__(self, scraper=None, parser=None, cache_name='nfl-agent'):
         """
         Creates Agent object
 
@@ -711,7 +731,6 @@ class Agent():
             scraper: NFLComScraper object
             parser: NFLComParser object
             cache_name: string
-            cj: cookiejar object
 
         """
         logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -724,9 +743,10 @@ class Agent():
         else:
             self._p = Parser()
 
-    def week_games(self, season, week, savedir=None):
+    def upcoming_games(self, season, week):
         """
-        Gets all games from weekly gamecenter page from NFL.com
+        Gets all games from weekly schedule page from NFL.com
+
         Args:
             season(int): 2018, etc.
             week(int): 1, etc.
@@ -735,50 +755,41 @@ class Agent():
             list of dict
 
         """
-        all_games = []
-        try:
-            for g in self._p.week_page(self._s.week_page(season, week)):
-                url = g.get("url")
-                # need to get the game ID, then can get relevant boxscore data
-                # http://www.nfl.com/widget/gc/2011/tabs/cat-post-boxscore?
-                # gameId=2007122000&enableNGS=false
-                if url:
-                    url += "#tab=analyze&analyze=boxscore"
-                    if savedir:
-                        content = self._s.get_filecache(url, savedir)
-                    else:
-                        content = self._s.get(url)
-                    if content:
-                        all_games.append(self._p.game_page(content))
-            logging.info("finished {} week {}".format(season, week))
+        content = self._s.schedule_week(season, week)
+        return self._p.upcoming_week_page(content)
 
-        except Exception as e:
-            logging.exception(e)
-
-        return all_games
-
-    def week_pages(self, seasons, weeks):
-        """
-        Gets weekly gamecenter pages from NFL.com
+    def yearly_schedule(self, season):
+        '''
 
         Args:
-            seasons(list): of int
-            weeks(list): of int
+            season(int): 2018, etc.
 
         Returns:
-            list of dict
+            list: of dict
 
-        """
-        all_games = []
-        for season in seasons:
-            for week in weeks:
-                try:
-                    games = self._p.week_page(self._s.week_page(season, week))
-                    all_games += games
-                    logging.info("finished {} week {}".format(season, week))
-                except Exception as e:
-                    logging.exception(e)
-        return all_games
+        '''
+        Base, engine, session = drbb_setup('base')
+        Game = Base.classes.game
+        for week in range(1, 18):
+            logging.info('starting week %s', week)
+            content = self._s.schedule_week(season, week)
+            utcnow = datetime.utcnow()
+            for g in self._p.upcoming_week_page(content):
+                gobj = Game(
+                    gsis_id=g['data-gameid'],
+                    start_time=g['start_time'],
+                    week=week,
+                    day_of_week=g['day_of_week'],
+                    season_year=season,
+                    season_type='Regular',
+                    finished=False,
+                    home_team=g['data-home-abbr'],
+                    away_team=g['data-away-abbr'],
+                    time_inserted=utcnow,
+                    time_updated=utcnow
+                )
+                session.add(gobj)
+                session.commit()
 
 
 if __name__ == "__main__":
