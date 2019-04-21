@@ -22,6 +22,31 @@ class Scraper(RequestScraper):
     def base_url(self):
         return "https://www.playerprofiler.com/wp-admin/admin-ajax.php?"
 
+    def depth_chart(self, site_team_id):
+        """
+        Gets one team's depth chart from playerprofiler
+
+        Args:
+            site_team_id(str):
+
+        Returns:
+            dict
+
+        """
+        headers = {
+            'Accept-Encoding': 'gzip, deflate',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                          'Chrome/69.0.3497.100 Safari/537.36 OPR/56.0.3051.99',
+            'Accept': 'application/json, text/plain, */*',
+            'Referer': f'https://www.playerprofiler.com/depth-charts/{site_team_id}/',
+            'Connection': 'keep-alive',
+        }
+
+        params = {"action": "playerprofiler_api",
+                  "endpoint": f'/team/{site_team_id}'}
+        return self.get_json(self.base_url, headers=headers, params=params)
+
     def player_articles(self, site_player_id):
         """
         Gets single player article page from playerprofiler
@@ -93,7 +118,39 @@ class Parser(object):
     def __init__(self):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-    def player_college_performance(self, data):
+    @classmethod
+    def depth_chart(cls, content):
+        '''
+
+        Args:
+            content(dict):
+
+        Returns:
+            dict, list of dict
+
+        '''
+        player_positions = content['data']['Players']
+        info = content['data']['Info']
+        team_data = {
+            'site_team_id': info['Team'],
+            'run_pct': info['Run %'],
+            'pass_pct': info['Pass %'],
+            'two_wr': info['2 WRs'],
+            'three_wr': info['3 WRs'],
+            'shotgun': info['Shotgun'],
+            'under_center': info['UnderCenter']
+        }
+        player_data = []
+        for position, players in player_positions.items():
+            for player in players:
+                player_dict = {k.lower().replace(' ','_'):v
+                               for k,v in player.items()}
+                player_dict['source_player_position'] = position
+                player_data.append(player_dict)
+        return team_data, player_data
+
+    @classmethod
+    def player_college_performance(cls, data):
         """
         Takes player dict, returns college performance
 
@@ -128,7 +185,8 @@ class Parser(object):
         context.update(cp)
         return context
 
-    def player_core(self, data):
+    @classmethod
+    def player_core(cls, data):
         """
         Takes player dict, returns core
 
@@ -190,7 +248,8 @@ class Parser(object):
             pass
         return context
 
-    def player_game_logs(self, data):
+    @classmethod
+    def player_game_logs(cls, data):
         """
         Takes player data, returns gamelogs
 
@@ -247,7 +306,8 @@ class Parser(object):
 
         return logs
 
-    def player_medical_history(self, data):
+    @classmethod
+    def player_medical_history(cls, data):
         """
         Takes player data, returns medical history
 
@@ -289,7 +349,8 @@ class Parser(object):
 
         return histories
 
-    def player_performance_metrics(self, data):
+    @classmethod
+    def player_performance_metrics(cls, data):
         """
         Takes player dict, returns performance metrics
 
@@ -388,7 +449,8 @@ class Parser(object):
         context.update(pm)
         return pm
 
-    def player_workout_metrics(self, data):
+    @classmethod
+    def player_workout_metrics(cls, data):
         """
         Takes player dict, returns workout metrics
 
@@ -437,7 +499,8 @@ class Parser(object):
         context.update(wm)
         return wm
 
-    def players(self, content):
+    @classmethod
+    def players(content):
         """
         Parses list of players, with ids, from playerprofiler
 
@@ -467,7 +530,8 @@ class Parser(object):
         else:
             return None
 
-    def rankings(self, content):
+    @classmethod
+    def rankings(cls, content):
         """
         Parses current season, dynasty, and weekly rankings from playerprofiler
 

@@ -26,6 +26,47 @@ class Scraper(RequestScraper):
     Scrapes nfl.com resources
 
     '''
+    @property
+    def nfl_teamd(self, team_code):
+        '''
+        Dict of team_code: nfl_team_id
+
+        '''
+        return {
+            'BAL': 325,
+            'CIN': 920,
+            'CLE': 1050,
+            'PIT': 3900,
+            'BUF': 610,
+            'MIA': 2700,
+            'NE': 3200,
+            'NYJ': 3430,
+            'CHI': 810,
+            'DET': 1540,
+            'GB': 1800,
+            'MIN': 3000,
+            'DAL': 1200,
+            'NYG': 3410,
+            'PHI': 3700,
+            'WAS': 5110,
+            'HOU': 2120,
+            'IND': 2200,
+            'JAX': 2250,
+            'TEN': 2100,
+            'DEN': 1400,
+            'KC': 2310,
+            'LAC': 4400,
+            'OAK': 2520,
+            'ATL': 200,
+            'CAR': 750,
+            'NO': 3300,
+            'TB': 4900,
+            'ARI': 3800,
+            'LA': 2510,
+            'SF': 4500,
+            'SEA': 4600,
+        }
+
     def game(self, gsis_id):
         """
         Gets individual gamecenter page
@@ -222,6 +263,27 @@ class Scraper(RequestScraper):
         """
         url = "http://www.nfl.com/scores/{0}/REG{1}"
         return self.get(url.format(season, week))
+
+    def team_roster(self, team_code=None, nfl_team_id=None):
+        '''
+
+        Args:
+            team_code(str):
+            nfl_team_id(int):
+
+        Returns:
+            Response
+
+        '''
+        if team_code:
+            nfl_team_id = self.nfl_teamd.get(team_code)
+        if not nfl_team_id:
+            raise ValueError('invalid team code or id: %s %s', team_code, nfl_team_id)
+        base_url = 'http://www.nfl.com/players/search?'
+        params = {'category': 'team',
+                  'playerType': 'current',
+                  'filter': nfl_team_id}
+        return self.get(base_url, params=params, return_object=True)
 
 
 class Parser():
@@ -640,6 +702,17 @@ class Parser():
         except:
             return "UNK"
 
+    def team_roster(self, response):
+        '''
+
+        Args:
+            response:
+
+        Returns:
+
+        '''
+        return self.players(response)
+
     def upcoming_week_page(self, content):
         """
         Parses upcoming week page (before games played)
@@ -742,6 +815,30 @@ class Agent():
             self._p = parser
         else:
             self._p = Parser()
+
+    def team_roster_urls(self):
+        '''
+        Gets URLs for nfl.com team roster pages
+
+        Returns:
+            list: of str
+
+        '''
+        base_url = 'http://www.nfl.com/players/search?'
+        params = {'category': 'team',
+                  'playerType': 'current'}
+
+        # team_roster_urls
+        roster_urls = {}
+        response = self._s.get(base_url, params=params, return_object=True)
+        div = response.html.find('#playertabs_2', first=True)
+        for tr in div.find('tr'):
+            for td in tr.find('td'):
+                for p in td.find('p'):
+                    a = p.find('a', first=True)
+                    if a:
+                        roster_urls[p.text] = a.absolute_links
+        return roster_urls
 
     def upcoming_games(self, season, week):
         """
