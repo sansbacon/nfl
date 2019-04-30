@@ -5,7 +5,7 @@
 import logging
 import time
 
-from nflmisc.browser import BrowserScraper
+from sportscraper.scraper import BrowserScraper
 
 
 class Scraper(BrowserScraper):

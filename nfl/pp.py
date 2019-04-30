@@ -1,14 +1,13 @@
-# -*- coding: utf-8 -*-
-'''
+"""
 
 # pp.py
 # classes to scrape and parse plyr proflr dot com
 
-'''
+"""
 
-import json
 import logging
 
+from playermatcher.xref import Site
 from sportscraper.scraper import RequestScraper
 
 
@@ -120,7 +119,7 @@ class Parser(object):
 
     @classmethod
     def depth_chart(cls, content):
-        '''
+        """
 
         Args:
             content(dict):
@@ -128,7 +127,7 @@ class Parser(object):
         Returns:
             dict, list of dict
 
-        '''
+        """
         player_positions = content['data']['Players']
         info = content['data']['Info']
         team_data = {
@@ -143,8 +142,8 @@ class Parser(object):
         player_data = []
         for position, players in player_positions.items():
             for player in players:
-                player_dict = {k.lower().replace(' ','_'):v
-                               for k,v in player.items()}
+                player_dict = {k.lower().replace(' ', '_'): v
+                               for k, v in player.items()}
                 player_dict['source_player_position'] = position
                 player_data.append(player_dict)
         return team_data, player_data
@@ -186,7 +185,7 @@ class Parser(object):
         return context
 
     @classmethod
-    def player_core(cls, data):
+    def player_core(self, content):
         """
         Takes player dict, returns core
 
@@ -198,7 +197,9 @@ class Parser(object):
 
         """
         context = {}
-        player = {"site": "playerprofiler", "site_player_id": data["Player_ID"]}
+        player_node = content['data']['Player']
+        player = {"source": "playerprofiler",
+                  "source_player_id": player_node["Player_ID"]}
         context.update(player)
         core_mapping = {
             "ADP": "adp",
@@ -225,25 +226,26 @@ class Parser(object):
         }
         core = {
             core_mapping[k]: v
-            for k, v in data["Core"].items()
+            for k, v in player_node["Core"].items()
             if k in core_mapping.keys()
         }
         context.update(core)
 
         ## Core has nested data as well
         try:
-            context["site_team_name"] = \
-                data["Core"]["Team"]["Name"]
+            context["source_team_name"] = \
+                player_node["Core"]["Team"]["Name"]
         except (ValueError, KeyError):
             pass
         try:
-            context["site_team_id"] = \
-                data["Core"]["Team"]["Team_ID"]
+            context["source_team_id"] = \
+                player_node["Core"]["Team"]["Team_ID"]
         except (ValueError, KeyError):
             pass
         try:
-            context["best_comparable"] = \
-                data["Core"]["Best Comparable Player"]["Player_ID"]
+            context["best_comparables"] = \
+                [v['Full Name'] for k,v in player_node["Core"].items()
+                  if "Best" in k]
         except (ValueError, KeyError):
             pass
         return context
@@ -355,7 +357,7 @@ class Parser(object):
         Takes player dict, returns performance metrics
 
         Args:
-            player:
+            data:
 
         Returns:
             dict
@@ -455,7 +457,7 @@ class Parser(object):
         Takes player dict, returns workout metrics
 
         Args:
-            player:
+            data:
 
         Returns:
             dict
@@ -500,7 +502,7 @@ class Parser(object):
         return wm
 
     @classmethod
-    def players(content):
+    def players(cls, content):
         """
         Parses list of players, with ids, from playerprofiler
 
@@ -511,24 +513,16 @@ class Parser(object):
             list: of dict
 
         """
-        try:
-            data = json.loads(content)
-
-        except Exception as e:
-            data = None
-            logging.exception("could not load content: {}".format(e))
-
-        if data:
-            return [
-                {
-                    "site": "playerprofiler",
-                    "site_player_name": p.get("Full Name"),
-                    "site_player_id": p.get("Player_ID"),
-                }
-                for p in data["data"]["Players"]
-            ]
-        else:
-            return None
+        return [
+            {
+                "source": "playerprofiler",
+                "source_player_name": p.get("Full Name"),
+                "source_player_id": p.get("Player_ID"),
+                "source_player_position": p.get("Position"),
+                "source_player_team": p.get("Team")
+            }
+            for p in content["data"]["Players"]
+        ]
 
     @classmethod
     def rankings(cls, content):
@@ -550,6 +544,51 @@ class Parser(object):
             for pos in positions:
                 vals.append(rankings[rt][pos])
         return vals
+
+
+class Agent():
+    """
+    Common pp tasks
+
+    """
+
+    def __init__(self, db=None):
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        self._s = Scraper()
+        self._p = Parser()
+        self._x = Xref(db=db)
+
+    def player_xref(self):
+        """
+        Matches players to table
+
+        Returns:
+
+        """
+        # get site players
+        # {'site': 'playerprofiler', 
+        #  'site_player_name': 'Cyrus Gray', 
+        #  'site_player_id': 'CG-2150'}
+        site_players = Parser.players(self._s.players())
+        return self._x.match_base(site_players)
+
+
+class Xref(Site):
+    """
+    Used to cross-reference site players
+
+    """
+
+    def __init__(self, db):
+        """
+
+        Args:
+            db(NFLPostgres): instance
+
+        """
+        super().__init__(db=db)
+        self.source_name = 'playerprofiler'
+
 
 
 if __name__ == "__main__":
