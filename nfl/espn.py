@@ -1,78 +1,24 @@
-# -*- coding: utf-8 -*-
-
 """
+
 # espn.py
 # classes for scraping, parsing espn football data
-"""
+# this does include some basic fantasy data
+# espn_fantasy is mostly about managing fantasy teams
 
+# NOTE: trouble accessing data in offseason
+# will have to revisit this module as season approaches
+
+"""
 
 import logging
 import re
 
 from bs4 import BeautifulSoup, NavigableString, Tag
+from playermatcher.xref import Site
 from sportscraper.scraper import RequestScraper
 
 
-class Scraper(RequestScraper):
-    """
-    Scrape ESPN.com for football stats
-
-    """
-
-    @property
-    def fantasy_team_codes(self):
-        """
-        Fantasy team codes
-
-        Returns:
-            int
-
-        """
-        return [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-            26,
-            27,
-            28,
-            29,
-            30,
-            33,
-            34,
-        ]
-
-    @property
-    def fantasy_teams(self):
-        """
-        Fantasy team codes and names
-
-        Returns:
-            dict
-
-        """
-        return {
+FANTASY_TEAMS = {
             1: "Atl",
             2: "Buf",
             3: "Chi",
@@ -107,6 +53,13 @@ class Scraper(RequestScraper):
             34: "Hou",
         }
 
+
+class Scraper(RequestScraper):
+    """
+    Scrape ESPN.com for football stats
+
+    """
+
     @staticmethod
     def _check_pos(pos):
         """
@@ -136,12 +89,10 @@ class Scraper(RequestScraper):
             "DST",
         ]:
             if pos in ["DST", "dst"]:
-                fixed = "D/ST"
-            else:
-                fixed = pos.upper()
+                pos = "D/ST"
+            return pos.upper()
         else:
             raise ValueError("invalid position: {}".format(pos))
-        return fixed
 
     def adp(self, season_year):
         """
@@ -278,94 +229,6 @@ class Parser:
         """
         """
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-
-    @property
-    def fantasy_team_codes(self):
-        """
-        Fantasy team codes
-
-        Returns:
-            int
-
-        """
-        return [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-            26,
-            27,
-            28,
-            29,
-            30,
-            33,
-            34,
-        ]
-
-    @property
-    def fantasy_teams(self):
-        """
-        Fantasy team codes to names
-
-        Returns:
-            dict
-
-        """
-        return {
-            1: "Atl",
-            2: "Buf",
-            3: "Chi",
-            4: "Cin",
-            5: "Cle",
-            6: "Dal",
-            7: "Den",
-            8: "Det",
-            9: "GB",
-            10: "Ten",
-            11: "Ind",
-            12: "KC",
-            13: "Oak",
-            14: "LAR",
-            15: "Mia",
-            16: "Min",
-            17: "NE",
-            18: "NO",
-            19: "NYG",
-            20: "NYJ",
-            21: "Phi",
-            22: "Ari",
-            23: "Pit",
-            24: "LAC",
-            25: "SF",
-            26: "Sea",
-            27: "TB",
-            28: "Wsh",
-            29: "Car",
-            30: "Jax",
-            33: "Bal",
-            34: "Hou",
-        }
 
     @staticmethod
     def _val(val):
@@ -544,7 +407,6 @@ class Parser:
                 players.append(player)
         else:
             pass
-
         return players
 
     @staticmethod
@@ -623,48 +485,6 @@ class Parser:
             except ValueError:
                 pass
         return players
-
-    @staticmethod
-    def watson(content):
-        """
-
-        Args:
-            content: list of dict - parsed JSON
-
-        Returns:
-            dict
-        """
-        wanted = [
-            "PLAYERID",
-            "EXECUTION_TIMESTAMP",
-            "DISTRIBUTION_NAME",
-            "SCORE_PROJECTION",
-            "SCORE_DISTRIBUTION",
-            "LOW_SCORE",
-            "HIGH_SCORE",
-            "OUTSIDE_PROJECTION",
-            "SIMULATION_PROJECTION",
-        ]
-
-        # have multiple time-stamped projections
-        # we want the most recent projection model only
-        newest = content[-1]
-        return {k.lower(): v for k, v in newest.items() if k in wanted}
-
-    @staticmethod
-    def watson_players(content, wanted=None):
-        """
-        Parses list of dict into player
-
-        Args:
-            content: dict - parsed JSON
-
-        Returns:
-            list of player dict
-        """
-        if not wanted:
-            wanted = ["FULL_NAME", "FANTASY_PLAYER_ID", "PLAYERID", "POSITION", "TEAM"]
-        return [{k.lower(): v for k, v in p.items() if k in wanted} for p in content]
 
     @staticmethod
     def weekly_scoring(content):
@@ -814,6 +634,84 @@ class Parser:
                         player["source_player_id"] = child.attrs.get("playerid")
                 results.append(player)
         return results
+
+
+class Agent():
+    '''
+    Combines common scraping/parsing tasks
+
+    '''
+    def __init__(self, scraper=None, parser=None, cache_name='espn-agent'):
+        """
+        Creates Agent object
+
+        Args:
+            scraper(espn.Scraper): default None
+            parser(espn.Parser): default None
+            cache_name(str): default 'espn-agent'
+
+        """
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        if scraper:
+            self._s = scraper
+        else:
+            self._s = Scraper(cache_name=cache_name)
+        if parser:
+            self._p = parser
+        else:
+            self._p = Parser()
+
+    def adp(self, season_year):
+        """
+        Gets season ADP data
+
+        Args:
+            season_year(int): 2018, 2019, etc.
+
+        Returns:
+            list: of dict
+
+        """
+        content = self._s.adp(season_year)
+        return self._p.adp(content)
+
+    def fantasy_players_team(self, team_id=None, team_code=None):
+        """
+        Gets fantasy players on one NFL team
+
+        Args:
+            team_id(int): None
+            team_code(str): default None
+
+        Returns:
+            list: of dict
+
+        """
+        if team_code:
+            match = [(k,v) for k,v in FANTASY_TEAMS.items() if v.upper() == team_code.upper()]
+            if match:
+                team_id = match[0][0]
+                logging.info('converted %s to %s', team_code, team_id)
+        if not team_id:
+            raise ValueError('Must specify team_id or team_code')
+        content = self._s.fantasy_players_team(team_id)
+        return self._p.fantasy_players_team(content)
+
+class Xref(Site):
+    """
+    Cross-reference source players with other names/ids
+
+    """
+
+    def __init__(self, source_name='espn'):
+        """
+
+        Args:
+            source_name(str): either 'espn' or 'espn_fantasy'
+
+        """
+        super().__init__()
+        self.source_name = source_name
 
 
 if __name__ == "__main__":

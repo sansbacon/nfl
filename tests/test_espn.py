@@ -95,7 +95,23 @@ class ESPN_test(unittest.TestCase):
         content = self.s.weekly_scoring(self.season, 1, 'k')
         self.assertIsInstance(self.p.weekly_scoring_k(content), list)
 
+    def test_agent(self):
+        a = ne.Agent()
+        self.assertIsInstance(a, ne.Agent)
+
+    def test_agent_adp(self):
+        a = ne.Agent(scraper=self.s, parser=self.p)
+        data = a.adp(2019)
+        self.assertIsInstance(data, list)
+        self.assertIsInstance(data[0], dict)
+        self.assertIn('ppr_rank', data[0].keys())
+
+    def test_agent_fantasy_players_team(self):
+        a = ne.Agent(scraper=self.s, parser=self.p)
+        data = a.fantasy_players_team(team_code='chi')
+        self.assertIsInstance(data, list)
+        self.assertIsInstance(data[0], dict)
+        self.assertIn('source_player_name', data[0].keys())
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
     unittest.main()
