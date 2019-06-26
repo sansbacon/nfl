@@ -12,6 +12,44 @@ from bs4 import BeautifulSoup
 from sportscraper.scraper import RequestScraper
 
 
+LONG_TO_CODE = {
+    "Arizona Cardinals": "ARI",
+    "Atlanta Falcons": "ATL",
+    "Baltimore Ravens": "BAL",
+    "Buffalo Bills": "BUF",
+    "Carolina Panthers": "CAR",
+    "Chicago Bears": "CHI",
+    "Cincinnati Bengals": "CIN",
+    "Cleveland Browns": "CLE",
+    "Dallas Cowboys": "DAL",
+    "Denver Broncos": "DEN",
+    "Detroit Lions": "DET",
+    "Green Bay Packers": "GB",
+    "Houston Texans": "HOU",
+    "Indianapolis Colts": "IND",
+    "Jacksonville Jaguars": "JAC",
+    "Kansas City Chiefs": "KC",
+    "Los Angeles Chargers": "LAC",
+    "Los Angeles Rams": "LA",
+    "Miami Dolphins": "MIA",
+    "Minnesota Vikings": "MIN",
+    "New England Patriots": "NE",
+    "New Orleans Saints": "NO",
+    "New York Giants": "NYG",
+    "New York Jets": "NYJ",
+    "Oakland Raiders": "OAK",
+    "Philadelphia Eagles": "PHI",
+    "Pittsburgh Steelers": "PIT",
+    "San Diego Chargers": "LAC",
+    "San Francisco 49ers": "SF",
+    "Seattle Seahawks": "SEA",
+    "St. Louis Rams": "LA",
+    "Tampa Bay Buccaneers": "TB",
+    "Tennessee Titans": "TEN",
+    "Washington Redskins": "WAS",
+}
+
+
 class Scraper(RequestScraper):
     @property
     def pgl_finder_url(self):
@@ -553,11 +591,11 @@ class Scraper(RequestScraper):
             season_year: 2016, etc.
 
         Returns:
-            str: HTML page
+            response
 
         """
         url = f"https://www.pro-football-reference.com/years/{season_year}"
-        return self.get(url)
+        return self.get(url, return_object=True)
 
     def team_offense_weekly(self, season_start, season_end, week):
         """
@@ -1132,24 +1170,31 @@ class Parser(object):
             teams.append({td["data-stat"]: td.text for td in tr.find_all("td")})
         return teams
 
-    def team_offense_yearly(self, content, season_year=None):
+    def team_offense_yearly(self, response):
         """
         Team offense stats for total season
 
         Args:
-            content(str): HTML page
+            response
 
         Returns:
             list of dict
 
         """
         teams = []
-        soup = BeautifulSoup(content, "lxml")
-        off = soup.find("table", {"id": "team_stats_clone"}).find("tbody")
-        for tr in off.findAll("tr"):
-            team = {td["data-stat"]: td.text for td in tr.find_all("td")}
-            if season_year:
-                team["season_year"] = season_year
+        response.html.render()
+        off = response.html.find('#team_stats', first=True)
+        season_year = response.html.find('h1', first=True).text.split()[0]
+        for tr in off.find("tr"):
+            team = {td.attrs.get("data-stat"): td.text for td in tr.find("td")}
+            team['source'] = 'pfr'
+            if not team.get('team'):
+                continue
+            elif team.get('team') in ['Avg Team', 'League Total', 'Avg Tm/G']:
+                continue
+            else:
+                team['source_team_code'] = LONG_TO_CODE.get(team.pop('team'))
+            team["season_year"] = season_year
             teams.append(team)
         return teams
 
@@ -1285,5 +1330,7 @@ if __name__ == "__main__":
     # pass
     s = Scraper(cache_name="pfr")
     p = Parser()
-    content = s.playerstats_passing_yearly(season_year=2018)
-    print(p.playerstats_passing_yearly(content))
+    content = s.team_offense_yearly(season_year=2008)
+    #with open('/home/sansbacon/to.htm', 'w') as f:
+    #    f.write(content)
+    print(p.team_offense_yearly(content, 2008))

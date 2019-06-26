@@ -14,11 +14,12 @@ import demjson
 from bs4 import BeautifulSoup, Comment
 import pendulum
 
-from drbb.orm.base import drbb_setup
+from .db import setup
 from playermatcher.name import first_last_pair
-from sportscraper.dates import convert_format
+from sportscraper.dates import convert_format, today
 from sportscraper.scraper import RequestScraper
-from sportscraper.utility import digits, merge_two
+from sportscraper.utility import digits, merge_two, save_csv
+from sqlalchemy import text
 
 
 class Scraper(RequestScraper):
@@ -549,7 +550,7 @@ class Parser():
 
         """
         soup = BeautifulSoup(content, "lxml")
-        player = {}
+        player = {'status': 'Active'}
 
         # GSIS ID and ESB ID are buried in the comments
         for c in soup.find_all(string=lambda text: isinstance(text, Comment)):
@@ -557,7 +558,7 @@ class Parser():
                 parts = [part.strip() for part in c.split("\n")]
                 esb_id = parts[2].split(":")[-1].strip()
                 gsis_id = parts[3].split(":")[-1].strip()
-                player["player_id"] = gsis_id
+                player["nflcom_player_id"] = gsis_id
                 player["profile_id"] = profile_id
                 if esb_id:
                     player["esb_id"] = esb_id
@@ -585,7 +586,7 @@ class Parser():
 
             # paras[1]: team
             player["team"] = paras[1].find("a")["href"].split("=")[-1]
-        except ValueError as e:
+        except (IndexError, ValueError) as e:
             logging.exception(e)
             return None
 
@@ -596,21 +597,21 @@ class Parser():
             player["height"] = int(digits(feet)) * 6 + int(digits(inches))
             player["weight"] = digits(parts[3])
             player["age"] = digits(parts[5])
-        except ValueError as e:
+        except (IndexError, ValueError) as e:
             logging.exception(e)
 
         try:
             # birthdate
             parts = paras[3].text.split()
             player["birthdate"] = parts[1].strip()
-        except ValueError as e:
+        except (IndexError, ValueError) as e:
             logging.exception(e)
 
         try:
             # college
             parts = paras[4].text.split()
             player["college"] = parts[1].strip()
-        except ValueError as e:
+        except (IndexError, ValueError) as e:
             logging.exception(e)
 
         try:
@@ -618,11 +619,8 @@ class Parser():
             parts = paras[5].text.split()
             ordinal = parts[1].strip()
             player["years_pro"] = "".join(ch for ch in ordinal if ch.isdigit())
-        except ValueError as e:
+        except (IndexError, ValueError) as e:
             logging.exception(e)
-
-        # status
-        player["status"] = "Active"
 
         return player
 
@@ -815,6 +813,7 @@ class Agent():
             self._p = parser
         else:
             self._p = Parser()
+        self.base, self.eng, self.session = setup(database='pg', schema='base')
 
     def team_roster_urls(self):
         '''
@@ -837,8 +836,206 @@ class Agent():
                 for p in td.find('p'):
                     a = p.find('a', first=True)
                     if a:
-                        roster_urls[p.text] = a.absolute_links
+                        roster_urls[p.text] = next(iter(a.absolute_links))
         return roster_urls
+
+    def get_team_rosters(self):
+        """
+        Gets all 32 team rosters
+
+        Returns:
+            list: of dict
+
+        """
+        rosters = []
+        for team_name, url in self.team_roster_urls().items():
+            logging.info('starting %s: %s', team_name, url)
+            response = self._s.get(url, return_object=True)
+            roster = self._p.team_roster(response)
+            logging.info(roster)
+            rosters.append(roster)
+        return [item for sublist in rosters for item in sublist]
+
+    def get_player(self, player):
+        """
+
+        Args:
+            player(dict):
+
+        Returns:
+            bool
+
+        """
+        PlayerXref = self.base.classes.player_xref
+        return (
+            self.session.query(PlayerXref) \
+                .filter(PlayerXref.source_player_code != None) \
+                .filter(PlayerXref.source_player_code == player.get("profile_path")) \
+                .filter(PlayerXref.source == "nflcom") \
+                .first()
+        )
+
+    def save_unmatched(self,
+                       unmatched,
+                       file_name='/tmp/unmatched.csv'):
+        """
+        Saves unmatched players to CSV file
+
+        Args:
+            unmatched(list): of dict
+            file_name(str): default '/tmp/unmatched.csv'
+
+        Returns:
+            None
+
+        """
+        if unmatched and len(unmatched) > 0:
+            save_csv(data=unmatched,
+                     csv_fname=file_name,
+                     fieldnames=sorted(list(unmatched[0].keys())))
+
+    def update_unmatched_xref(self, unmatched):
+        """
+        Adds unmatched player to player_xref
+
+        Args:
+            unmatched:
+
+        Returns:
+
+        """
+        Player = self.base.classes.player
+        PlayerXref = self.base.classes.player_xref
+
+        for item in unmatched:
+            profile_path = item.get('profile_path')
+            if profile_path:
+                profile_id = profile_path.split('/')[-1]
+                try:
+                    content = self._s.player_profile(profile_path=profile_path)
+                    p = self._p.player_page(content, profile_id)
+                    match = self.session.query(Player) \
+                        .filter(Player.full_name == p['full_name']) \
+                        .filter(Player.pos == p['position']) \
+                        .filter(Player.birthdate == p.get('birthdate', '1960-01-01')) \
+                        .first()
+                    if match:
+                        self.session.add(
+                            PlayerXref(
+                                player_id=match.player_id,
+                                source='nflcom',
+                                source_player_id=match.nflcom_player_id,
+                                source_player_code=profile_id,
+                                source_player_name=match.full_name,
+                                source_player_position=match.position
+                            )
+                        )
+
+                except:
+                    pass
+
+        self.session.commit()
+
+    def update_unmatched(self, unmatched):
+        """
+
+        Args:
+            unmatched:
+
+        Returns:
+
+        """
+        Player = self.base.classes.player
+
+        for item in unmatched:
+            profile_path = item.get('profile_path')
+            if profile_path:
+                profile_id = profile_path.split('/')[-1]
+                try:
+                    content = self._s.player_profile(profile_path=profile_path)
+                    p = self._p.player_page(content, profile_id)
+                    filt = text(f"nflcom_player_id='{p['nflcom_player_id']}'")
+                    match = self.session.query(Player).filter(filt).first()
+
+                    # if no match, add to player table and get autoincrement id
+                    # if match, get existing player_id
+                    if match:
+                        logging.info('found match for %s', p['full_name'])
+                    else:
+                        logging.info('no match for %s', p['full_name'])
+                        match = self.session.query(Player) \
+                            .filter(Player.first_name == p['first_name']) \
+                            .filter(Player.last_name == p['last_name']) \
+                            .filter(Player.pos == p['position']) \
+                            .filter(Player.birthdate == p.get('birthdate')) \
+                            .first()
+                        if match:
+                            match.nflcom_player_id = p['nflcom_player_id']
+                            if p.get('height'):
+                                match.height = p['height']
+                            if p.get('weight'):
+                                match.weight = p['weight']
+                            if p.get('college'):
+                                match.college = p['college']
+                        else:
+                            playerobj = Player(
+                                nflcom_player_id = p['nflcom_player_id'],
+                                first_name = p['first_name'],
+                                last_name=p['last_name'],
+                                pos=p['position'],
+                                height=p.get('height', None),
+                                weight=p.get('weight', None),
+                                birthdate=p.get('birthdate', None),
+                                college=p.get('college', None)
+                            )
+                            self.session.add(playerobj)
+                        self.session.commit()
+                except:
+                    pass
+
+    def update_team_rosters(self, rosters):
+        """
+        Adds team rosters to roster table
+
+        Args:
+            rosters(list): of dict
+
+        Returns:
+            None
+
+        """
+        unmatched = []
+        matched = []
+        Roster = self.base.classes.roster
+        as_of = today()
+        for item in rosters:
+            # sample item
+            # {'pos': 'WR',
+            # 'num': '16',
+            # 'plyr': 'Adeboyejo, Quincy',
+            # 'status': 'ACT',
+            # 'team': 'BAL',
+            # 'profile_path': 'quincyadeboyejo/2557843'}
+
+            # step one: see if player in table
+            # if not in table, then add
+            player = self.get_player(item)
+            if not player:
+                # add player
+                unmatched.append(item)
+                logging.info('no match for %s', item['plyr'])
+                continue
+            # step two: add player to roster table
+            matched.append({'as_of': as_of,
+                            'player_id': player.player_id,
+                            'team_id': item['team']})
+            logging.info('added %s', item['plyr'])
+
+        # add roster objects to database
+        self.session.bulk_insert_mappings(Roster, matched)
+        self.session.commit()
+
+        return unmatched
 
     def upcoming_games(self, season, week):
         """
@@ -865,12 +1062,12 @@ class Agent():
             list: of dict
 
         '''
-        Base, engine, session = drbb_setup('base')
-        Game = Base.classes.game
+        Game = self.base.classes.game
         for week in range(1, 18):
             logging.info('starting week %s', week)
             content = self._s.schedule_week(season, week)
             utcnow = datetime.utcnow()
+            gobjs = []
             for g in self._p.upcoming_week_page(content):
                 gobj = Game(
                     gsis_id=g['data-gameid'],
@@ -885,8 +1082,9 @@ class Agent():
                     time_inserted=utcnow,
                     time_updated=utcnow
                 )
-                session.add(gobj)
-                session.commit()
+                gobjs.append(gobj)
+            self.session.bulk_save_objects(gobjs)
+            self.session.commit()
 
 
 if __name__ == "__main__":
