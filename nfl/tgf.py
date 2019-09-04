@@ -1,9 +1,9 @@
-'''
+"""
 
 # nfl/tgf.py
 # interactive search of team-level stats allowed
 
-'''
+"""
 
 import logging
 import pandas as pd
@@ -11,25 +11,20 @@ from .gf import GameFinder
 
 
 class TeamGameFinder(GameFinder):
-    '''
+    """
     Interactive command line app
 
-    '''
+    """
 
     prompt = "team_game_finder> "
     intro = "Welcome to Team Game Finder! Type ? to list commands"
 
     @property
     def basecols(self):
-        return [
-            "pos",
-            "week",
-            "team",
-        ]
-
+        return ["pos", "week", "team"]
 
     def do_search(self, inp):
-        '''
+        """
         Search for stats
 
         Args:
@@ -38,9 +33,9 @@ class TeamGameFinder(GameFinder):
         Returns:
             None
 
-        '''
+        """
         logging.debug(inp)
-        file_name = self.path / f'{self.seas}_{self.opp}_{self.pos}.csv'
+        file_name = self.path / f"{self.seas}_{self.opp}_{self.pos}.csv"
         if file_name.is_file():
             df = self.read_csv(file_name)
         else:

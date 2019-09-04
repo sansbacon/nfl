@@ -23,49 +23,50 @@ from sqlalchemy import text
 
 
 class Scraper(RequestScraper):
-    '''
+    """
     Scrapes nfl.com resources
 
-    '''
+    """
+
     @property
     def nfl_teamd(self, team_code):
-        '''
+        """
         Dict of team_code: nfl_team_id
 
-        '''
+        """
         return {
-            'BAL': 325,
-            'CIN': 920,
-            'CLE': 1050,
-            'PIT': 3900,
-            'BUF': 610,
-            'MIA': 2700,
-            'NE': 3200,
-            'NYJ': 3430,
-            'CHI': 810,
-            'DET': 1540,
-            'GB': 1800,
-            'MIN': 3000,
-            'DAL': 1200,
-            'NYG': 3410,
-            'PHI': 3700,
-            'WAS': 5110,
-            'HOU': 2120,
-            'IND': 2200,
-            'JAX': 2250,
-            'TEN': 2100,
-            'DEN': 1400,
-            'KC': 2310,
-            'LAC': 4400,
-            'OAK': 2520,
-            'ATL': 200,
-            'CAR': 750,
-            'NO': 3300,
-            'TB': 4900,
-            'ARI': 3800,
-            'LA': 2510,
-            'SF': 4500,
-            'SEA': 4600,
+            "BAL": 325,
+            "CIN": 920,
+            "CLE": 1050,
+            "PIT": 3900,
+            "BUF": 610,
+            "MIA": 2700,
+            "NE": 3200,
+            "NYJ": 3430,
+            "CHI": 810,
+            "DET": 1540,
+            "GB": 1800,
+            "MIN": 3000,
+            "DAL": 1200,
+            "NYG": 3410,
+            "PHI": 3700,
+            "WAS": 5110,
+            "HOU": 2120,
+            "IND": 2200,
+            "JAX": 2250,
+            "TEN": 2100,
+            "DEN": 1400,
+            "KC": 2310,
+            "LAC": 4400,
+            "OAK": 2520,
+            "ATL": 200,
+            "CAR": 750,
+            "NO": 3300,
+            "TB": 4900,
+            "ARI": 3800,
+            "LA": 2510,
+            "SF": 4500,
+            "SEA": 4600,
         }
 
     def game(self, gsis_id):
@@ -266,7 +267,7 @@ class Scraper(RequestScraper):
         return self.get(url.format(season, week))
 
     def team_roster(self, team_code=None, nfl_team_id=None):
-        '''
+        """
 
         Args:
             team_code(str):
@@ -275,19 +276,17 @@ class Scraper(RequestScraper):
         Returns:
             Response
 
-        '''
+        """
         if team_code:
             nfl_team_id = self.nfl_teamd.get(team_code)
         if not nfl_team_id:
-            raise ValueError('invalid team code or id: %s %s', team_code, nfl_team_id)
-        base_url = 'http://www.nfl.com/players/search?'
-        params = {'category': 'team',
-                  'playerType': 'current',
-                  'filter': nfl_team_id}
+            raise ValueError("invalid team code or id: %s %s", team_code, nfl_team_id)
+        base_url = "http://www.nfl.com/players/search?"
+        params = {"category": "team", "playerType": "current", "filter": nfl_team_id}
         return self.get(base_url, params=params, return_object=True)
 
 
-class Parser():
+class Parser:
     """
     Used to parse NFL.com GameCenter pages,
     which are json documents with game and play-by-play stats
@@ -550,7 +549,7 @@ class Parser():
 
         """
         soup = BeautifulSoup(content, "lxml")
-        player = {'status': 'Active'}
+        player = {"status": "Active"}
 
         # GSIS ID and ESB ID are buried in the comments
         for c in soup.find_all(string=lambda text: isinstance(text, Comment)):
@@ -701,14 +700,14 @@ class Parser():
             return "UNK"
 
     def team_roster(self, response):
-        '''
+        """
 
         Args:
             response:
 
         Returns:
 
-        '''
+        """
         return self.players(response)
 
     def upcoming_week_page(self, content):
@@ -723,20 +722,23 @@ class Parser():
 
         """
         games = []
-        etz = 'America/New_York'
+        etz = "America/New_York"
         soup = BeautifulSoup(content, "lxml")
-        patt = re.compile(r'(game[.]+week.*?homeCityName:.*?[-]+[>]+)',
-                          re.MULTILINE | re.DOTALL)
-        subpatt = re.compile(r'formattedDate: (.*?)\s+[-]+[>]+.*?formattedTime: (\d+:\d+ [AP]+M)',
-                          re.MULTILINE | re.DOTALL)
+        patt = re.compile(
+            r"(game[.]+week.*?homeCityName:.*?[-]+[>]+)", re.MULTILINE | re.DOTALL
+        )
+        subpatt = re.compile(
+            r"formattedDate: (.*?)\s+[-]+[>]+.*?formattedTime: (\d+:\d+ [AP]+M)",
+            re.MULTILINE | re.DOTALL,
+        )
 
         # get game data from comments
         start_times = []
         for match in re.finditer(patt, content):
             submatch = re.search(subpatt, match.group(1))
-            dtstr = f'{submatch.group(1)} {submatch.group(2)}'
+            dtstr = f"{submatch.group(1)} {submatch.group(2)}"
             parsed = pendulum.parse(dtstr, tz=etz)
-            start_times.append((parsed.in_tz('UTC'), parsed.date().strftime('%A')))
+            start_times.append((parsed.in_tz("UTC"), parsed.date().strftime("%A")))
 
         wanted = [
             "data-gameid",
@@ -746,10 +748,12 @@ class Parser():
             "data-site",
         ]
 
-        for start_time, div in zip(start_times, soup.select("div.schedules-list-content")):
+        for start_time, div in zip(
+            start_times, soup.select("div.schedules-list-content")
+        ):
             game = {att: div[att].strip() for att in div.attrs if att in wanted}
-            game['start_time'] = start_time[0]
-            game['day_of_week'] = start_time[1]
+            game["start_time"] = start_time[0]
+            game["day_of_week"] = start_time[1]
             games.append(game)
 
         return games
@@ -789,12 +793,13 @@ class Parser():
         return games
 
 
-class Agent():
-    '''
+class Agent:
+    """
     Combines common scraping/parsing tasks
 
-    '''
-    def __init__(self, scraper=None, parser=None, cache_name='nfl-agent'):
+    """
+
+    def __init__(self, scraper=None, parser=None, cache_name="nfl-agent"):
         """
         Creates Agent object
 
@@ -813,28 +818,27 @@ class Agent():
             self._p = parser
         else:
             self._p = Parser()
-        self.base, self.eng, self.session = setup(database='pg', schema='base')
+        self.base, self.eng, self.session = setup(database="pg", schema="base")
 
     def team_roster_urls(self):
-        '''
+        """
         Gets URLs for nfl.com team roster pages
 
         Returns:
             list: of str
 
-        '''
-        base_url = 'http://www.nfl.com/players/search?'
-        params = {'category': 'team',
-                  'playerType': 'current'}
+        """
+        base_url = "http://www.nfl.com/players/search?"
+        params = {"category": "team", "playerType": "current"}
 
         # team_roster_urls
         roster_urls = {}
         response = self._s.get(base_url, params=params, return_object=True)
-        div = response.html.find('#playertabs_2', first=True)
-        for tr in div.find('tr'):
-            for td in tr.find('td'):
-                for p in td.find('p'):
-                    a = p.find('a', first=True)
+        div = response.html.find("#playertabs_2", first=True)
+        for tr in div.find("tr"):
+            for td in tr.find("td"):
+                for p in td.find("p"):
+                    a = p.find("a", first=True)
                     if a:
                         roster_urls[p.text] = next(iter(a.absolute_links))
         return roster_urls
@@ -849,7 +853,7 @@ class Agent():
         """
         rosters = []
         for team_name, url in self.team_roster_urls().items():
-            logging.info('starting %s: %s', team_name, url)
+            logging.info("starting %s: %s", team_name, url)
             response = self._s.get(url, return_object=True)
             roster = self._p.team_roster(response)
             logging.info(roster)
@@ -868,16 +872,14 @@ class Agent():
         """
         PlayerXref = self.base.classes.player_xref
         return (
-            self.session.query(PlayerXref) \
-                .filter(PlayerXref.source_player_code != None) \
-                .filter(PlayerXref.source_player_code == player.get("profile_path")) \
-                .filter(PlayerXref.source == "nflcom") \
-                .first()
+            self.session.query(PlayerXref)
+            .filter(PlayerXref.source_player_code != None)
+            .filter(PlayerXref.source_player_code == player.get("profile_path"))
+            .filter(PlayerXref.source == "nflcom")
+            .first()
         )
 
-    def save_unmatched(self,
-                       unmatched,
-                       file_name='/tmp/unmatched.csv'):
+    def save_unmatched(self, unmatched, file_name="/tmp/unmatched.csv"):
         """
         Saves unmatched players to CSV file
 
@@ -890,9 +892,11 @@ class Agent():
 
         """
         if unmatched and len(unmatched) > 0:
-            save_csv(data=unmatched,
-                     csv_fname=file_name,
-                     fieldnames=sorted(list(unmatched[0].keys())))
+            save_csv(
+                data=unmatched,
+                csv_fname=file_name,
+                fieldnames=sorted(list(unmatched[0].keys())),
+            )
 
     def update_unmatched_xref(self, unmatched):
         """
@@ -908,26 +912,28 @@ class Agent():
         PlayerXref = self.base.classes.player_xref
 
         for item in unmatched:
-            profile_path = item.get('profile_path')
+            profile_path = item.get("profile_path")
             if profile_path:
-                profile_id = profile_path.split('/')[-1]
+                profile_id = profile_path.split("/")[-1]
                 try:
                     content = self._s.player_profile(profile_path=profile_path)
                     p = self._p.player_page(content, profile_id)
-                    match = self.session.query(Player) \
-                        .filter(Player.full_name == p['full_name']) \
-                        .filter(Player.pos == p['position']) \
-                        .filter(Player.birthdate == p.get('birthdate', '1960-01-01')) \
+                    match = (
+                        self.session.query(Player)
+                        .filter(Player.full_name == p["full_name"])
+                        .filter(Player.pos == p["position"])
+                        .filter(Player.birthdate == p.get("birthdate", "1960-01-01"))
                         .first()
+                    )
                     if match:
                         self.session.add(
                             PlayerXref(
                                 player_id=match.player_id,
-                                source='nflcom',
+                                source="nflcom",
                                 source_player_id=match.nflcom_player_id,
                                 source_player_code=profile_id,
                                 source_player_name=match.full_name,
-                                source_player_position=match.position
+                                source_player_position=match.position,
                             )
                         )
 
@@ -948,9 +954,9 @@ class Agent():
         Player = self.base.classes.player
 
         for item in unmatched:
-            profile_path = item.get('profile_path')
+            profile_path = item.get("profile_path")
             if profile_path:
-                profile_id = profile_path.split('/')[-1]
+                profile_id = profile_path.split("/")[-1]
                 try:
                     content = self._s.player_profile(profile_path=profile_path)
                     p = self._p.player_page(content, profile_id)
@@ -960,33 +966,35 @@ class Agent():
                     # if no match, add to player table and get autoincrement id
                     # if match, get existing player_id
                     if match:
-                        logging.info('found match for %s', p['full_name'])
+                        logging.info("found match for %s", p["full_name"])
                     else:
-                        logging.info('no match for %s', p['full_name'])
-                        match = self.session.query(Player) \
-                            .filter(Player.first_name == p['first_name']) \
-                            .filter(Player.last_name == p['last_name']) \
-                            .filter(Player.pos == p['position']) \
-                            .filter(Player.birthdate == p.get('birthdate')) \
+                        logging.info("no match for %s", p["full_name"])
+                        match = (
+                            self.session.query(Player)
+                            .filter(Player.first_name == p["first_name"])
+                            .filter(Player.last_name == p["last_name"])
+                            .filter(Player.pos == p["position"])
+                            .filter(Player.birthdate == p.get("birthdate"))
                             .first()
+                        )
                         if match:
-                            match.nflcom_player_id = p['nflcom_player_id']
-                            if p.get('height'):
-                                match.height = p['height']
-                            if p.get('weight'):
-                                match.weight = p['weight']
-                            if p.get('college'):
-                                match.college = p['college']
+                            match.nflcom_player_id = p["nflcom_player_id"]
+                            if p.get("height"):
+                                match.height = p["height"]
+                            if p.get("weight"):
+                                match.weight = p["weight"]
+                            if p.get("college"):
+                                match.college = p["college"]
                         else:
                             playerobj = Player(
-                                nflcom_player_id = p['nflcom_player_id'],
-                                first_name = p['first_name'],
-                                last_name=p['last_name'],
-                                pos=p['position'],
-                                height=p.get('height', None),
-                                weight=p.get('weight', None),
-                                birthdate=p.get('birthdate', None),
-                                college=p.get('college', None)
+                                nflcom_player_id=p["nflcom_player_id"],
+                                first_name=p["first_name"],
+                                last_name=p["last_name"],
+                                pos=p["position"],
+                                height=p.get("height", None),
+                                weight=p.get("weight", None),
+                                birthdate=p.get("birthdate", None),
+                                college=p.get("college", None),
                             )
                             self.session.add(playerobj)
                         self.session.commit()
@@ -1023,13 +1031,13 @@ class Agent():
             if not player:
                 # add player
                 unmatched.append(item)
-                logging.info('no match for %s', item['plyr'])
+                logging.info("no match for %s", item["plyr"])
                 continue
             # step two: add player to roster table
-            matched.append({'as_of': as_of,
-                            'player_id': player.player_id,
-                            'team_id': item['team']})
-            logging.info('added %s', item['plyr'])
+            matched.append(
+                {"as_of": as_of, "player_id": player.player_id, "team_id": item["team"]}
+            )
+            logging.info("added %s", item["plyr"])
 
         # add roster objects to database
         self.session.bulk_insert_mappings(Roster, matched)
@@ -1053,7 +1061,7 @@ class Agent():
         return self._p.upcoming_week_page(content)
 
     def yearly_schedule(self, season):
-        '''
+        """
 
         Args:
             season(int): 2018, etc.
@@ -1061,26 +1069,26 @@ class Agent():
         Returns:
             list: of dict
 
-        '''
+        """
         Game = self.base.classes.game
         for week in range(1, 18):
-            logging.info('starting week %s', week)
+            logging.info("starting week %s", week)
             content = self._s.schedule_week(season, week)
             utcnow = datetime.utcnow()
             gobjs = []
             for g in self._p.upcoming_week_page(content):
                 gobj = Game(
-                    gsis_id=g['data-gameid'],
-                    start_time=g['start_time'],
+                    gsis_id=g["data-gameid"],
+                    start_time=g["start_time"],
                     week=week,
-                    day_of_week=g['day_of_week'],
+                    day_of_week=g["day_of_week"],
                     season_year=season,
-                    season_type='Regular',
+                    season_type="Regular",
                     finished=False,
-                    home_team=g['data-home-abbr'],
-                    away_team=g['data-away-abbr'],
+                    home_team=g["data-home-abbr"],
+                    away_team=g["data-away-abbr"],
                     time_inserted=utcnow,
-                    time_updated=utcnow
+                    time_updated=utcnow,
                 )
                 gobjs.append(gobj)
             self.session.bulk_save_objects(gobjs)

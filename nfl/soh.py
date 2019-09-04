@@ -46,10 +46,7 @@ class Scraper(RequestScraper):
 
         """
         url = "https://www.sportsoddshistory.com/nfl-win/?"
-        params = {"y": season_year,
-                  "sa": 'nfl',
-                  "t": "win",
-                  "o": "t"}
+        params = {"y": season_year, "sa": "nfl", "t": "win", "o": "t"}
 
         return self.get(url, params=params, return_object=True)
 
@@ -77,26 +74,26 @@ class Parser:
 
         """
         vals = []
-        h1 = response.html.find('div.entry_content > h1', first=True)
+        h1 = response.html.find("div.entry_content > h1", first=True)
         season_year = int(h1.text.split()[0])
         tbl = response.html.find("table.soh1", first=True)
-        tbody = tbl.find('tbody', first=True)
-        for tr in tbody.find('tr'):
-            tdvals = [td.text for td in tr.find('td')]
-            val= {
-                'season_year': season_year,
-                'team': tdvals[0],
-                'win_total': tdvals[1],
-                'over_odds': tdvals[2],
-                'under_odds': tdvals[3]
+        tbody = tbl.find("tbody", first=True)
+        for tr in tbody.find("tr"):
+            tdvals = [td.text for td in tr.find("td")]
+            val = {
+                "season_year": season_year,
+                "team": tdvals[0],
+                "win_total": tdvals[1],
+                "over_odds": tdvals[2],
+                "under_odds": tdvals[3],
             }
 
-            for k in ['over_odds', 'under_odds']:
+            for k in ["over_odds", "under_odds"]:
                 try:
                     val[k] = int(val[k])
                 except ValueError:
                     try:
-                        val[k] = int(val[k].replace('+',''))
+                        val[k] = int(val[k].replace("+", ""))
                     except ValueError:
                         val[k] = 0
             vals.append(val)
@@ -105,4 +102,3 @@ class Parser:
 
 if __name__ == "__main__":
     pass
-

@@ -1183,17 +1183,17 @@ class Parser(object):
         """
         teams = []
         response.html.render()
-        off = response.html.find('#team_stats', first=True)
-        season_year = response.html.find('h1', first=True).text.split()[0]
+        off = response.html.find("#team_stats", first=True)
+        season_year = response.html.find("h1", first=True).text.split()[0]
         for tr in off.find("tr"):
             team = {td.attrs.get("data-stat"): td.text for td in tr.find("td")}
-            team['source'] = 'pfr'
-            if not team.get('team'):
+            team["source"] = "pfr"
+            if not team.get("team"):
                 continue
-            elif team.get('team') in ['Avg Team', 'League Total', 'Avg Tm/G']:
+            elif team.get("team") in ["Avg Team", "League Total", "Avg Tm/G"]:
                 continue
             else:
-                team['source_team_code'] = LONG_TO_CODE.get(team.pop('team'))
+                team["source_team_code"] = LONG_TO_CODE.get(team.pop("team"))
             team["season_year"] = season_year
             teams.append(team)
         return teams
@@ -1331,6 +1331,6 @@ if __name__ == "__main__":
     s = Scraper(cache_name="pfr")
     p = Parser()
     content = s.team_offense_yearly(season_year=2008)
-    #with open('/home/sansbacon/to.htm', 'w') as f:
+    # with open('/home/sansbacon/to.htm', 'w') as f:
     #    f.write(content)
     print(p.team_offense_yearly(content, 2008))

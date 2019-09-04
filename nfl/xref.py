@@ -188,11 +188,13 @@ class NFL(Site):
                WHERE nflcom_player_id IS NOT NULL"""
         return self.db.select_dict(q)
 
-    def get_playersd(self,
-                     dict_key="name",
-                     id_key="nflcom_player_id",
-                     name_key="full_name",
-                     pos_key="primary_pos",):
+    def get_playersd(
+        self,
+        dict_key="name",
+        id_key="nflcom_player_id",
+        name_key="full_name",
+        pos_key="primary_pos",
+    ):
         """
         Gets players by key
 

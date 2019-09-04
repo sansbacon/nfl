@@ -33,17 +33,16 @@ class Scraper(RequestScraper):
 
         """
         headers = {
-            'Accept-Encoding': 'gzip, deflate',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                          'Chrome/69.0.3497.100 Safari/537.36 OPR/56.0.3051.99',
-            'Accept': 'application/json, text/plain, */*',
-            'Referer': f'https://www.playerprofiler.com/depth-charts/{site_team_id}/',
-            'Connection': 'keep-alive',
+            "Accept-Encoding": "gzip, deflate",
+            "Accept-Language": "en-US,en;q=0.9",
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/69.0.3497.100 Safari/537.36 OPR/56.0.3051.99",
+            "Accept": "application/json, text/plain, */*",
+            "Referer": f"https://www.playerprofiler.com/depth-charts/{site_team_id}/",
+            "Connection": "keep-alive",
         }
 
-        params = {"action": "playerprofiler_api",
-                  "endpoint": f'/team/{site_team_id}'}
+        params = {"action": "playerprofiler_api", "endpoint": f"/team/{site_team_id}"}
         return self.get_json(self.base_url, headers=headers, params=params)
 
     def player_articles(self, site_player_id):
@@ -128,23 +127,24 @@ class Parser(object):
             dict, list of dict
 
         """
-        player_positions = content['data']['Players']
-        info = content['data']['Info']
+        player_positions = content["data"]["Players"]
+        info = content["data"]["Info"]
         team_data = {
-            'site_team_id': info['Team'],
-            'run_pct': info['Run %'],
-            'pass_pct': info['Pass %'],
-            'two_wr': info['2 WRs'],
-            'three_wr': info['3 WRs'],
-            'shotgun': info['Shotgun'],
-            'under_center': info['UnderCenter']
+            "site_team_id": info["Team"],
+            "run_pct": info["Run %"],
+            "pass_pct": info["Pass %"],
+            "two_wr": info["2 WRs"],
+            "three_wr": info["3 WRs"],
+            "shotgun": info["Shotgun"],
+            "under_center": info["UnderCenter"],
         }
         player_data = []
         for position, players in player_positions.items():
             for player in players:
-                player_dict = {k.lower().replace(' ', '_'): v
-                               for k, v in player.items()}
-                player_dict['source_player_position'] = position
+                player_dict = {
+                    k.lower().replace(" ", "_"): v for k, v in player.items()
+                }
+                player_dict["source_player_position"] = position
                 player_data.append(player_dict)
         return team_data, player_data
 
@@ -197,9 +197,11 @@ class Parser(object):
 
         """
         context = {}
-        player_node = content['data']['Player']
-        player = {"source": "playerprofiler",
-                  "source_player_id": player_node["Player_ID"]}
+        player_node = content["data"]["Player"]
+        player = {
+            "source": "playerprofiler",
+            "source_player_id": player_node["Player_ID"],
+        }
         context.update(player)
         core_mapping = {
             "ADP": "adp",
@@ -233,19 +235,17 @@ class Parser(object):
 
         ## Core has nested data as well
         try:
-            context["source_team_name"] = \
-                player_node["Core"]["Team"]["Name"]
+            context["source_team_name"] = player_node["Core"]["Team"]["Name"]
         except (ValueError, KeyError):
             pass
         try:
-            context["source_team_id"] = \
-                player_node["Core"]["Team"]["Team_ID"]
+            context["source_team_id"] = player_node["Core"]["Team"]["Team_ID"]
         except (ValueError, KeyError):
             pass
         try:
-            context["best_comparables"] = \
-                [v['Full Name'] for k,v in player_node["Core"].items()
-                  if "Best" in k]
+            context["best_comparables"] = [
+                v["Full Name"] for k, v in player_node["Core"].items() if "Best" in k
+            ]
         except (ValueError, KeyError):
             pass
         return context
@@ -519,7 +519,7 @@ class Parser(object):
                 "source_player_name": p.get("Full Name"),
                 "source_player_id": p.get("Player_ID"),
                 "source_player_position": p.get("Position"),
-                "source_player_team": p.get("Team")
+                "source_player_team": p.get("Team"),
             }
             for p in content["data"]["Players"]
         ]
@@ -546,7 +546,7 @@ class Parser(object):
         return vals
 
 
-class Agent():
+class Agent:
     """
     Common pp tasks
 
@@ -566,8 +566,8 @@ class Agent():
 
         """
         # get site players
-        # {'site': 'playerprofiler', 
-        #  'site_player_name': 'Cyrus Gray', 
+        # {'site': 'playerprofiler',
+        #  'site_player_name': 'Cyrus Gray',
         #  'site_player_id': 'CG-2150'}
         site_players = Parser.players(self._s.players())
         return self._x.match_base(site_players)
@@ -587,8 +587,7 @@ class Xref(Site):
 
         """
         super().__init__(db=db)
-        self.source_name = 'playerprofiler'
-
+        self.source_name = "playerprofiler"
 
 
 if __name__ == "__main__":

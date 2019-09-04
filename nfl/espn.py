@@ -19,39 +19,39 @@ from sportscraper.scraper import RequestScraper
 
 
 FANTASY_TEAMS = {
-            1: "Atl",
-            2: "Buf",
-            3: "Chi",
-            4: "Cin",
-            5: "Cle",
-            6: "Dal",
-            7: "Den",
-            8: "Det",
-            9: "GB",
-            10: "Ten",
-            11: "Ind",
-            12: "KC",
-            13: "Oak",
-            14: "LAR",
-            15: "Mia",
-            16: "Min",
-            17: "NE",
-            18: "NO",
-            19: "NYG",
-            20: "NYJ",
-            21: "Phi",
-            22: "Ari",
-            23: "Pit",
-            24: "LAC",
-            25: "SF",
-            26: "Sea",
-            27: "TB",
-            28: "Wsh",
-            29: "Car",
-            30: "Jax",
-            33: "Bal",
-            34: "Hou",
-        }
+    1: "Atl",
+    2: "Buf",
+    3: "Chi",
+    4: "Cin",
+    5: "Cle",
+    6: "Dal",
+    7: "Den",
+    8: "Det",
+    9: "GB",
+    10: "Ten",
+    11: "Ind",
+    12: "KC",
+    13: "Oak",
+    14: "LAR",
+    15: "Mia",
+    16: "Min",
+    17: "NE",
+    18: "NO",
+    19: "NYG",
+    20: "NYJ",
+    21: "Phi",
+    22: "Ari",
+    23: "Pit",
+    24: "LAC",
+    25: "SF",
+    26: "Sea",
+    27: "TB",
+    28: "Wsh",
+    29: "Car",
+    30: "Jax",
+    33: "Bal",
+    34: "Hou",
+}
 
 
 class Scraper(RequestScraper):
@@ -636,12 +636,13 @@ class Parser:
         return results
 
 
-class Agent():
-    '''
+class Agent:
+    """
     Combines common scraping/parsing tasks
 
-    '''
-    def __init__(self, scraper=None, parser=None, cache_name='espn-agent'):
+    """
+
+    def __init__(self, scraper=None, parser=None, cache_name="espn-agent"):
         """
         Creates Agent object
 
@@ -688,14 +689,19 @@ class Agent():
 
         """
         if team_code:
-            match = [(k,v) for k,v in FANTASY_TEAMS.items() if v.upper() == team_code.upper()]
+            match = [
+                (k, v)
+                for k, v in FANTASY_TEAMS.items()
+                if v.upper() == team_code.upper()
+            ]
             if match:
                 team_id = match[0][0]
-                logging.info('converted %s to %s', team_code, team_id)
+                logging.info("converted %s to %s", team_code, team_id)
         if not team_id:
-            raise ValueError('Must specify team_id or team_code')
+            raise ValueError("Must specify team_id or team_code")
         content = self._s.fantasy_players_team(team_id)
         return self._p.fantasy_players_team(content)
+
 
 class Xref(Site):
     """
@@ -703,7 +709,7 @@ class Xref(Site):
 
     """
 
-    def __init__(self, source_name='espn'):
+    def __init__(self, source_name="espn"):
         """
 
         Args:

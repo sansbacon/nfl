@@ -1,10 +1,10 @@
-'''
+"""
 
 db.py
 
 setup automap classes
 
-'''
+"""
 import logging
 import os
 
@@ -35,15 +35,13 @@ def prefix_inserts(insert, compiler, **kw):
     # https://stackoverflow.com/questions/33307250/
     # postgresql-on-conflict-in-sqlalchemy
     s = compiler.visit_insert(insert, **kw)
-    if ' RETURNING ' in s:
-        return s.replace(' RETURNING ', ' ON CONFLICT DO NOTHING RETURNING ')
-    return s + ' ON CONFLICT DO NOTHING'
+    if " RETURNING " in s:
+        return s.replace(" RETURNING ", " ON CONFLICT DO NOTHING RETURNING ")
+    return s + " ON CONFLICT DO NOTHING"
 
 
-def setup(database='sqlite',
-               database_file='../data/nfl.sqlite', 
-               schema=None):
-    '''
+def setup(database="sqlite", database_file="../data/nfl.sqlite", schema=None):
+    """
     Automaps classes
     
     Args:
@@ -54,21 +52,18 @@ def setup(database='sqlite',
     Returns:
         Base, engine, session
 
-    '''
-    if database in ['postgresql', 'postgres', 'pg']:
-        db_user = os.getenv('NFL_PG_USER')
-        db_pwd = os.getenv('NFL_PG_PWD')
-        db_host = os.getenv('NFL_PG_HOST')
-        db_port = os.getenv('NFL_PG_PORT')
-        db_db = os.getenv('NFL_PG_DB')
+    """
+    if database in ["postgresql", "postgres", "pg"]:
+        db_user = os.getenv("NFL_PG_USER")
+        db_pwd = os.getenv("NFL_PG_PWD")
+        db_host = os.getenv("NFL_PG_HOST")
+        db_port = os.getenv("NFL_PG_PORT")
+        db_db = os.getenv("NFL_PG_DB")
 
-        connstr = (
-            f"postgresql://{db_user}:{db_pwd}@{db_host}"
-            f":{db_port}/{db_db}"
-        )
-    
-    elif database == 'sqlite':
-        connstr = f'sqlite:///{database_file}'
+        connstr = f"postgresql://{db_user}:{db_pwd}@{db_host}" f":{db_port}/{db_db}"
+
+    elif database == "sqlite":
+        connstr = f"sqlite:///{database_file}"
 
     eng = create_engine(connstr)
     session = Session(eng)
