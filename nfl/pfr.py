@@ -199,6 +199,40 @@ class Scraper(RequestScraper):
         """
         return self.get(self.pgl_finder_url, params=self._merge_params(params))
 
+    def player_gamelogs(self,
+                        source_player_name,
+                        source_player_id,
+                        year_min,
+                        year_max
+                        )
+        """
+        Gets fantasy gamelog for individual player
+
+        """
+        extra_params = {
+            'request': '1',
+            'match': 'game',
+            'player_id_hint': source_player_name,
+            'player_id_select': source_player_name,
+            'player_id': source_player_id,
+            'idx': 'players',
+            'year_min': year_min,
+            'year_max': year_max,
+            'season_start': '1',
+            'season_end': '-1',
+            'pos[]': ['QB', 'WR', 'RB', 'TE', 'OL', 'DL', 'LB', 'DB'],
+            'c1stat': 'draftkings_points',
+            'c1comp': 'gt',
+            'c1val': '0',
+            'c2stat': 'targets',
+            'c2comp': 'gt',
+            'c2val': '0',
+            'c5val': '1.0',
+            'order_by': 'game_date',
+            'order_by_asc': 'Y'
+        }
+        return self.get(self.pgl_finder_url, params=self._merge_params(extra_params))
+
     def playerstats_fantasy_weekly(self, season_year, week, pos=None, offset=0):
         """
         Gets 100 rows of fantasy results for specific season and week

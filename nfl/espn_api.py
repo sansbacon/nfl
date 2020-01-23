@@ -26,6 +26,7 @@ Usage:
 
 import json
 import logging
+import time
 
 from sportscraper.scraper import RequestScraper
 
@@ -600,6 +601,54 @@ class Parser:
             p["source_team_code"] = ID_TEAM_DICT.get(int(p.get("source_team_id", 0)))
             proj.append(p)
         return proj
+
+
+class Agent:
+    """
+    Combines common scraping/parsing tasks
+
+    """
+
+    def __init__(self, scraper=None, parser=None, cache_name="espn-agent"):
+        """
+        Creates Agent object
+
+        Args:
+            scraper(espn.Scraper): default None
+            parser(espn.Parser): default None
+            cache_name(str): default 'espn-agent'
+
+        """
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        if scraper:
+            self._s = scraper
+        else:
+            self._s = Scraper(cache_name=cache_name)
+        if parser:
+            self._p = parser
+        else:
+            self._p = Parser()
+
+    def weekly_projections(self, season_year, week):
+        """
+
+        Args:
+            season_year(int): e.g. 2019
+            week(int): 1-17
+
+        Returns:
+            list: of dict
+
+        """
+        projections = []
+        logging.info('getting projections for %s Week %s', season_year, week)
+        for team in TEAM_ID_DICT:
+            logging.info('starting projections for %s', team)
+            content = self._s.weekly_projections(week=week, team_code=team)
+            projections.append(self._p.weekly_projections(content, season_year, week))
+            time.sleep(2)
+        return [item for sublist in projections
+                for item in sublist]
 
 
 if __name__ == "__main__":

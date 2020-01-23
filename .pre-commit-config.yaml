@@ -1,0 +1,28 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.4.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: fix-encoding-pragma
+    -   id: check-added-large-files
+    -   id: check-merge-conflict
+    -   id: flake8
+
+-   repo: https://github.com/pre-commit/mirrors-yapf
+    rev: v0.29.0
+    hooks:
+    -   id: yapf
+        args: ['--style={based_on_style: google, indent_width: 4}', '--parallel', '--in-place']
+
+-   repo: https://github.com/Lucas-C/pre-commit-hooks-bandit
+    sha: v1.0.4
+    hooks:
+    -   id: python-bandit-vulnerability-check
+
+-   repo: https://github.com/pre-commit/mirrors-pylint
+    rev: v2.4.4
+    hooks:
+    -       id: pylint
