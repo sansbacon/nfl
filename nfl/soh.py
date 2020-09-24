@@ -1,7 +1,6 @@
 """
-
-# soh.py
-# classes for scraping, parsing sportsoddshistory.com
+soh.py
+classes for scraping, parsing sportsoddshistory.com
 
 from time import sleep
 from prettyprinter import pprint
@@ -19,7 +18,6 @@ for y in range(2009, 2019):
 
 fname = '/home/sansbacon/win_totals.csv'
 save_csv([item for sublist in all_win_totals for item in sublist], fname)
-
 """
 
 import logging

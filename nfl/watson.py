@@ -217,29 +217,4 @@ class Agent:
 
 
 if __name__ == "__main__":
-    #pass
-    import json
-    logging.basicConfig(level=logging.INFO)
-    a = Agent()
-
-    inactives = ['AJ Green', 'Alec Ingold', 'Alex Armah', 'Alex Ellis', 'Alex McGough',
-                'Alex Tanney', 'Andre Patton', 'Andrew Beck', 'Beau Brinkley',
-                'Ben Roethlisberger', 'CJ Board', 'Cedrick Wilson', 'Cethan Carter',
-                'Chris Hogan', 'Chris Manhertz', 'Clark Harris',
-                'Cullen Gillaspia', 'Damion Willis', 'Danny Vitale',
-                'David Fluellen', 'Davion Davis', 'Deonte Harris',
-                'Derrius Guice', 'Devlin Hodges', 'Diontae Spencer', 'Dontrelle Inman',
-                'Drew Brees', 'Easton Stick', 'Evan Baylis', 'Fred Brown',
-                'Garrett Dickerson', 'Gunner Olszewski', 'Hunter Henry',
-                'Isaiah Crowell', 'JP Holtz', 'Jaeden Graham', 'Jake Dolegala',
-                'Jakob Johnson', 'Jalin Marshall', 'Jamaal Williams', 'James Develin',
-                'Jerell Adams', 'Jerome Cunningham', 'John Ross', 'Jordan Reed',
-                'Josh Dobbs', 'Josh Oliver', 'Justin Jackson', 'Kaden Smith',
-                'LilJordan Humphrey', 'Matt Orzech', 'Matthew Slater',
-                'NKeal Harry', 'Nick Foles', 'Olamide Zaccheaus',
-                'Patrick Scales', 'Reggie Bonnafon', 'Robert Davis',
-                'Roc Thomas', 'Scotty Miller', 'Sean Culkin', 'Steven Sims',
-                'TJ Jones', 'Tanner Hudson', 'Trace McSorley', 'Tyler Kroft', 'Vyncint Smith']
-    projections = a.weekly_projections(2019, 8, inactives=inactives)
-    with open('/home/sansbacon/watson-w8.json', 'w') as f:
-        json.dump(projections, f)
+    pass

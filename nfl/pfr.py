@@ -12,44 +12,6 @@ from bs4 import BeautifulSoup
 from sportscraper.scraper import RequestScraper
 
 
-LONG_TO_CODE = {
-    "Arizona Cardinals": "ARI",
-    "Atlanta Falcons": "ATL",
-    "Baltimore Ravens": "BAL",
-    "Buffalo Bills": "BUF",
-    "Carolina Panthers": "CAR",
-    "Chicago Bears": "CHI",
-    "Cincinnati Bengals": "CIN",
-    "Cleveland Browns": "CLE",
-    "Dallas Cowboys": "DAL",
-    "Denver Broncos": "DEN",
-    "Detroit Lions": "DET",
-    "Green Bay Packers": "GB",
-    "Houston Texans": "HOU",
-    "Indianapolis Colts": "IND",
-    "Jacksonville Jaguars": "JAC",
-    "Kansas City Chiefs": "KC",
-    "Los Angeles Chargers": "LAC",
-    "Los Angeles Rams": "LA",
-    "Miami Dolphins": "MIA",
-    "Minnesota Vikings": "MIN",
-    "New England Patriots": "NE",
-    "New Orleans Saints": "NO",
-    "New York Giants": "NYG",
-    "New York Jets": "NYJ",
-    "Oakland Raiders": "OAK",
-    "Philadelphia Eagles": "PHI",
-    "Pittsburgh Steelers": "PIT",
-    "San Diego Chargers": "LAC",
-    "San Francisco 49ers": "SF",
-    "Seattle Seahawks": "SEA",
-    "St. Louis Rams": "LA",
-    "Tampa Bay Buccaneers": "TB",
-    "Tennessee Titans": "TEN",
-    "Washington Redskins": "WAS",
-}
-
-
 class Scraper(RequestScraper):
     @property
     def pgl_finder_url(self):
@@ -204,7 +166,7 @@ class Scraper(RequestScraper):
                         source_player_id,
                         year_min,
                         year_max
-                        )
+                        ):
         """
         Gets fantasy gamelog for individual player
 
@@ -1227,7 +1189,7 @@ class Parser(object):
             elif team.get("team") in ["Avg Team", "League Total", "Avg Tm/G"]:
                 continue
             else:
-                team["source_team_code"] = LONG_TO_CODE.get(team.pop("team"))
+                team["source_team_code"] = team.pop("team")
             team["season_year"] = season_year
             teams.append(team)
         return teams

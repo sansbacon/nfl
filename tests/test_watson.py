@@ -1,34 +1,39 @@
 import logging
-import sys
-import unittest
+import pytest
 
 import nfl.watson as nw
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
+logging.basicConfig(level=logging.INFO)
 
 
-class Watson_test(unittest.TestCase):
-    '''
-    Tests nfldotcom scraper and parser
-    '''
+@pytest.fixture
+def season():
+    return 2019
 
-    def setUp(self):
-        self.s = nw.Scraper(cache_name='test-watson-scraper')
-        self.p = nw.Parser()
 
-    def test_players(self):
-        content = self.s.players(season_year=2018)
-        players = self.p.players(content)
-        self.assertGreater(len(players), 0)
-        logging.info(players[0])
+@pytest.fixture
+def scraper():
+    return nw.Scraper(cache_name='test-watson-scraper')
 
-    def test_weekly_projection(self):
-        pid = 18306
-        content = self.s.weekly_projection(season_year=2018, pid=pid)
-        projection = self.p.weekly_projection(content)
-        self.assertIsInstance(projection, list)
-        self.assertIsInstance(projection[0], dict)
 
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
-    unittest.main()
+@pytest.fixture
+def parser():
+    return nw.Parser()
+
+
+def test_players(scraper, parser, season):
+    content = scraper.players(season_year=season)
+    players = parser.players(content)
+    assert len(players) > 0
+    logging.info(players[0])
+
+
+def test_weekly_projection(scraper, parser, season):
+    pid = 13216
+    content = scraper.weekly_projection(season_year=season, pid=pid)
+    projection = parser.weekly_projection(content)
+    assert isinstance(projection, list)
+    assert isinstance(projection[0], dict)
+
+

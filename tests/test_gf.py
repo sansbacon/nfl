@@ -10,6 +10,7 @@ import pandas as pd
 
 from nfl.gf import GameFinder
 from nfl.seasons import current_season_year
+import pytest
 
 
 logger = logging.getLogger(__name__)
@@ -39,16 +40,17 @@ class Gf_test(unittest.TestCase):
         # test qb columns
         clean_df = cli.clean_results(df, 'qb')
         for qbcol in cli.qbcols:
-            self.assertIn(qbcol, clean_df.columns)
+            assert qbcol in clean_df.columns
 
         # test flex columns
         clean_df = cli.clean_results(df, 'rb')
         for flexcol in cli.flexcols:
-            self.assertIn(flexcol, clean_df.columns)
+            assert flexcol in clean_df.columns
 
         # test invalid position
         # list function then arguments rather than calling function
-        self.assertRaises(AttributeError, cli.clean_results, df, 0.0)
+        with pytest.raises(AttributeError):
+            cli.clean_results(df, 0.0)
 
     @unittest.skip
     def test_gf_search(self):
@@ -65,7 +67,7 @@ class Gf_test(unittest.TestCase):
         if not cli.pos:
             cli.pos = 'TE'
         vals = cli.gf_search()
-        self.assertIsInstance(vals, list)
+        assert isinstance(vals, list)
         logger.info(vals)
         #self.assertIsInstance(vals[0], dict)
 
@@ -79,19 +81,19 @@ class Gf_test(unittest.TestCase):
         # opp identical to pfr team code
         opp = 'gnb'
         with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            self.assertFalse(cli.onecmd(f'opp {opp}'))
-        self.assertEqual(f'Set opp to {opp}', fakeOutput.getvalue().strip())
+            assert not cli.onecmd(f'opp {opp}')
+        assert f'Set opp to {opp}' == fakeOutput.getvalue().strip()
 
         # convert opp to valid pfr team code
         with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            self.assertFalse(cli.onecmd('opp gb'))
-        self.assertEqual('Set opp to gnb', fakeOutput.getvalue().strip())
+            assert not cli.onecmd('opp gb')
+        assert 'Set opp to gnb' == fakeOutput.getvalue().strip()
 
         # invalid pfr team code
         opp = 'nx'
         with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            self.assertFalse(cli.onecmd(f'opp {opp}'))
-        self.assertEqual(f"Invalid team code: {opp}", fakeOutput.getvalue().strip())
+            assert not cli.onecmd(f'opp {opp}')
+        assert f"Invalid team code: {opp}" == fakeOutput.getvalue().strip()
 
     def test_pos(self):
         """
@@ -103,20 +105,20 @@ class Gf_test(unittest.TestCase):
         # valid uppercase pos code
         pos = 'QB'
         with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            self.assertFalse(cli.onecmd(f'pos {pos}'))
-        self.assertEqual(f'Set pos to {pos}', fakeOutput.getvalue().strip())
+            assert not cli.onecmd(f'pos {pos}')
+        assert f'Set pos to {pos}' == fakeOutput.getvalue().strip()
 
         # valid lowercase pos code
         pos = 'wr'
         with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            self.assertFalse(cli.onecmd(f'pos {pos}'))
-        self.assertEqual(f'Set pos to {pos.upper()}', fakeOutput.getvalue().strip())
+            assert not cli.onecmd(f'pos {pos}')
+        assert f'Set pos to {pos.upper()}' == fakeOutput.getvalue().strip()
 
         # invalid pos code
         pos = 'k'
         with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            self.assertFalse(cli.onecmd(f'pos {pos}'))
-        self.assertEqual(f"Invalid position: {pos}", fakeOutput.getvalue().strip())
+            assert not cli.onecmd(f'pos {pos}')
+        assert f"Invalid position: {pos}" == fakeOutput.getvalue().strip()
 
     def test_seas(self):
         """
@@ -127,14 +129,14 @@ class Gf_test(unittest.TestCase):
 
         # valid season
         with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            self.assertFalse(cli.onecmd('seas 2018'))
-        self.assertEqual('Set seas to 2018', fakeOutput.getvalue().strip())
+            assert not cli.onecmd('seas 2018')
+        assert 'Set seas to 2018' == fakeOutput.getvalue().strip()
 
         # invalid season returns current season
         seas = current_season_year()
         with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            self.assertFalse(cli.onecmd('seas x'))
-        self.assertEqual(f'Set seas to {seas}', fakeOutput.getvalue().strip())
+            assert not cli.onecmd('seas x')
+        assert f'Set seas to {seas}' == fakeOutput.getvalue().strip()
 
     def test_settings(self):
         """
@@ -145,11 +147,11 @@ class Gf_test(unittest.TestCase):
 
         # valid season
         with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            self.assertFalse(cli.onecmd('settings'))
+            assert not cli.onecmd('settings')
         return_value = fakeOutput.getvalue().strip()
-        self.assertIn('seas', return_value)
-        self.assertIn('pos', return_value)
-        self.assertIn('thresh', return_value)
+        assert 'seas' in return_value
+        assert 'pos' in return_value
+        assert 'thresh' in return_value
 
     def test_thresh(self):
         """
@@ -162,15 +164,15 @@ class Gf_test(unittest.TestCase):
         thresh = 2.5
         cmd = f'thresh {thresh}'
         with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            self.assertFalse(cli.onecmd(cmd))
-        self.assertEqual(f'Set thresh to {thresh}', fakeOutput.getvalue().strip())
+            assert not cli.onecmd(cmd)
+        assert f'Set thresh to {thresh}' == fakeOutput.getvalue().strip()
 
         # invalid thresh returns error message
         thresh = 'x'
         cmd = f'thresh {thresh}'
         with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            self.assertFalse(cli.onecmd(cmd))
-        self.assertEqual(f"Invalid threshold {thresh}", fakeOutput.getvalue().strip())
+            assert not cli.onecmd(cmd)
+        assert f"Invalid threshold {thresh}" == fakeOutput.getvalue().strip()
 
     def test_exit(self):
         """
@@ -182,8 +184,8 @@ class Gf_test(unittest.TestCase):
         with patch('sys.stdout', new=StringIO()) as fakeOutput:
             # is True because onecmd returns flag indicating
             # whether interpretation of commands should stop
-            self.assertTrue(cli.onecmd('exit'))
-        self.assertEqual('Bye', fakeOutput.getvalue().strip())
+            assert cli.onecmd('exit')
+        assert 'Bye' == fakeOutput.getvalue().strip()
 
 
 if __name__ == '__main__':

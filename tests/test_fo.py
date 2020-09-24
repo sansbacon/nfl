@@ -1,111 +1,106 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import pytest
 import random
-import sys
-import unittest
 
 import nfl.fo as nf
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
+
+@pytest.fixture
+def season():
+    return random.choice(range(2009, 2017))
 
 
-class Fo_test(unittest.TestCase):
-    '''
-    Tests football outsiders scraper and parser
-    '''
+@pytest.fixture
+def week():
+    return random.choice(range(1, 18))
 
-    @property
-    def season(self):
-        return random.choice(range(2009, 2017))
 
-    @property
-    def week(self):
-        return random.choice(range(1, 18))
+@pytest.fixture
+def scraper():
+    return nf.Scraper(cache_name='test-fo-scraper')
 
-    def setUp(self):
-        self.s = nf.Scraper(cache_name='test-fo-scraper')
-        self.p = nf.Parser()
-        self.all_games = []
+@pytest.fixture
+def parser():
+    return nf.Parser()
 
-    def test_ol(self):
-        season_year = 2018
-        logging.info('starting %s', season_year)
-        response = self.s.ol(season_year)
-        self.assertIn('OFFENSIVE LINES', response.text)
-        ol = self.p.ol(response)
-        self.assertIsInstance(ol, list)
-        self.assertIsInstance(random.choice(ol), dict)
 
-        season_year = random.randint(2009, 2017)
-        logging.info('starting %s', season_year)
-        response = self.s.ol(season_year)
-        self.assertIn('OFFENSIVE LINES', response.text)
-        ol = self.p.ol(response)
-        self.assertIsInstance(ol, list)
-        self.assertIsInstance(random.choice(ol), dict)
+def test_ol(scraper, parser):
+    season_year = 2018
+    logging.info('starting %s', season_year)
+    response = scraper.ol(season_year)
+    assert 'OFFENSIVE LINES' in response.text
+    ol = parser.ol(response)
+    assert isinstance(ol, list)
+    assert isinstance(random.choice(ol), dict)
+
+    season_year = random.randint(2009, 2017)
+    logging.info('starting %s', season_year)
+    response = scraper.ol(season_year)
+    assert 'OFFENSIVE LINES' in response.text
+    ol = parser.ol(response)
+    assert isinstance(ol, list)
+    assert isinstance(random.choice(ol), dict)
 
     """
     def test_dl(self):
-        content = self.s.dl()
+        content = scraper.dl()
         self.assertIsNotNone(content)
-        self.p.dl(content)
+        parser.dl(content)
     
     
     def test_drive(self):
-        content = self.s.drive()
+        content = scraper.drive()
         self.assertIsNotNone(content)
-        self.p.drive(content)    
+        parser.drive(content)    
     
     def test_qb(self):
-        content = self.s.qb()
+        content = scraper.qb()
         self.assertIsNotNone(content)
-        self.p.qb(content)
+        parser.qb(content)
     
     
     def test_rb(self):
-        content = self.s.rb()
+        content = scraper.rb()
         self.assertIsNotNone(content)
-        self.p.rb(content)
+        parser.rb(content)
     
     
     def test_snap_counts(self):
-        content = self.s.snap_counts()
+        content = scraper.snap_counts()
         self.assertIsNotNone(content)
-        self.p.snap_counts(content)
+        parser.snap_counts(content)
     
     
     def test_te(self):
-        content = self.s.te()
+        content = scraper.te()
         self.assertIsNotNone(content)
-        self.p.te(content)
+        parser.te(content)
     
     
     def test_team_defense(self):
-        content = self.s.team_defense()
+        content = scraper.team_defense()
         self.assertIsNotNone(content)
-        self.p.team_defense(content)
+        parser.team_defense(content)
     
     
     def test_team_efficiency(self):
-        content = self.s.team_efficiency()
+        content = scraper.team_efficiency()
         self.assertIsNotNone(content)
-        self.p.team_efficiency(content)
+        parser.team_efficiency(content)
     
     
     def test_team_offense(self):
-        content = self.s.team_offense()
+        content = scraper.team_offense()
         self.assertIsNotNone(content)
-        self.p.team_offense(content)
+        parser.team_offense(content)
     
     
     def test_wr(self):
-        content = self.s.wr()
+        content = scraper.wr()
         self.assertIsNotNone(content)
-        self.p.wr(content)
+        parser.wr(content)
     """
 
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
-    unittest.main()

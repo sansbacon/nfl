@@ -6,42 +6,38 @@ tests/test_pp.py
 
 import logging
 import random
-import sys
-import unittest
+import pytest
 
 from nfl.soh import Scraper, Parser
 
-logger = logging.getLogger()
-logger.level = logging.INFO
-stream_handler = logging.StreamHandler(sys.stdout)
-logger.addHandler(stream_handler)
+
+logging.basicConfig(level=logging.INFO)
 
 
-class TestSoh(unittest.TestCase):
-
-    def setUp(self):
-        self.s = Scraper()
-        self.p = Parser()
-
-    @property
-    def seasons(self):
-        return random.choice(list(range(2013, 2019)))
-
-    def test_win_totals(self):
-        seas = self.seasons
-        response = self.s.win_totals(seas)
-        win_totals = self.p.win_totals(response)
-        self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(win_totals, list)
-        win_total = random.choice(win_totals)
-        self.assertIsInstance(win_total, dict)
-        self.assertTrue(bool(win_total))
-        self.assertIn('team', win_total.keys())
-        self.assertIsInstance(win_total['season_year'], int)
-        self.assertIsInstance(win_total['over_odds'], int)
-        self.assertIsInstance(win_total['under_odds'], int)
-        logging.info(win_total)
+@pytest.fixture
+def scraper():
+    return Scraper()
 
 
-if __name__ == '__main__':
-    unittest.main()
+@pytest.fixture
+def parser():
+    return Parser()
+
+@pytest.fixture()
+def season():
+    return random.choice(list(range(2013, 2019)))
+
+
+def test_win_totals(scraper, parser, season):
+    response = scraper.win_totals(season)
+    win_totals = parser.win_totals(response)
+    assert response.status_code == 200
+    assert isinstance(win_totals, list)
+    win_total = random.choice(win_totals)
+    assert isinstance(win_total, dict)
+    assert bool(win_total)
+    assert 'team' in win_total.keys()
+    assert isinstance(win_total['season_year'], int)
+    assert isinstance(win_total['over_odds'], int)
+    assert isinstance(win_total['under_odds'], int)
+    logging.info(win_total)

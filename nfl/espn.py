@@ -14,7 +14,7 @@ import logging
 import re
 
 from bs4 import BeautifulSoup, NavigableString, Tag
-from playermatcher.xref import Site
+from namematcher.xref import Site
 from sportscraper.scraper import RequestScraper
 
 
@@ -111,20 +111,6 @@ class Scraper(RequestScraper):
         )
         return self.get_json(url)
 
-    def fantasy_players_team(self, team_id):
-        """
-        Gets page with fantasy players by team
-
-        Args:
-            team_id(int): 1, 2, etc.
-
-        Returns:
-            str: HTML
-
-        """
-        url = "http://games.espn.com/ffl/tools/projections?proTeamId={}"
-        return self.get(url.format(team_id), encoding="latin1")
-
     def players_position(self, pos):
         """
         Gets page with all players by position
@@ -151,6 +137,8 @@ class Scraper(RequestScraper):
 
         Returns:
             HTML string
+
+        TODO: revise based on new URL
         """
         pos = pos.lower()
         slot_categories = {"qb": 0, "rb": 2, "wr": 4, "te": 6, "dst": 16, "k": 17}
@@ -163,6 +151,7 @@ class Scraper(RequestScraper):
         if offset % 40 > 0:
             raise ValueError("invalid offset {}".format(offset))
 
+        # https://fantasy.espn.com/football/players/projections
         url = "http://games.espn.com/ffl/tools/projections?"
         if season_year:
             params = {
@@ -205,11 +194,12 @@ class Scraper(RequestScraper):
         Returns:
             str: HTML
 
-        TODO: does not work out of season?
+        TODO: rework for new URL
         """
         poscode = {"qb": 0, "rb": 2, "wr": 4, "te": 6, "dst": 16, "k": 17}
         if position.lower() not in poscode:
             raise ValueError("invalid position: {}".format(position))
+        # https://fantasy.espn.com/football/leaders
         url = "http://games.espn.com/ffl/leaders?&"
         params = {
             "scoringPeriodId": week,
@@ -277,61 +267,6 @@ class Parser:
                         api_player[key] = None
             vals.append(api_player)
         return vals
-
-    @staticmethod
-    def fantasy_players_team(content):
-        """
-        Parses page of fantasy players
-
-        Args:
-            content: HTML string
-
-        Returns:
-            list of players
-        """
-        players = {}
-        soup = BeautifulSoup(content, "lxml")
-        for link in soup.find_all("a", {"class": "flexpop"}):
-            pid = link.attrs.get("playerid")
-            pname = link.text.strip()
-            if pid and pname:
-                players[pid] = pname
-        return players
-
-    @staticmethod
-    def lovehate(season, week, lhdict):
-        """
-
-        Args:
-            season(int):
-            week(int):
-            lhdict(dict): keys are position_love, position_hate
-
-        Returns:
-            list: of player dict
-
-        """
-
-        players = []
-        if not season or week:
-            raise ValueError("need season and week")
-
-        for poslh, ratings in lhdict.items():
-            pos = poslh.split("_")[0]
-            label = ratings.get("label")
-            sublabel = None
-
-            if label in ("favorite", "bargain", "desparate"):
-                sublabel = label
-                label = "love"
-                logging.info("%s", label)
-            for link in ratings.get("links"):
-                spid = {}
-                url = link.split('"')[1]
-                spid["site_player_id"], spid["site_player_stub"] = url.split("/")[7:9]
-                spid["site_player_name"] = link.split(">")[1].split("<")[0]
-                logging.info("%s %s %s", pos, sublabel, spid)
-        return players
 
     def projections(self, content, pos):
         """
@@ -675,32 +610,6 @@ class Agent:
         """
         content = self._s.adp(season_year)
         return self._p.adp(content)
-
-    def fantasy_players_team(self, team_id=None, team_code=None):
-        """
-        Gets fantasy players on one NFL team
-
-        Args:
-            team_id(int): None
-            team_code(str): default None
-
-        Returns:
-            list: of dict
-
-        """
-        if team_code:
-            match = [
-                (k, v)
-                for k, v in FANTASY_TEAMS.items()
-                if v.upper() == team_code.upper()
-            ]
-            if match:
-                team_id = match[0][0]
-                logging.info("converted %s to %s", team_code, team_id)
-        if not team_id:
-            raise ValueError("Must specify team_id or team_code")
-        content = self._s.fantasy_players_team(team_id)
-        return self._p.fantasy_players_team(content)
 
 
 class Xref(Site):

@@ -32,9 +32,9 @@ class Pgf_test(unittest.TestCase):
 
         # valid season
         with patch('sys.stdout', new=StringIO()) as fakeOutput:
-            self.assertFalse(cli.onecmd('settings'))
+            assert not cli.onecmd('settings')
         return_value = fakeOutput.getvalue().strip()
-        self.assertIsNotNone(return_value)
+        assert return_value is not None
 
 
 if __name__ == '__main__':

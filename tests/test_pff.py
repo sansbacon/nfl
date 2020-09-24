@@ -42,40 +42,40 @@ class Pff_test(unittest.TestCase):
     def test_position_grades(self):
         content = self.s.position_grades(self.pos)
         logging.info(content)
-        self.assertIsInstance(content, dict)
-        self.assertGreater(len(self.p.position_grades(content)), 0)
+        assert isinstance(content, dict)
+        assert len(self.p.position_grades(content)) > 0
 
     def test_depth_charts(self):
         content = self.s.depth_charts(self.team_id)
-        self.assertIsInstance(content, dict)
-        self.assertGreater(len(self.p.depth_charts(content)), 0)
+        assert isinstance(content, dict)
+        assert len(self.p.depth_charts(content)) > 0
         excl = ('rt', 'rg', 'lt', 'lg', 'c')
-        self.assertGreater(len(self.p.depth_charts(content, excl)), 0)
+        assert len(self.p.depth_charts(content, excl)) > 0
 
     def test_player_grades_career(self):
         content = self.s.player_grades_career(self.player)
-        self.assertIsInstance(content, list)
-        self.assertGreater(len(self.p.player_grades_career(content)), 0)
+        assert isinstance(content, list)
+        assert len(self.p.player_grades_career(content)) > 0
 
     def test_player_grades_week(self):
         content = self.s.player_grades_week(self.player)
-        self.assertIsInstance(content, list)
-        self.assertGreater(len(self.p.player_grades_week(content)), 0)
+        assert isinstance(content, list)
+        assert len(self.p.player_grades_week(content)) > 0
 
     def test_player_snaps_season(self):
         content = self.s.player_snaps_season(self.player)
-        self.assertIsInstance(content, list)
-        self.assertGreater(len(self.p.player_snaps_season(content)), 0)
+        assert isinstance(content, list)
+        assert len(self.p.player_snaps_season(content)) > 0
 
     def test_players(self):
         content = self.s.players(self.team_id)
-        self.assertIsInstance(content, dict)
-        self.assertGreater(len(self.p.players(content)), 0)
+        assert isinstance(content, dict)
+        assert len(self.p.players(content)) > 0
 
     def test_teams(self):
         content = self.s.teams()
-        self.assertIsInstance(content, dict)
-        self.assertGreater(len(self.p.teams(content)), 0)
+        assert isinstance(content, dict)
+        assert len(self.p.teams(content)) > 0
 
 
 if __name__ == '__main__':

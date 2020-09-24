@@ -12,10 +12,7 @@ from pathlib import Path
 
 import json
 
-try:
-    from prettyprinter import pprint
-except:
-    from pprint import pprint
+from pprint import pprint
 
 try:
     import readline
@@ -25,7 +22,7 @@ except ImportError:
 from fcache.cache import FileCache
 
 from .pp import Scraper, Parser
-from playermatcher import match_fuzzy, match_interactive
+from namematcher import match_fuzzy, match_interactive
 
 
 def read_json(file_name):

@@ -7,7 +7,7 @@
 
 import logging
 
-from playermatcher.xref import Site
+from namematcher.xref import Site
 from sportscraper.scraper import RequestScraper
 
 
@@ -539,7 +539,7 @@ class Parser(object):
         vals = []
         positions = ["QB", "RB", "WR", "TE"]
         rtypes = ["Dynasty", "Rookie", "Seasonal", "Weekly"]
-        rankings = content["data"]
+        rankings = content["data"]["rankings"]
         for rt in rtypes:
             for pos in positions:
                 vals.append(rankings[rt][pos])
