@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yahoo-fantasy"
+version = "0.1.0"
+description = "Yahoo Fantasy data library"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Project Maintainers" }
+]
+dependencies = [
+    "python-dotenv>=1.0.1",
+    "requests>=2.31.0",
+    "requests-oauthlib>=1.3.1",
+    "yfpy>=16.0.3",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.2.0",
+    "nflreadpy>=0.1.0",
+    "polars>=1.5.0",
+    "pyiceberg>=0.7.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.0.0",
+    "mypy>=1.11.0",
+    "pytest>=8.3.0",
+    "ruff>=0.6.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["nfl", "nfl.*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
