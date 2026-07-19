@@ -1,0 +1,8 @@
+site_name: NFL Package Docs
+site_description: Zensical documentation for the nfl package
+site_dir: site
+docs_dir: docs
+theme:
+  name: mkdocs
+nav:
+  - Home: ZENSICAL_DOCUMENTATION.md
