@@ -552,7 +552,10 @@ class YahooApiClient:
         rows: list[dict[str, Any]] = []
 
         for week in weeks:
-            payload = self.get(f"/league/{league_key}/scoreboard;week={week}")
+            try:
+                payload = self.get(f"/league/{league_key}/scoreboard;week={week}")
+            except Exception:
+                continue
             for left, right, matchup_week, is_playoff, is_consolation in self._extract_weekly_matchup_pairs(payload):
                 rows.append(
                     {
@@ -597,10 +600,14 @@ class YahooApiClient:
 
         for week in weeks:
             for team_key in team_keys:
+                payload: dict[str, Any] | None = None
                 try:
                     payload = self.get(f"/team/{team_key}/roster;week={week};out=players,stats")
                 except Exception:
-                    payload = self.get(f"/team/{team_key}/roster;week={week};out=players")
+                    try:
+                        payload = self.get(f"/team/{team_key}/roster;week={week};out=players")
+                    except Exception:
+                        continue
                 rows.extend(self._extract_team_roster_entries(payload, league_key, season, week, team_key))
 
         rows.sort(key=lambda r: (r["week"], r["team_key"], r["player_key"]))

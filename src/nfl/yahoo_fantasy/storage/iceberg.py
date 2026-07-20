@@ -106,9 +106,12 @@ def _frame_digest(table_identifier: str, mode: WriteMode, frame: pl.DataFrame) -
 
 def _normalize_null_dtypes(frame: pl.DataFrame) -> pl.DataFrame:
     null_cols = [name for name, dtype in frame.schema.items() if dtype == pl.Null]
-    if not null_cols:
+    list_null_cols = [name for name, dtype in frame.schema.items() if str(dtype) == "List(Null)"]
+    if not null_cols and not list_null_cols:
         return frame
-    return frame.with_columns([pl.col(col).cast(pl.Utf8, strict=False).alias(col) for col in null_cols])
+    casts: list[pl.Expr] = [pl.col(col).cast(pl.Utf8, strict=False).alias(col) for col in null_cols]
+    casts.extend(pl.col(col).cast(pl.List(pl.Utf8), strict=False).alias(col) for col in list_null_cols)
+    return frame.with_columns(casts)
 
 
 def _load_pyiceberg_catalog(config: IcebergCatalogConfig) -> Any:
@@ -151,6 +154,14 @@ def _write_frame_with_pyiceberg(catalog: Any, table_identifier: str, frame: pl.D
         raise RuntimeError(f"Failed appending to Iceberg table '{table_identifier}': {exc}") from exc
 
 
+def _table_exists(catalog: Any, table_identifier: str) -> bool:
+    try:
+        catalog.load_table(table_identifier)
+        return True
+    except Exception:
+        return False
+
+
 def persist_to_iceberg(
     frames: Mapping[str, pl.DataFrame],
     catalog_config: IcebergCatalogConfig | None = None,
@@ -176,7 +187,11 @@ def persist_to_iceberg(
         write_frame = _normalize_null_dtypes(write_frame)
 
         digest = _frame_digest(table_identifier, mode, write_frame)
-        if store.contains(digest):
+        should_skip = store.contains(digest)
+        if should_skip and not dry_run and catalog is not None and not _table_exists(catalog, table_identifier):
+            should_skip = False
+
+        if should_skip:
             results.append(
                 IcebergWriteResult(
                     entity=frame_name,
