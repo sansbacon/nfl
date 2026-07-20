@@ -5,4 +5,5 @@ docs_dir: docs
 theme:
   name: mkdocs
 nav:
-  - Home: ZENSICAL_DOCUMENTATION.md
+  - Home: index.md
+  - Zensical Guide: ZENSICAL_DOCUMENTATION.md
