@@ -32,6 +32,7 @@ class PipelineConfig:
     cache_dir: str | Path = ".cache"
     use_cache: bool = True
     validate_contracts: bool = True
+    require_nfl_player_points: bool = False
     start_week: int | None = None
     end_week: int | None = None
     storage_target: StorageTarget = "none"
@@ -161,6 +162,20 @@ def run_pipeline(
         teams=common_entities.get("team", []),
         config=cfg,
     )
+
+    if sport == "nfl" and cfg.require_nfl_player_points:
+        roster_entries = nfl_entities.get("roster_entries", [])
+        player_stats_weekly = nfl_entities.get("player_stats_weekly", [])
+
+        has_non_null_roster_points = any(row.get("points") is not None for row in roster_entries)
+        has_non_zero_fantasy_points = any(float(row.get("fantasy_points") or 0.0) != 0.0 for row in player_stats_weekly)
+        has_any_player_stats = any(bool(row.get("stats")) for row in player_stats_weekly)
+
+        if not has_non_null_roster_points and not has_non_zero_fantasy_points and not has_any_player_stats:
+            raise ValueError(
+                "NFL player-level scoring data is unavailable (roster points and player stats are empty). "
+                "Rerun with use_cache=False or refresh cache/API permissions before persisting."
+            )
 
     frames = transform(common_entities=common_entities, nfl_entities=nfl_entities, nba_entities=nba_entities)
 

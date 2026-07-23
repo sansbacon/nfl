@@ -79,10 +79,16 @@ class YahooApiClient:
     def _cache_file(self, path: str) -> Path:
         return self.cache_dir / f"{hashlib.md5(path.encode('utf-8')).hexdigest()}.json"
 
-    def get(self, path: str, timeout_seconds: int | None = None) -> dict[str, Any]:
+    def get(
+        self,
+        path: str,
+        timeout_seconds: int | None = None,
+        use_cache: bool | None = None,
+    ) -> dict[str, Any]:
         timeout = timeout_seconds if timeout_seconds is not None else self.timeout_seconds
+        should_use_cache = self.use_cache if use_cache is None else use_cache
         cache_file = self._cache_file(path)
-        if self.use_cache and cache_file.exists():
+        if should_use_cache and cache_file.exists():
             try:
                 return json.loads(cache_file.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
@@ -92,7 +98,7 @@ class YahooApiClient:
         resp = self.oauth_session.get(url, params={"format": "json"}, timeout=timeout)
         resp.raise_for_status()
         payload = resp.json()
-        if self.use_cache:
+        if should_use_cache:
             try:
                 self.cache_dir.mkdir(parents=True, exist_ok=True)
                 cache_file.write_text(json.dumps(payload), encoding="utf-8")
@@ -608,12 +614,45 @@ class YahooApiClient:
                         payload = self.get(f"/team/{team_key}/roster;week={week};out=players")
                     except Exception:
                         continue
-                rows.extend(self._extract_team_roster_entries(payload, league_key, season, week, team_key))
+
+                team_rows = self._extract_team_roster_entries(payload, league_key, season, week, team_key)
+
+                # Cached payloads can be stale and omit scoring details.
+                # If we do not see points/stats, retry this roster request uncached.
+                if self.use_cache and not self._has_usable_scoring_data(team_rows):
+                    try:
+                        fresh_payload = self.get(
+                            f"/team/{team_key}/roster;week={week};out=players,stats",
+                            use_cache=False,
+                        )
+                        fresh_rows = self._extract_team_roster_entries(
+                            fresh_payload,
+                            league_key,
+                            season,
+                            week,
+                            team_key,
+                        )
+                        if self._has_usable_scoring_data(fresh_rows):
+                            team_rows = fresh_rows
+                    except Exception:
+                        pass
+
+                rows.extend(team_rows)
 
         rows.sort(key=lambda r: (r["week"], r["team_key"], r["player_key"]))
         if self.validate_contracts and rows:
             validate(rows, entity="roster_entries", sport="nfl")
         return rows
+
+    def _has_usable_scoring_data(self, rows: list[dict[str, Any]]) -> bool:
+        for row in rows:
+            points = row.get("points")
+            if points is not None:
+                return True
+            stats = row.get("stats")
+            if isinstance(stats, list) and len(stats) > 0:
+                return True
+        return False
 
     def get_player_stats_weekly(
         self,
