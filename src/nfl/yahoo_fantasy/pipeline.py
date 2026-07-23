@@ -37,6 +37,7 @@ class PipelineConfig:
     backoff_base_seconds: float = 1.0
     player_page_size: int = 25
     require_nfl_player_points: bool = False
+    include_nfl_unrostered_player_stats: bool = False
     start_week: int | None = None
     end_week: int | None = None
     storage_target: StorageTarget = "none"
@@ -130,6 +131,16 @@ def _collect_sport_entities(
             season=int(league.get("season") or 0),
             roster_entries=roster_entries,
         )
+        if config.include_nfl_unrostered_player_stats:
+            league_player_stats_weekly = client.get_player_stats_weekly_all_players(
+                league_key,
+                season=int(league.get("season") or 0),
+                weeks=weeks,
+            )
+            player_stats_weekly = _merge_weekly_player_stats(
+                base_rows=player_stats_weekly,
+                additional_rows=league_player_stats_weekly,
+            )
         matchups = client.get_matchups(
             league_key,
             season=int(league.get("season") or 0),
@@ -145,6 +156,38 @@ def _collect_sport_entities(
             {},
         )
     return ({}, {"standings": standings, "standing_category_scores": [], "roster_entries": [], "player_projections": []})
+
+
+def _merge_weekly_player_stats(
+    base_rows: list[dict[str, Any]],
+    additional_rows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    rows_by_key: dict[tuple[str, int, str], dict[str, Any]] = {}
+
+    for row in base_rows:
+        key = (str(row.get("league_key") or ""), int(row.get("week") or 0), str(row.get("player_key") or ""))
+        rows_by_key[key] = row
+
+    for row in additional_rows:
+        key = (str(row.get("league_key") or ""), int(row.get("week") or 0), str(row.get("player_key") or ""))
+        existing = rows_by_key.get(key)
+        if existing is None:
+            rows_by_key[key] = row
+            continue
+
+        existing_points = float(existing.get("fantasy_points") or 0.0)
+        row_points = float(row.get("fantasy_points") or 0.0)
+        existing_has_stats = bool(existing.get("stats"))
+        row_has_stats = bool(row.get("stats"))
+
+        if (row_points != 0.0 and existing_points == 0.0) or (row_has_stats and not existing_has_stats):
+            merged = dict(existing)
+            merged.update(row)
+            rows_by_key[key] = merged
+
+    rows = list(rows_by_key.values())
+    rows.sort(key=lambda r: (int(r.get("week") or 0), str(r.get("player_key") or "")))
+    return rows
 
 
 def run_pipeline(

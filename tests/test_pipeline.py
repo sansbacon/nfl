@@ -176,6 +176,21 @@ class _FakeClient:
             }
         ]
 
+    def get_player_stats_weekly_all_players(self, league_key: str, season: int, weeks: list[int]) -> list[dict]:
+        _ = season
+        return [
+            {
+                "league_key": league_key,
+                "season": 2025,
+                "week": weeks[0],
+                "player_key": "461.p.999",
+                "fantasy_points": 7.5,
+                "status": None,
+                "bye_week": None,
+                "stats": [{"stat_id": "5", "value": 100.0}],
+            }
+        ]
+
 
 def test_run_pipeline_without_persistence() -> None:
     result = run_pipeline(
@@ -365,3 +380,16 @@ def test_player_weekly_points_match_scoring_rule_rollup_for_2025() -> None:
 
     assert joined.height == 1
     assert joined["computed_points"][0] == joined["fantasy_points"][0] == 18.3
+
+
+def test_run_pipeline_can_include_unrostered_player_stats() -> None:
+    result = run_pipeline(
+        league_key="461.l.717896",
+        sport="nfl",
+        api_client=_FakeClient(),
+        config=PipelineConfig(storage_target="none", include_nfl_unrostered_player_stats=True),
+    )
+
+    weekly = result.frames["nfl_player_stats_weekly"]
+    assert weekly.height == 2
+    assert "461.p.999" in weekly["player_key"].to_list()
