@@ -686,35 +686,42 @@ class YahooApiClient:
         for week in weeks:
             for team_key in team_keys:
                 payload: dict[str, Any] | None = None
-                try:
-                    payload = self.get(f"/team/{team_key}/roster;week={week};out=players,stats")
-                except Exception:
+                endpoint_candidates = [
+                    f"/team/{team_key}/roster;week={week}/players/stats",
+                    f"/team/{team_key}/roster;week={week};out=players,stats",
+                    f"/team/{team_key}/roster;week={week};out=players",
+                ]
+
+                for endpoint in endpoint_candidates:
                     try:
-                        payload = self.get(f"/team/{team_key}/roster;week={week};out=players")
+                        payload = self.get(endpoint)
+                        break
                     except Exception:
                         continue
+
+                if payload is None:
+                    continue
 
                 team_rows = self._extract_team_roster_entries(payload, league_key, season, week, team_key)
 
                 # Cached payloads can be stale and omit scoring details.
-                # If we do not see points/stats, retry this roster request uncached.
+                # If we do not see points/stats, retry roster requests uncached.
                 if self.use_cache and not self._has_usable_scoring_data(team_rows):
-                    try:
-                        fresh_payload = self.get(
-                            f"/team/{team_key}/roster;week={week};out=players,stats",
-                            use_cache=False,
-                        )
-                        fresh_rows = self._extract_team_roster_entries(
-                            fresh_payload,
-                            league_key,
-                            season,
-                            week,
-                            team_key,
-                        )
-                        if self._has_usable_scoring_data(fresh_rows):
-                            team_rows = fresh_rows
-                    except Exception:
-                        pass
+                    for endpoint in endpoint_candidates:
+                        try:
+                            fresh_payload = self.get(endpoint, use_cache=False)
+                            fresh_rows = self._extract_team_roster_entries(
+                                fresh_payload,
+                                league_key,
+                                season,
+                                week,
+                                team_key,
+                            )
+                            if self._has_usable_scoring_data(fresh_rows):
+                                team_rows = fresh_rows
+                                break
+                        except Exception:
+                            continue
 
                 rows.extend(team_rows)
 
@@ -773,6 +780,218 @@ class YahooApiClient:
         if self.validate_contracts and rows:
             validate(rows, entity="player_stats_weekly", sport="nfl")
         return rows
+
+    def get_player_stats_weekly_all_players(
+        self,
+        league_key: str,
+        season: int,
+        weeks: list[int],
+        player_keys: list[str] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Fetch weekly player stats from league-level player endpoints.
+
+        This can include players that are not present on any current roster.
+        """
+        allowed_player_keys = {str(pk) for pk in (player_keys or []) if pk}
+        use_player_filter = len(allowed_player_keys) > 0
+
+        rows_by_key: dict[tuple[str, int, str], dict[str, Any]] = {}
+
+        for week in sorted(set(int(w) for w in weeks if int(w) > 0)):
+            start = 0
+            count = self.player_page_size
+            max_pages = 200
+
+            for _ in range(max_pages):
+                payload: dict[str, Any] | None = None
+                endpoint_candidates = [
+                    f"/league/{league_key}/players;start={start};count={count};out=stats;week={week}",
+                    f"/league/{league_key}/players;start={start};count={count};week={week};out=stats",
+                    f"/league/{league_key}/players/stats;type=week;week={week};start={start};count={count}",
+                ]
+
+                for endpoint in endpoint_candidates:
+                    try:
+                        payload = self.get(endpoint)
+                        break
+                    except Exception:
+                        continue
+
+                if payload is None:
+                    break
+
+                page_rows = self._extract_weekly_player_stats_from_league_payload(
+                    payload,
+                    league_key=league_key,
+                    season=season,
+                    week=week,
+                )
+
+                if use_player_filter:
+                    page_rows = [r for r in page_rows if r.get("player_key") in allowed_player_keys]
+
+                for row in page_rows:
+                    key = (league_key, int(row["week"]), str(row["player_key"]))
+                    existing = rows_by_key.get(key)
+                    if existing is None:
+                        rows_by_key[key] = row
+                        continue
+                    if self._is_better_weekly_player_row(row, existing):
+                        rows_by_key[key] = row
+
+                page_player_keys = {
+                    str(item.get("player_key"))
+                    for item in iter_dicts(payload)
+                    if isinstance(item, dict) and item.get("player_key")
+                }
+                if len(page_player_keys) < count:
+                    break
+
+                start += count
+
+        rows = sorted(rows_by_key.values(), key=lambda r: (r["week"], r["player_key"]))
+        if self.validate_contracts and rows:
+            validate(rows, entity="player_stats_weekly", sport="nfl")
+        return rows
+
+    @staticmethod
+    def _is_better_weekly_player_row(candidate: dict[str, Any], current: dict[str, Any]) -> bool:
+        candidate_points = to_float(candidate.get("fantasy_points"), 0.0)
+        current_points = to_float(current.get("fantasy_points"), 0.0)
+        candidate_has_stats = bool(candidate.get("stats"))
+        current_has_stats = bool(current.get("stats"))
+
+        if candidate_points != 0.0 and current_points == 0.0:
+            return True
+        if candidate_has_stats and not current_has_stats:
+            return True
+        if candidate_points > current_points:
+            return True
+        return False
+
+    def _extract_weekly_player_stats_from_league_payload(
+        self,
+        payload: dict[str, Any],
+        league_key: str,
+        season: int,
+        week: int,
+    ) -> list[dict[str, Any]]:
+        rows_by_key: dict[str, dict[str, Any]] = {}
+
+        league = payload.get("fantasy_content", {}).get("league", [])
+        if len(league) >= 2 and isinstance(league[1], dict):
+            players_dict = league[1].get("players", {})
+            if isinstance(players_dict, dict):
+                for player_entry in players_dict.values():
+                    if not isinstance(player_entry, dict):
+                        continue
+                    player_array = player_entry.get("player", [])
+                    if not isinstance(player_array, list) or not player_array:
+                        continue
+                    row = self._extract_weekly_row_from_player_array(
+                        player_array,
+                        league_key=league_key,
+                        season=season,
+                        week=week,
+                    )
+                    if row and row.get("player_key"):
+                        rows_by_key[str(row["player_key"])] = row
+
+        # Fallback shape handling for alternate Yahoo responses where fields are flattened.
+        for item in iter_dicts(payload):
+            if not isinstance(item, dict):
+                continue
+            player_key = str(item.get("player_key") or "")
+            if not player_key:
+                continue
+            if player_key in rows_by_key:
+                continue
+
+            has_scoring_keys = any(k in item for k in ("player_points", "player_stats", "status", "bye_weeks"))
+            if not has_scoring_keys:
+                continue
+
+            points = 0.0
+            if "player_points" in item:
+                points = self._extract_points_from_player_points(item.get("player_points"))
+
+            bye_week: int | None = None
+            bye_raw = item.get("bye_weeks")
+            if isinstance(bye_raw, dict):
+                week_raw = pick_scalar(bye_raw.get("week"))
+                if week_raw not in (None, ""):
+                    bye_week = to_int(week_raw, 0)
+
+            stats = self._extract_player_stat_lines(item.get("player_stats")) if "player_stats" in item else []
+            rows_by_key[player_key] = {
+                "league_key": league_key,
+                "season": season,
+                "week": week,
+                "player_key": player_key,
+                "fantasy_points": points,
+                "status": str(item.get("status") or "") or None,
+                "bye_week": bye_week,
+                "stats": stats,
+            }
+
+        return list(rows_by_key.values())
+
+    def _extract_weekly_row_from_player_array(
+        self,
+        player_array: list[Any],
+        league_key: str,
+        season: int,
+        week: int,
+    ) -> dict[str, Any] | None:
+        player_key = ""
+        status: str | None = None
+        bye_week: int | None = None
+        fantasy_points = 0.0
+        stats: list[dict[str, Any]] = []
+
+        for elem in player_array:
+            if isinstance(elem, list):
+                for m in elem:
+                    if not isinstance(m, dict):
+                        continue
+                    if not player_key and m.get("player_key"):
+                        player_key = str(m.get("player_key"))
+                    if status is None and m.get("status") not in (None, ""):
+                        status = str(m.get("status"))
+                    if bye_week is None and m.get("bye_weeks") is not None:
+                        bw = m.get("bye_weeks")
+                        if isinstance(bw, dict):
+                            bye_val = pick_scalar(bw.get("week"))
+                            if bye_val not in (None, ""):
+                                bye_week = to_int(bye_val, 0)
+            elif isinstance(elem, dict):
+                if "player_points" in elem:
+                    fantasy_points = self._extract_points_from_player_points(elem.get("player_points"))
+                if "player_stats" in elem:
+                    stats = self._extract_player_stat_lines(elem.get("player_stats"))
+
+        if not player_key:
+            return None
+
+        return {
+            "league_key": league_key,
+            "season": season,
+            "week": week,
+            "player_key": player_key,
+            "fantasy_points": fantasy_points,
+            "status": status,
+            "bye_week": bye_week,
+            "stats": stats,
+        }
+
+    def _extract_points_from_player_points(self, player_points: Any) -> float:
+        if isinstance(player_points, dict):
+            return to_float(pick_scalar(player_points.get("total")), 0.0)
+        if isinstance(player_points, list):
+            for item in player_points:
+                if isinstance(item, dict) and item.get("total") not in (None, ""):
+                    return to_float(item.get("total"), 0.0)
+        return 0.0
 
     def _extract_standing_teams(self, payload: dict[str, Any]) -> list[dict[str, Any]]:
         leagues = payload.get("fantasy_content", {}).get("league", [])
@@ -1087,6 +1306,30 @@ class YahooApiClient:
 
     def _extract_player_stat_lines(self, player_stats: Any) -> list[dict[str, Any]]:
         lines: list[dict[str, Any]] = []
+
+        # Common Yahoo shape: {"stat": [{"stat_id": "5"}, {"value": "200"}]}
+        for item in iter_dicts(player_stats):
+            if not isinstance(item, dict) or "stat" not in item:
+                continue
+            stat_block = item.get("stat")
+            if not isinstance(stat_block, list):
+                continue
+
+            stat_id = ""
+            value_raw = None
+            for part in stat_block:
+                if not isinstance(part, dict):
+                    continue
+                if not stat_id and part.get("stat_id") not in (None, ""):
+                    stat_id = str(pick_scalar(part.get("stat_id")) or "").strip()
+                if value_raw in (None, ""):
+                    value_raw = pick_scalar(part.get("value"))
+                if value_raw in (None, ""):
+                    value_raw = pick_scalar(part.get("points"))
+
+            if stat_id and value_raw not in (None, ""):
+                lines.append({"stat_id": stat_id, "value": to_float(value_raw, 0.0)})
+
         for item in iter_dicts(player_stats):
             stat_id_raw = item.get("stat_id") if isinstance(item, dict) else None
             if stat_id_raw in (None, ""):

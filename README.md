@@ -54,6 +54,40 @@ print(result.polars_outputs)
   - NFL: `yhnfl`
   - NBA: `ynbna`
 
+## Warehouse Query Quickstart
+
+Use the query layer to discover and load existing Iceberg tables as Polars DataFrames.
+
+```python
+from nfl.yahoo_fantasy import YahooWarehouseClient
+
+client = YahooWarehouseClient.from_project_root()
+report = client.ensure_registered()
+print(report)
+
+print(client.list_namespaces())
+print(client.list_tables("yahoo_common"))
+
+league_df = client.load_table("yahoo_common.league")
+team_df = client.maybe_load("yahoo_common.team")
+```
+
+You can also run reusable analytics helpers that mirror the notebook examples:
+
+```python
+from nfl.yahoo_fantasy import league_team_info, weekly_team_points
+
+league_team = league_team_info(league_df=league_df, team_df=team_df)
+
+stats_df = client.maybe_load("yhnfl.player_stats_weekly")
+roster_df = client.maybe_load("yhnfl.roster_entries")
+matchups_df = client.maybe_load("yhnfl.matchups")
+
+weekly_points, points_source = weekly_team_points(stats_df, roster_df, matchups_df)
+print(points_source)
+print(weekly_points)
+```
+
 ## Testing
 
 ```powershell

@@ -27,6 +27,7 @@ The architecture is library-first: import and run from Python code, tests, or no
 src/nfl/
   yahoo_fantasy/
     api.py, auth.py, pipeline.py, transforms.py, validation.py, views.py
+    warehouse.py, queries.py
   fantasypros_fantasy/
     api.py, matching.py, pipeline.py, transforms.py, validation.py
     storage/iceberg.py, storage/polars.py
@@ -59,6 +60,11 @@ Notes:
 - Requires `oauth_session` unless a custom `api_client` is supplied.
 - Supports `sport` values: `nfl`, `nba`.
 - Optional materialized views are available through config flags.
+- Query/read APIs for persisted data are available via:
+  - `YahooWarehouseClient`
+  - `league_team_info`, `standings_summary`, `weekly_team_points`
+  - `build_player_weekly_points`, `position_weekly_points`, `team_position_weekly_points`
+  - `average_scoring_by_position_by_team`, `latest_roster_snapshot`, `scoring_quality_by_week`
 
 ### 4.2 FantasyPros Fantasy
 

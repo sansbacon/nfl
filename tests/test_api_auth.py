@@ -350,3 +350,58 @@ def test_api_client_extracts_scoring_rules_and_stat_categories() -> None:
 
     assert len(categories) == 2
     assert any(row["stat_id"] == "5" and row["display_name"] == "Pass Yds" for row in categories)
+
+
+def test_api_client_extracts_weekly_player_stats_for_all_players() -> None:
+    payload_map = {
+        "/league/461.l.717896/players;start=0;count=25;out=stats;week=1": {
+            "fantasy_content": {
+                "league": [
+                    {"league_key": "461.l.717896"},
+                    {
+                        "players": {
+                            "0": {
+                                "player": [
+                                    [
+                                        {"player_key": "461.p.123"},
+                                        {"status": "Q"},
+                                        {"bye_weeks": {"week": "7"}},
+                                    ],
+                                    {"player_points": {"total": "15.7"}},
+                                    {
+                                        "player_stats": {
+                                            "stats": {
+                                                "0": {"stat": [{"stat_id": "5"}, {"value": "200"}]}
+                                            }
+                                        }
+                                    },
+                                ]
+                            },
+                            "1": {
+                                "player": [
+                                    [
+                                        {"player_key": "461.p.999"},
+                                    ],
+                                    {"player_points": {"total": "0"}},
+                                ]
+                            },
+                        }
+                    },
+                ]
+            }
+        }
+    }
+
+    client = YahooApiClient(oauth_session=_FakeOAuth(payload_map), use_cache=False)
+    weekly = client.get_player_stats_weekly_all_players(
+        "461.l.717896",
+        season=2025,
+        weeks=[1],
+    )
+
+    assert len(weekly) == 2
+    row_123 = next(r for r in weekly if r["player_key"] == "461.p.123")
+    assert row_123["fantasy_points"] == 15.7
+    assert row_123["status"] == "Q"
+    assert row_123["bye_week"] == 7
+    assert len(row_123["stats"]) == 1
