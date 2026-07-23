@@ -333,3 +333,35 @@ def test_run_pipeline_with_materialized_views_enabled() -> None:
     ).issubset(set(scoring_view.columns))
     assert scoring_view["stat_points"][0] == 18.3
     assert scoring_view["total_stat_points"][0] == 18.3
+
+
+def test_player_weekly_points_match_scoring_rule_rollup_for_2025() -> None:
+    result = run_pipeline(
+        league_key="461.l.717896",
+        sport="nfl",
+        api_client=_FakeClient(),
+        config=PipelineConfig(storage_target="none", materialized_views_enabled=True),
+    )
+
+    scoring_view = result.frames["v_player_fantasy_scoring"]
+    weekly_stats = result.frames["nfl_player_stats_weekly"]
+
+    weekly_rollup = (
+        scoring_view.group_by(["league_key", "week", "player_key"])
+        .agg(pl.sum("total_stat_points").alias("computed_points"))
+        .sort(["league_key", "week", "player_key"])
+    )
+
+    weekly_points = (
+        weekly_stats.select(["league_key", "week", "player_key", "fantasy_points"])
+        .sort(["league_key", "week", "player_key"])
+    )
+
+    joined = weekly_rollup.join(
+        weekly_points,
+        on=["league_key", "week", "player_key"],
+        how="inner",
+    )
+
+    assert joined.height == 1
+    assert joined["computed_points"][0] == joined["fantasy_points"][0] == 18.3

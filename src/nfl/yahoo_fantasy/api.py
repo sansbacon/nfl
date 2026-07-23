@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import random
 import re
+import time
 from pathlib import Path
 from typing import Any
 
 from requests_oauthlib import OAuth2Session
+from requests.exceptions import JSONDecodeError as RequestsJSONDecodeError
 
 from nfl.yahoo_fantasy.validation import validate
 
@@ -69,12 +72,38 @@ class YahooApiClient:
         cache_dir: Path | str = ".cache",
         use_cache: bool = True,
         validate_contracts: bool = True,
+        request_interval_seconds: float = 0.0,
+        max_request_retries: int = 2,
+        backoff_base_seconds: float = 1.0,
+        player_page_size: int = 25,
     ) -> None:
         self.oauth_session = oauth_session
         self.timeout_seconds = timeout_seconds
         self.cache_dir = Path(cache_dir)
         self.use_cache = use_cache
         self.validate_contracts = validate_contracts
+        self.request_interval_seconds = max(0.0, request_interval_seconds)
+        self.max_request_retries = max(1, max_request_retries)
+        self.backoff_base_seconds = max(0.1, backoff_base_seconds)
+        self.player_page_size = max(1, player_page_size)
+        self._last_request_ts = 0.0
+
+    def _respect_rate_limit(self) -> None:
+        if self.request_interval_seconds <= 0:
+            return
+        elapsed = time.monotonic() - self._last_request_ts
+        wait_for = self.request_interval_seconds - elapsed
+        if wait_for > 0:
+            time.sleep(wait_for)
+
+    def _mark_request(self) -> None:
+        self._last_request_ts = time.monotonic()
+
+    @staticmethod
+    def _is_request_denied(status_code: int, text: str) -> bool:
+        if status_code == 999:
+            return True
+        return "request denied" in text.lower()
 
     def _cache_file(self, path: str) -> Path:
         return self.cache_dir / f"{hashlib.md5(path.encode('utf-8')).hexdigest()}.json"
@@ -95,9 +124,59 @@ class YahooApiClient:
                 pass
 
         url = f"{API_BASE}{path}"
-        resp = self.oauth_session.get(url, params={"format": "json"}, timeout=timeout)
-        resp.raise_for_status()
-        payload = resp.json()
+        payload: dict[str, Any] | None = None
+        last_error: Exception | None = None
+
+        for attempt in range(self.max_request_retries):
+            self._respect_rate_limit()
+            resp = self.oauth_session.get(url, params={"format": "json"}, timeout=timeout)
+            self._mark_request()
+            status_code = int(getattr(resp, "status_code", 200))
+            text = str(getattr(resp, "text", ""))
+
+            if self._is_request_denied(status_code, text):
+                if attempt < self.max_request_retries - 1:
+                    delay = self.backoff_base_seconds * (2**attempt) + random.uniform(0, 0.25)
+                    time.sleep(delay)
+                    continue
+                raise RuntimeError(
+                    f"Yahoo request denied for '{path}' (status={status_code}). "
+                    "Retry later or reduce request rate."
+                )
+
+            if status_code >= 400:
+                try:
+                    resp.raise_for_status()
+                except Exception as exc:
+                    content_type = str(getattr(resp, "headers", {}).get("content-type", ""))
+                    text_head = text[:200].replace("\n", " ")
+                    raise RuntimeError(
+                        f"Yahoo API request failed for '{path}' "
+                        f"(status={status_code}, content-type={content_type}, head={text_head!r})"
+                    ) from exc
+            try:
+                payload = resp.json()
+                break
+            except (json.JSONDecodeError, RequestsJSONDecodeError) as exc:
+                last_error = exc
+                # Yahoo occasionally returns an empty body on transient edge responses.
+                # Retry once before failing.
+                if attempt < self.max_request_retries - 1 and not text.strip():
+                    delay = self.backoff_base_seconds * (2**attempt) + random.uniform(0, 0.25)
+                    time.sleep(delay)
+                    continue
+                content_type = str(getattr(resp, "headers", {}).get("content-type", ""))
+                text_head = text[:200].replace("\n", " ")
+                raise RuntimeError(
+                    f"Yahoo API returned non-JSON payload for '{path}' "
+                    f"(status={status_code}, content-type={content_type}, head={text_head!r})"
+                ) from exc
+
+        if payload is None:
+            raise RuntimeError(
+                f"Yahoo API returned an empty response body for '{path}' after retry."
+            ) from last_error
+
         if should_use_cache:
             try:
                 self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -181,7 +260,7 @@ class YahooApiClient:
 
         rows_by_key: dict[str, dict[str, Any]] = {}
         start = 0
-        count = 25
+        count = self.player_page_size
         max_pages = 200
 
         for _ in range(max_pages):

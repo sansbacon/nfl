@@ -32,6 +32,10 @@ class PipelineConfig:
     cache_dir: str | Path = ".cache"
     use_cache: bool = True
     validate_contracts: bool = True
+    request_interval_seconds: float = 0.0
+    max_request_retries: int = 2
+    backoff_base_seconds: float = 1.0
+    player_page_size: int = 25
     require_nfl_player_points: bool = False
     start_week: int | None = None
     end_week: int | None = None
@@ -66,6 +70,10 @@ def _build_client(oauth_session: OAuth2Session, config: PipelineConfig) -> Yahoo
         cache_dir=config.cache_dir,
         use_cache=config.use_cache,
         validate_contracts=config.validate_contracts,
+        request_interval_seconds=config.request_interval_seconds,
+        max_request_retries=config.max_request_retries,
+        backoff_base_seconds=config.backoff_base_seconds,
+        player_page_size=config.player_page_size,
     )
 
 
