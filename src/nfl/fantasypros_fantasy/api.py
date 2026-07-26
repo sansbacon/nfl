@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
+import json
 import re
 from typing import Any
 
@@ -43,9 +44,11 @@ def _safe_int(value: str | None) -> int | None:
         return None
 
 
-def _safe_float(value: str | None) -> float | None:
+def _safe_float(value: str | float | int | None) -> float | None:
     if value is None:
         return None
+    if isinstance(value, (int, float)):
+        return float(value)
     text = value.replace(",", "").strip()
     if not text:
         return None
@@ -110,8 +113,211 @@ class FantasyProsApiClient:
     def parse_adp_page(self, html: str, season: int, effective_date: date | None = None) -> AdpPageData:
         soup = BeautifulSoup(html, "lxml")
         table = soup.find("table", {"id": "data"})
-        if not table:
-            raise ExtractionError("Could not find FantasyPros ADP table with id='data'.")
+        if table:
+            return self._parse_legacy_adp_table(
+                table=table,
+                season=season,
+                effective_date=effective_date,
+            )
+
+        report_config = self._extract_report_config(soup)
+        if report_config is not None:
+            return self._parse_report_config_adp(
+                report_config=report_config,
+                season=season,
+                effective_date=effective_date,
+            )
+
+        raise ExtractionError("Could not find FantasyPros ADP payload (legacy table or reportConfig JSON).")
+
+    def _extract_report_config(self, soup: BeautifulSoup) -> dict[str, Any] | None:
+        for script in soup.find_all("script"):
+            script_text = script.string if isinstance(script.string, str) else script.get_text("", strip=False)
+            if not script_text or "window.FP.reportConfig" not in script_text:
+                continue
+
+            marker = "window.FP.reportConfig"
+            marker_idx = script_text.find(marker)
+            if marker_idx < 0:
+                continue
+
+            assign_idx = script_text.find("=", marker_idx)
+            if assign_idx < 0:
+                continue
+
+            start_idx = script_text.find("{", assign_idx)
+            if start_idx < 0:
+                continue
+
+            depth = 0
+            end_idx = -1
+            for idx in range(start_idx, len(script_text)):
+                char = script_text[idx]
+                if char == "{":
+                    depth += 1
+                elif char == "}":
+                    depth -= 1
+                    if depth == 0:
+                        end_idx = idx
+                        break
+
+            if end_idx < 0:
+                continue
+
+            json_blob = script_text[start_idx : end_idx + 1]
+
+            try:
+                payload = json.loads(json_blob)
+            except json.JSONDecodeError:
+                continue
+
+            if isinstance(payload, dict) and isinstance(payload.get("table"), dict):
+                return payload
+
+        return None
+
+    def _parse_report_config_adp(
+        self,
+        report_config: dict[str, Any],
+        season: int,
+        effective_date: date | None,
+    ) -> AdpPageData:
+        table_data = report_config.get("table")
+        if not isinstance(table_data, dict):
+            raise ExtractionError("FantasyPros reportConfig payload is missing table data.")
+
+        rows = table_data.get("rows")
+        if not isinstance(rows, list) or not rows:
+            return AdpPageData(players=[], adp_rows=[])
+
+        fields = table_data.get("fields") if isinstance(table_data.get("fields"), list) else []
+        source_key_by_label: dict[str, str] = {}
+        for field in fields:
+            if not isinstance(field, dict):
+                continue
+            label = field.get("label")
+            key = field.get("key")
+            if isinstance(label, str) and isinstance(key, str):
+                source_key_by_label[label.strip().upper()] = key
+
+        adp_key = source_key_by_label.get("AVG", "avg")
+        realtime_key = source_key_by_label.get("REAL-TIME", "realtime")
+        platform_keys = {
+            "adp_espn": source_key_by_label.get("ESPN"),
+            "adp_sleeper": source_key_by_label.get("SLEEPER"),
+            "adp_cbs": source_key_by_label.get("CBS"),
+            "adp_nfl": source_key_by_label.get("NFL"),
+            "adp_rtsports": source_key_by_label.get("RTSPORTS"),
+            "adp_fantrax": source_key_by_label.get("FANTRAX"),
+        }
+
+        effective = effective_date or date.today()
+        player_rows: list[dict[str, Any]] = []
+        adp_rows: list[dict[str, Any]] = []
+
+        for idx, row in enumerate(rows):
+            if not isinstance(row, dict):
+                continue
+
+            player_data = row.get("player")
+            if not isinstance(player_data, dict):
+                continue
+
+            full_name = str(player_data.get("name") or "").strip()
+            first_name, last_name = _normalize_name(full_name)
+
+            player_url = str(player_data.get("url") or "")
+            url_match = re.search(r"/nfl/players/([^/.]+)", player_url)
+            fp_player_id = url_match.group(1) if url_match else f"unknown_{idx}"
+
+            team_text = str(player_data.get("team") or "").strip()
+            team_match = re.match(r"^([A-Za-z]+)\s*\((\d+)\)$", team_text)
+            if team_match:
+                team = team_match.group(1).upper()
+                bye_week = _safe_int(team_match.group(2))
+            else:
+                team = team_text.upper()
+                bye_week = None
+
+            pos_text = str(row.get("pos") or "").strip()
+            position = re.sub(r"\d+$", "", pos_text).upper()
+
+            player_rows.append(
+                {
+                    "fp_player_id": fp_player_id,
+                    "full_name": full_name,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "position": position,
+                    "team": team,
+                }
+            )
+
+            rank = _safe_int(str(row.get("rank"))) or idx + 1
+            adp = _safe_float(row.get(adp_key))
+            if adp is None:
+                continue
+
+            values: dict[str, float | None] = {}
+            for target_name, source_key in platform_keys.items():
+                values[target_name] = _safe_float(row.get(source_key)) if source_key else None
+
+            adp_realtime = _safe_float(row.get(realtime_key))
+
+            platforms = [
+                values["adp_espn"],
+                values["adp_sleeper"],
+                values["adp_cbs"],
+                values["adp_nfl"],
+                values["adp_rtsports"],
+                values["adp_fantrax"],
+            ]
+            valid_platforms = [v for v in platforms if v is not None]
+            high = int(min(valid_platforms)) if valid_platforms else None
+            low = int(max(valid_platforms)) if valid_platforms else None
+
+            stdev = None
+            if len(valid_platforms) >= 2:
+                mean = sum(valid_platforms) / len(valid_platforms)
+                variance = sum((x - mean) ** 2 for x in valid_platforms) / len(valid_platforms)
+                stdev = round(variance ** 0.5, 2)
+
+            round_num = int((adp - 1) // 12) + 1
+            pick_num = int((adp - 1) % 12) + 1
+            adp_formatted = f"{round_num}.{pick_num:02d}"
+
+            adp_rows.append(
+                {
+                    "fp_player_id": fp_player_id,
+                    "season": season,
+                    "rank": rank,
+                    "adp": adp,
+                    "adp_espn": values["adp_espn"],
+                    "adp_sleeper": values["adp_sleeper"],
+                    "adp_cbs": values["adp_cbs"],
+                    "adp_nfl": values["adp_nfl"],
+                    "adp_rtsports": values["adp_rtsports"],
+                    "adp_fantrax": values["adp_fantrax"],
+                    "adp_realtime": adp_realtime,
+                    "adp_formatted": adp_formatted,
+                    "high": high,
+                    "low": low,
+                    "stdev": stdev,
+                    "bye_week": bye_week,
+                    "effective_date": effective,
+                    "end_date": None,
+                    "is_current": True,
+                }
+            )
+
+        if self.validate_contracts and player_rows:
+            validate(player_rows, entity="fp_player")
+        if self.validate_contracts and adp_rows:
+            validate(adp_rows, entity="fp_adp_snapshot", sport="nfl")
+
+        return AdpPageData(players=player_rows, adp_rows=adp_rows)
+
+    def _parse_legacy_adp_table(self, table: Any, season: int, effective_date: date | None) -> AdpPageData:
 
         tbody = table.find("tbody")
         if not tbody:

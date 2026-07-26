@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+import os
 import re
 import sqlite3
 from dataclasses import dataclass
@@ -32,6 +34,16 @@ class RegistrationReport:
 
 class WarehouseQueryError(RuntimeError):
     """Raised when a warehouse query action cannot be completed."""
+
+
+@contextmanager
+def _temporary_cwd(path: Path):
+    previous = Path.cwd()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(previous)
 
 
 class YahooWarehouseClient:
@@ -114,8 +126,10 @@ class YahooWarehouseClient:
 
     def load_table(self, table_identifier: str) -> pl.DataFrame:
         try:
-            table = self._catalog.load_table(table_identifier)
-            return pl.from_arrow(table.scan().to_arrow())
+            # Relative metadata/manifest paths should resolve from project root.
+            with _temporary_cwd(self.paths.project_root):
+                table = self._catalog.load_table(table_identifier)
+                return pl.from_arrow(table.scan().to_arrow())
         except Exception as exc:
             raise WarehouseQueryError(f"Could not load table '{table_identifier}': {exc}") from exc
 
@@ -178,20 +192,61 @@ def _resolve_catalog_paths(
     )
 
 
-def _to_repo_relative_path(location: str, project_root: Path) -> str:
+def _to_canonical_metadata_path(location: str, project_root: Path) -> str:
+    def _as_catalog_location(path: Path) -> str:
+        # PyIceberg on Windows expects file://C:/... (two slashes), while
+        # POSIX paths work with standard file:///... URIs.
+        resolved = path.resolve().as_posix()
+        if re.match(r"^[A-Za-z]:/", resolved):
+            return f"file://{resolved}"
+        return path.resolve().as_uri()
+
     value = location.replace("\\", "/")
 
     if value.lower().startswith("file:///"):
         value = value[8:]
+    elif value.lower().startswith("file://"):
+        value = value[7:]
+
+    if value.startswith("./"):
+        value = value[2:]
 
     if re.match(r"^/[A-Za-z]:/", value):
         value = value[1:]
 
     root_prefix = project_root.as_posix().rstrip("/") + "/"
-    if value.startswith(root_prefix):
-        return value[len(root_prefix) :]
+    lower_value = value.lower()
 
-    return value
+    # Legacy notebook runs could register metadata under examples/warehouse.
+    # Always normalize to the canonical project warehouse root.
+    marker = "/examples/warehouse/"
+    marker_idx = lower_value.find(marker)
+    if marker_idx >= 0:
+        tail = value[marker_idx + len(marker) :]
+        return _as_catalog_location(project_root / "warehouse" / tail)
+
+    if lower_value.startswith("examples/warehouse/"):
+        tail = value[len("examples/warehouse/") :]
+        return _as_catalog_location(project_root / "warehouse" / tail)
+
+    if lower_value.startswith("warehouse/"):
+        return _as_catalog_location(project_root / value)
+
+    # Legacy rows can point at a stale absolute repo path while still carrying
+    # the correct warehouse-relative tail. Re-anchor those to the active project.
+    warehouse_marker = "/warehouse/"
+    warehouse_idx = lower_value.find(warehouse_marker)
+    if warehouse_idx >= 0:
+        tail = value[warehouse_idx + len(warehouse_marker) :]
+        return _as_catalog_location(project_root / "warehouse" / tail)
+
+    if value.startswith(root_prefix):
+        return _as_catalog_location(Path(value))
+
+    if re.match(r"^[A-Za-z]:/", value):
+        return _as_catalog_location(Path(value))
+
+    return _as_catalog_location(project_root / value)
 
 
 def normalize_catalog_metadata_locations(catalog_db_path: Path, project_root: Path) -> int:
@@ -202,28 +257,28 @@ def normalize_catalog_metadata_locations(catalog_db_path: Path, project_root: Pa
     try:
         cur = conn.cursor()
         rows = cur.execute(
-            "SELECT catalog_name, table_namespace, table_name, metadata_location, previous_metadata_location FROM iceberg_tables"
+            "SELECT rowid, metadata_location, previous_metadata_location FROM iceberg_tables"
         ).fetchall()
 
-        updates: list[tuple[str, str | None, str, str, str]] = []
-        for catalog_name, table_namespace, table_name, metadata_location, previous_metadata_location in rows:
+        updates: list[tuple[str, str | None, int]] = []
+        for rowid, metadata_location, previous_metadata_location in rows:
             new_meta = (
-                _to_repo_relative_path(metadata_location, project_root) if metadata_location else metadata_location
+                _to_canonical_metadata_path(metadata_location, project_root) if metadata_location else metadata_location
             )
             new_prev = (
-                _to_repo_relative_path(previous_metadata_location, project_root)
+                _to_canonical_metadata_path(previous_metadata_location, project_root)
                 if previous_metadata_location
                 else previous_metadata_location
             )
             if new_meta != metadata_location or new_prev != previous_metadata_location:
-                updates.append((new_meta, new_prev, catalog_name, table_namespace, table_name))
+                updates.append((new_meta, new_prev, rowid))
 
         if updates:
             cur.executemany(
                 """
                 UPDATE iceberg_tables
                 SET metadata_location = ?, previous_metadata_location = ?
-                WHERE catalog_name = ? AND table_namespace = ? AND table_name = ?
+                WHERE rowid = ?
                 """,
                 updates,
             )
@@ -241,7 +296,7 @@ def _latest_metadata_file(table_dir: Path) -> Path | None:
 
     metadata_files = sorted(
         metadata_dir.glob("*.metadata.json"),
-        key=lambda p: p.stat().st_mtime,
+        key=lambda p: (p.stat().st_mtime, p.name),
         reverse=True,
     )
     return metadata_files[0] if metadata_files else None
@@ -276,7 +331,7 @@ def register_tables_from_warehouse(
             if metadata_file is None:
                 continue
 
-            metadata_rel = metadata_file.resolve().relative_to(project_root).as_posix()
+            metadata_rel = _to_canonical_metadata_path(metadata_file.resolve().as_posix(), project_root)
             try:
                 catalog.register_table(table_identifier, metadata_rel)
                 registered += 1

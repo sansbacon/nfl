@@ -114,6 +114,60 @@ def _normalize_null_dtypes(frame: pl.DataFrame) -> pl.DataFrame:
     return frame.with_columns(casts)
 
 
+def _serialize_stats_list_for_storage(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+
+    serialized: list[str] = []
+    for item in value:
+        if isinstance(item, dict):
+            payload = item
+            element = payload.get("element")
+            if isinstance(element, dict):
+                payload = element
+
+            stat_id = payload.get("stat_id")
+            raw_value = payload.get("value")
+            if raw_value is None:
+                raw_value = payload.get("points")
+
+            if stat_id is not None or raw_value is not None:
+                try:
+                    numeric_value: Any = float(raw_value) if raw_value is not None else None
+                except (TypeError, ValueError):
+                    numeric_value = raw_value
+
+                serialized.append(
+                    json.dumps(
+                        {
+                            "stat_id": "" if stat_id is None else str(stat_id),
+                            "value": numeric_value,
+                        },
+                        sort_keys=True,
+                    )
+                )
+            else:
+                serialized.append(json.dumps(payload, sort_keys=True, default=str))
+            continue
+
+        serialized.append(str(item))
+
+    return serialized
+
+
+def _normalize_player_stats_frame_for_storage(frame_name: str, frame: pl.DataFrame) -> pl.DataFrame:
+    # Legacy catalogs may have yhnfl.player_stats_weekly.stats stored as list<string>.
+    # Keep storage-compatible representation to avoid nested schema drift at append time.
+    if frame_name != "nfl_player_stats_weekly" or "stats" not in frame.columns:
+        return frame
+
+    return frame.with_columns(
+        pl.col("stats")
+        .map_elements(_serialize_stats_list_for_storage, return_dtype=pl.List(pl.Utf8))
+        .alias("stats")
+    )
+
+
 def _load_pyiceberg_catalog(config: IcebergCatalogConfig) -> Any:
     try:
         from pyiceberg.catalog import load_catalog
@@ -184,6 +238,7 @@ def persist_to_iceberg(
         source_rows = frame.height
         contract = get_contract(entity=entity, sport=sport)
         write_frame = _dedupe_for_upsert(frame, contract.primary_key) if mode == "upsert" else frame
+        write_frame = _normalize_player_stats_frame_for_storage(frame_name, write_frame)
         write_frame = _normalize_null_dtypes(write_frame)
 
         digest = _frame_digest(table_identifier, mode, write_frame)

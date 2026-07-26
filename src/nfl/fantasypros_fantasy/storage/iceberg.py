@@ -100,6 +100,17 @@ def _frame_digest(table_identifier: str, mode: WriteMode, frame: pl.DataFrame) -
     return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode("utf-8")).hexdigest()
 
 
+def _normalize_null_dtypes(frame: pl.DataFrame) -> pl.DataFrame:
+    null_cols = [name for name, dtype in frame.schema.items() if dtype == pl.Null]
+    list_null_cols = [name for name, dtype in frame.schema.items() if str(dtype) == "List(Null)"]
+    if not null_cols and not list_null_cols:
+        return frame
+
+    casts: list[pl.Expr] = [pl.col(col).cast(pl.Utf8, strict=False).alias(col) for col in null_cols]
+    casts.extend(pl.col(col).cast(pl.List(pl.Utf8), strict=False).alias(col) for col in list_null_cols)
+    return frame.with_columns(casts)
+
+
 def _load_pyiceberg_catalog(config: IcebergCatalogConfig) -> Any:
     try:
         from pyiceberg.catalog import load_catalog
@@ -114,9 +125,25 @@ def _load_pyiceberg_catalog(config: IcebergCatalogConfig) -> Any:
     )
 
 
+def _ensure_table_exists(catalog: Any, table_identifier: str, frame: pl.DataFrame) -> Any:
+    try:
+        return catalog.load_table(table_identifier)
+    except Exception:
+        namespace, _table_name = table_identifier.rsplit(".", 1)
+        try:
+            catalog.create_namespace(namespace)
+        except Exception:
+            pass
+
+        try:
+            return catalog.create_table(identifier=table_identifier, schema=frame.to_arrow().schema)
+        except Exception:
+            return catalog.load_table(table_identifier)
+
+
 def _write_frame_with_pyiceberg(catalog: Any, table_identifier: str, frame: pl.DataFrame) -> None:
     try:
-        table = catalog.load_table(table_identifier)
+        table = _ensure_table_exists(catalog, table_identifier, frame)
     except Exception as exc:
         raise RuntimeError(f"Iceberg table '{table_identifier}' not found.") from exc
 
@@ -124,6 +151,14 @@ def _write_frame_with_pyiceberg(catalog: Any, table_identifier: str, frame: pl.D
         table.append(frame.to_arrow())
     except Exception as exc:
         raise RuntimeError(f"Failed appending to Iceberg table '{table_identifier}': {exc}") from exc
+
+
+def _table_exists(catalog: Any, table_identifier: str) -> bool:
+    try:
+        catalog.load_table(table_identifier)
+        return True
+    except Exception:
+        return False
 
 
 def persist_to_iceberg(
@@ -148,9 +183,14 @@ def persist_to_iceberg(
         source_rows = frame.height
         contract = get_contract(entity=entity, sport=sport)
         write_frame = _dedupe_for_upsert(frame, contract.primary_key) if mode == "upsert" else frame
+        write_frame = _normalize_null_dtypes(write_frame)
 
         digest = _frame_digest(table_identifier, mode, write_frame)
-        if store.contains(digest):
+        should_skip = store.contains(digest)
+        if should_skip and not dry_run and catalog is not None and not _table_exists(catalog, table_identifier):
+            should_skip = False
+
+        if should_skip:
             results.append(
                 IcebergWriteResult(
                     entity=frame_name,

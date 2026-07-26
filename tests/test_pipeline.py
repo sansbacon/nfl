@@ -4,11 +4,24 @@ from pathlib import Path
 
 import polars as pl
 
-from nfl.yahoo_fantasy.pipeline import PipelineConfig, run_pipeline
+from nfl.yahoo_fantasy.pipeline import PipelineConfig, PipelineDiagnosticsConfig, run_pipeline
 from nfl.yahoo_fantasy.storage.iceberg import IcebergNamespaceConfig
 
 
 class _FakeClient:
+    def get_request_stats(self) -> dict:
+        return {
+            "total_requests": 10,
+            "cache_hits": 2,
+            "retry_attempts": 1,
+            "request_denied_count": 0,
+            "http_error_count": 0,
+            "non_json_count": 0,
+            "total_latency_ms": 55.0,
+            "avg_latency_ms": 5.5,
+            "endpoints": {"/league/x/settings": 1},
+        }
+
     def get_league_metadata(self, league_key: str) -> dict:
         return {
             "league_key": league_key,
@@ -393,3 +406,117 @@ def test_run_pipeline_can_include_unrostered_player_stats() -> None:
     weekly = result.frames["nfl_player_stats_weekly"]
     assert weekly.height == 2
     assert "461.p.999" in weekly["player_key"].to_list()
+
+
+def test_run_pipeline_excludes_non_target_sport_frames_by_default() -> None:
+    result = run_pipeline(
+        league_key="461.l.717896",
+        sport="nfl",
+        api_client=_FakeClient(),
+        config=PipelineConfig(storage_target="none"),
+    )
+
+    assert any(name.startswith("nfl_") for name in result.frames)
+    assert not any(name.startswith("nba_") for name in result.frames)
+
+
+def test_run_pipeline_can_include_non_target_sport_frames_when_enabled() -> None:
+    result = run_pipeline(
+        league_key="461.l.717896",
+        sport="nfl",
+        api_client=_FakeClient(),
+        config=PipelineConfig(storage_target="none", include_non_target_sport_frames=True),
+    )
+
+    assert any(name.startswith("nba_") for name in result.frames)
+
+
+def test_run_pipeline_emits_diagnostics_when_enabled() -> None:
+    result = run_pipeline(
+        league_key="461.l.717896",
+        sport="nfl",
+        api_client=_FakeClient(),
+        config=PipelineConfig(
+            storage_target="none",
+            diagnostics=PipelineDiagnosticsConfig(enabled=True),
+        ),
+    )
+
+    assert result.diagnostics is not None
+    assert result.diagnostics.league_key == "461.l.717896"
+    assert result.diagnostics.sport == "nfl"
+    assert result.diagnostics.request_stats is not None
+    assert result.diagnostics.request_stats["total_requests"] == 10
+    stage_names = [stage.stage_name for stage in result.diagnostics.stages]
+    assert "build_client" in stage_names
+    assert "collect_common_entities" in stage_names
+    assert "collect_sport_entities" in stage_names
+    assert "nfl_scoring_guard" in stage_names
+    assert "transform" in stage_names
+
+
+class _ZeroScoringClient(_FakeClient):
+    def get_roster_entries(self, league_key: str, season: int, weeks: list[int], team_keys: list[str]) -> list[dict]:
+        _ = season
+        return [
+            {
+                "league_key": league_key,
+                "season": 2025,
+                "week": weeks[0],
+                "team_key": team_keys[0] if team_keys else f"{league_key}.t.1",
+                "player_key": "461.p.123",
+                "selected_position": "WR",
+                "is_starting": True,
+                "points": None,
+            }
+        ]
+
+    def get_player_stats_weekly(self, league_key: str, season: int, roster_entries: list[dict]) -> list[dict]:
+        _ = season
+        return [
+            {
+                "league_key": league_key,
+                "season": 2025,
+                "week": int(roster_entries[0]["week"]),
+                "player_key": "461.p.123",
+                "fantasy_points": 0.0,
+                "status": None,
+                "bye_week": None,
+                "stats": [],
+            }
+        ]
+
+
+def test_run_pipeline_diagnostics_warns_for_zero_scoring() -> None:
+    result = run_pipeline(
+        league_key="461.l.717896",
+        sport="nfl",
+        api_client=_ZeroScoringClient(),
+        config=PipelineConfig(
+            storage_target="none",
+            diagnostics=PipelineDiagnosticsConfig(enabled=True),
+        ),
+    )
+
+    assert result.diagnostics is not None
+    guard_stage = next(stage for stage in result.diagnostics.stages if stage.stage_name == "nfl_scoring_guard")
+    assert guard_stage.status == "warning"
+    assert any("no non-null points" in warning for warning in guard_stage.warnings)
+
+
+def test_run_pipeline_diagnostics_captures_failure_stage() -> None:
+    try:
+        run_pipeline(
+            league_key="461.l.717896",
+            sport="nfl",
+            api_client=_ZeroScoringClient(),
+            config=PipelineConfig(
+                storage_target="none",
+                require_nfl_player_points=True,
+                diagnostics=PipelineDiagnosticsConfig(enabled=True),
+            ),
+        )
+        assert False, "Expected ValueError for missing player-level scoring data"
+    except ValueError as exc:
+        notes = list(getattr(exc, "__notes__", []))
+        assert any("pipeline_stage=nfl_scoring_guard" in note for note in notes)

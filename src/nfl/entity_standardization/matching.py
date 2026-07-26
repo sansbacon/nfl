@@ -23,6 +23,19 @@ def _ratio(a: str, b: str) -> float:
     return float(SequenceMatcher(None, a, b).ratio())
 
 
+def _name_parts(normalized_name: str) -> tuple[str, str]:
+    tokens = [tok for tok in normalized_name.split(" ") if tok]
+    if len(tokens) < 2:
+        return "", ""
+    return tokens[0], tokens[-1]
+
+
+def _prefix_match(a: str, b: str, prefix_len: int = 3) -> bool:
+    if len(a) < prefix_len or len(b) < prefix_len:
+        return False
+    return a[:prefix_len] == b[:prefix_len]
+
+
 def match_position(raw_position: str, allowed_positions: set[str]) -> MatchDecision:
     normalized = normalize_position(raw_position)
     if normalized in allowed_positions:
@@ -67,19 +80,30 @@ def match_player(
         )
 
     exact_candidates: list[dict[str, Any]] = []
+    nickname_candidates: list[dict[str, Any]] = []
     fuzzy_candidates: list[dict[str, Any]] = []
+
+    raw_first, raw_last = _name_parts(normalized_name)
+    last_name_counts: dict[str, int] = {}
+
+    # Team is intentionally excluded from player matching to avoid seasonal drift.
+    _ = canonical_team_id
+
+    for player in canonical_players:
+        display_name = str(player.get("display_name") or "")
+        normalized_display = normalize_player_name(display_name)
+        _, display_last = _name_parts(normalized_display)
+        if display_last:
+            last_name_counts[display_last] = last_name_counts.get(display_last, 0) + 1
 
     for player in canonical_players:
         canonical_id = str(player.get("canonical_player_id") or "")
         display_name = str(player.get("display_name") or "")
+        normalized_display = normalize_player_name(display_name)
         aliases = player.get("aliases") or []
-        alias_set = {normalize_player_name(str(display_name))} | {
+        alias_set = {normalized_display} | {
             normalize_player_name(str(alias)) for alias in aliases
         }
-
-        team_bonus = 0.0
-        if canonical_team_id and canonical_team_id == str(player.get("current_team") or ""):
-            team_bonus = 0.02
 
         position_bonus = 0.0
         if canonical_position_code and canonical_position_code == str(player.get("primary_position") or ""):
@@ -90,13 +114,33 @@ def match_player(
                 {
                     "canonical_player_id": canonical_id,
                     "display_name": display_name,
-                    "score": min(1.0, 0.96 + team_bonus + position_bonus),
+                    "score": min(1.0, 0.96 + position_bonus),
                     "method": "exact",
                 }
             )
             continue
 
-        score_candidates = [_ratio(normalized_name, normalize_player_name(display_name))] + [
+        display_first, display_last = _name_parts(normalized_display)
+        if (
+            raw_last
+            and display_last
+            and raw_last == display_last
+            and _prefix_match(raw_first, display_first)
+            and canonical_position_code
+            and canonical_position_code == str(player.get("primary_position") or "")
+            and last_name_counts.get(raw_last, 0) == 1
+        ):
+            nickname_candidates.append(
+                {
+                    "canonical_player_id": canonical_id,
+                    "display_name": display_name,
+                    "score": 0.985,
+                    "method": "nickname_heuristic",
+                }
+            )
+            continue
+
+        score_candidates = [_ratio(normalized_name, normalized_display)] + [
             _ratio(normalized_name, normalize_player_name(str(a))) for a in aliases
         ]
         score = max(score_candidates) if score_candidates else 0.0
@@ -105,12 +149,12 @@ def match_player(
                 {
                     "canonical_player_id": canonical_id,
                     "display_name": display_name,
-                    "score": min(1.0, score + team_bonus + position_bonus),
+                    "score": min(1.0, score + position_bonus),
                     "method": "fuzzy",
                 }
             )
 
-    ranked = sorted(exact_candidates + fuzzy_candidates, key=lambda r: r["score"], reverse=True)
+    ranked = sorted(exact_candidates + nickname_candidates + fuzzy_candidates, key=lambda r: r["score"], reverse=True)
     if not ranked:
         return (
             MatchDecision(canonical_value="", confidence=0.0, method="unresolved", evidence={"raw": raw_player_name}),

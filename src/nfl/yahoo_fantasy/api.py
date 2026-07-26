@@ -87,6 +87,16 @@ class YahooApiClient:
         self.backoff_base_seconds = max(0.1, backoff_base_seconds)
         self.player_page_size = max(1, player_page_size)
         self._last_request_ts = 0.0
+        self._request_stats: dict[str, Any] = {
+            "total_requests": 0,
+            "cache_hits": 0,
+            "retry_attempts": 0,
+            "request_denied_count": 0,
+            "http_error_count": 0,
+            "non_json_count": 0,
+            "total_latency_ms": 0.0,
+            "endpoints": {},
+        }
 
     def _respect_rate_limit(self) -> None:
         if self.request_interval_seconds <= 0:
@@ -119,6 +129,7 @@ class YahooApiClient:
         cache_file = self._cache_file(path)
         if should_use_cache and cache_file.exists():
             try:
+                self._request_stats["cache_hits"] += 1
                 return json.loads(cache_file.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 pass
@@ -129,12 +140,21 @@ class YahooApiClient:
 
         for attempt in range(self.max_request_retries):
             self._respect_rate_limit()
+            request_start = time.perf_counter()
             resp = self.oauth_session.get(url, params={"format": "json"}, timeout=timeout)
             self._mark_request()
+            duration_ms = (time.perf_counter() - request_start) * 1000.0
+            self._request_stats["total_requests"] += 1
+            self._request_stats["total_latency_ms"] += duration_ms
+            endpoint_counter = self._request_stats["endpoints"]
+            endpoint_counter[path] = int(endpoint_counter.get(path, 0)) + 1
+            if attempt > 0:
+                self._request_stats["retry_attempts"] += 1
             status_code = int(getattr(resp, "status_code", 200))
             text = str(getattr(resp, "text", ""))
 
             if self._is_request_denied(status_code, text):
+                self._request_stats["request_denied_count"] += 1
                 if attempt < self.max_request_retries - 1:
                     delay = self.backoff_base_seconds * (2**attempt) + random.uniform(0, 0.25)
                     time.sleep(delay)
@@ -145,6 +165,7 @@ class YahooApiClient:
                 )
 
             if status_code >= 400:
+                self._request_stats["http_error_count"] += 1
                 try:
                     resp.raise_for_status()
                 except Exception as exc:
@@ -159,6 +180,7 @@ class YahooApiClient:
                 break
             except (json.JSONDecodeError, RequestsJSONDecodeError) as exc:
                 last_error = exc
+                self._request_stats["non_json_count"] += 1
                 # Yahoo occasionally returns an empty body on transient edge responses.
                 # Retry once before failing.
                 if attempt < self.max_request_retries - 1 and not text.strip():
@@ -185,6 +207,22 @@ class YahooApiClient:
                 pass
         return payload
 
+    def get_request_stats(self) -> dict[str, Any]:
+        total_requests = int(self._request_stats.get("total_requests", 0))
+        total_latency_ms = float(self._request_stats.get("total_latency_ms", 0.0))
+        avg_latency_ms = round(total_latency_ms / total_requests, 2) if total_requests else 0.0
+        return {
+            "total_requests": total_requests,
+            "cache_hits": int(self._request_stats.get("cache_hits", 0)),
+            "retry_attempts": int(self._request_stats.get("retry_attempts", 0)),
+            "request_denied_count": int(self._request_stats.get("request_denied_count", 0)),
+            "http_error_count": int(self._request_stats.get("http_error_count", 0)),
+            "non_json_count": int(self._request_stats.get("non_json_count", 0)),
+            "total_latency_ms": round(total_latency_ms, 2),
+            "avg_latency_ms": avg_latency_ms,
+            "endpoints": dict(self._request_stats.get("endpoints", {})),
+        }
+
     def discover_league_keys(self, sport: str = "all") -> list[str]:
         sport_value = (sport or "").strip().lower()
         if sport_value in {"", "all", "*"}:
@@ -203,6 +241,200 @@ class YahooApiClient:
                 if isinstance(league_key, str) and LEAGUE_KEY_RE.match(league_key):
                     keys.add(league_key)
         return sorted(keys)
+
+    def discover_games(self, sport: str = "all") -> list[dict[str, Any]]:
+        sport_value = (sport or "").strip().lower()
+        if sport_value in {"", "all", "*"}:
+            endpoints = ["/games"]
+        else:
+            endpoints = [
+                f"/games;game_codes={sport_value}",
+                f"/games;game_keys={sport_value}",
+                "/games",
+            ]
+
+        rows_by_id: dict[int, dict[str, Any]] = {}
+        for endpoint in endpoints:
+            try:
+                payload = self.get(endpoint)
+            except Exception:
+                continue
+
+            for item in iter_dicts(payload):
+                game_block = item.get("game") if isinstance(item, dict) else None
+                if not isinstance(game_block, list):
+                    continue
+                merged: dict[str, Any] = {}
+                for part in game_block:
+                    if isinstance(part, dict):
+                        merged.update(part)
+
+                raw_game_id = pick_scalar(merged.get("game_id"))
+                raw_game_key = pick_scalar(merged.get("game_key"))
+                raw_game_code = pick_scalar(merged.get("code")) or pick_scalar(merged.get("game_code"))
+                raw_season = pick_scalar(merged.get("season"))
+                if raw_game_id in (None, "") and raw_game_key in (None, ""):
+                    continue
+
+                game_id = to_int(raw_game_id or raw_game_key, 0)
+                if game_id <= 0:
+                    continue
+
+                game_code = str(raw_game_code or "").strip().lower()
+                if sport_value not in {"", "all", "*"} and game_code and game_code != sport_value:
+                    continue
+
+                candidate = {
+                    "game_id": game_id,
+                    "game_key": str(raw_game_key or game_id),
+                    "game_code": game_code,
+                    "season": to_int(raw_season, 0),
+                    "name": str(pick_scalar(merged.get("name")) or "").strip(),
+                }
+                existing = rows_by_id.get(game_id)
+                if existing is None:
+                    rows_by_id[game_id] = candidate
+                else:
+                    rows_by_id[game_id] = {
+                        "game_id": game_id,
+                        "game_key": candidate["game_key"] or existing.get("game_key") or str(game_id),
+                        "game_code": candidate["game_code"] or existing.get("game_code") or "",
+                        "season": candidate["season"] or int(existing.get("season") or 0),
+                        "name": candidate["name"] or existing.get("name") or "",
+                    }
+
+            for item in iter_dicts(payload):
+                raw_game_id = pick_scalar(item.get("game_id"))
+                raw_game_key = pick_scalar(item.get("game_key"))
+                raw_game_code = pick_scalar(item.get("code")) or pick_scalar(item.get("game_code"))
+                raw_season = pick_scalar(item.get("season"))
+                if raw_game_id in (None, "") and raw_game_key in (None, ""):
+                    continue
+
+                game_id = to_int(raw_game_id or raw_game_key, 0)
+                if game_id <= 0:
+                    continue
+
+                game_code = str(raw_game_code or "").strip().lower()
+                if sport_value not in {"", "all", "*"} and game_code and game_code != sport_value:
+                    continue
+
+                candidate = {
+                    "game_id": game_id,
+                    "game_key": str(raw_game_key or game_id),
+                    "game_code": game_code,
+                    "season": to_int(raw_season, 0),
+                    "name": str(pick_scalar(item.get("name")) or "").strip(),
+                }
+                existing = rows_by_id.get(game_id)
+                if existing is None:
+                    rows_by_id[game_id] = candidate
+                else:
+                    rows_by_id[game_id] = {
+                        "game_id": game_id,
+                        "game_key": candidate["game_key"] or existing.get("game_key") or str(game_id),
+                        "game_code": candidate["game_code"] or existing.get("game_code") or "",
+                        "season": candidate["season"] or int(existing.get("season") or 0),
+                        "name": candidate["name"] or existing.get("name") or "",
+                    }
+
+        return sorted(rows_by_id.values(), key=lambda r: (r["season"], r["game_id"]))
+
+    def get_players_by_game(
+        self,
+        game_id: int,
+        search: str | None = None,
+    ) -> list[dict[str, Any]]:
+        rows_by_key: dict[str, dict[str, Any]] = {}
+        start = 0
+        count = self.player_page_size
+        max_pages = 200
+
+        search_suffix = ""
+        if search:
+            search_term = str(search).strip()
+            if search_term:
+                search_suffix = f";search={search_term}"
+
+        for _ in range(max_pages):
+            payload = self.get(f"/game/{game_id}/players;start={start};count={count}{search_suffix}")
+            page_records = self._extract_players_from_payload(payload, game_id)
+            if not page_records:
+                break
+
+            for record in page_records:
+                rows_by_key[record["player_key"]] = record
+
+            page_player_keys = {
+                str(item.get("player_key"))
+                for item in iter_dicts(payload)
+                if isinstance(item, dict) and item.get("player_key")
+            }
+            if len(page_player_keys) < count:
+                break
+
+            start += count
+
+        rows = sorted(rows_by_key.values(), key=lambda r: r["player_key"])
+        if self.validate_contracts and rows:
+            validate(rows, entity="player")
+        return rows
+
+    def get_players_for_season(
+        self,
+        season: int,
+        sport: str = "nfl",
+        search: str | None = None,
+    ) -> list[dict[str, Any]]:
+        games = self.discover_games(sport=sport)
+        matching_games = [
+            row for row in games if to_int(row.get("season"), 0) == int(season)
+        ]
+        if not matching_games:
+            raise ValueError(
+                f"No Yahoo game found for sport='{sport}' and season={season}."
+            )
+
+        game = sorted(matching_games, key=lambda r: int(r.get("game_id") or 0))[-1]
+        return self.get_players_by_game(game_id=int(game["game_id"]), search=search)
+
+    def get_players_for_season_range(
+        self,
+        start_season: int,
+        end_season: int,
+        sport: str = "nfl",
+        search: str | None = None,
+    ) -> list[dict[str, Any]]:
+        if int(start_season) > int(end_season):
+            raise ValueError(
+                f"Invalid season range: start_season={start_season} is greater than end_season={end_season}."
+            )
+
+        rows_by_key: dict[str, dict[str, Any]] = {}
+        found_any_season = False
+        for season in range(int(start_season), int(end_season) + 1):
+            try:
+                season_rows = self.get_players_for_season(
+                    season=season,
+                    sport=sport,
+                    search=search,
+                )
+            except ValueError:
+                continue
+
+            found_any_season = True
+            for row in season_rows:
+                rows_by_key[str(row["player_key"])] = row
+
+        if not found_any_season:
+            raise ValueError(
+                f"No Yahoo game/player pools found for sport='{sport}' in seasons {start_season}-{end_season}."
+            )
+
+        rows = sorted(rows_by_key.values(), key=lambda r: r["player_key"])
+        if self.validate_contracts and rows:
+            validate(rows, entity="player")
+        return rows
 
     def get_league_metadata(self, league_key: str) -> dict[str, Any]:
         payload = self.get(f"/league/{league_key}/settings")
@@ -1090,49 +1322,56 @@ class YahooApiClient:
     def _extract_players_from_payload(self, payload: dict[str, Any], game_id: int) -> list[dict[str, Any]]:
         rows_by_key: dict[str, dict[str, Any]] = {}
 
+        def _collect_from_players_dict(players_dict: Any) -> None:
+            if not isinstance(players_dict, dict):
+                return
+            for player_entry in players_dict.values():
+                if not isinstance(player_entry, dict):
+                    continue
+                player_array = player_entry.get("player", [])
+                if not isinstance(player_array, list) or not player_array:
+                    continue
+                metadata = player_array[0] if isinstance(player_array[0], list) else []
+                if not isinstance(metadata, list):
+                    continue
+
+                player_key = ""
+                player_id: int | None = None
+                full_name = ""
+                display_position = ""
+                editorial_team_abbr: str | None = None
+
+                for m in metadata:
+                    if not isinstance(m, dict):
+                        continue
+                    if not player_key and m.get("player_key"):
+                        player_key = str(m.get("player_key"))
+                    if player_id is None and m.get("player_id") is not None:
+                        player_id = to_int(m.get("player_id"), 0)
+                    if not full_name and isinstance(m.get("name"), dict):
+                        full_name = str(m["name"].get("full") or "").strip()
+                    if not display_position and m.get("display_position") is not None:
+                        display_position = str(m.get("display_position") or "").strip()
+                    if editorial_team_abbr is None and m.get("editorial_team_abbr"):
+                        editorial_team_abbr = str(m.get("editorial_team_abbr"))
+
+                if player_key and player_id is not None and full_name and display_position:
+                    rows_by_key[player_key] = {
+                        "player_key": player_key,
+                        "player_id": player_id,
+                        "game_id": game_id,
+                        "full_name": full_name,
+                        "display_position": display_position,
+                        "editorial_team_abbr": editorial_team_abbr,
+                    }
+
         league = payload.get("fantasy_content", {}).get("league", [])
         if len(league) >= 2 and isinstance(league[1], dict):
-            players_dict = league[1].get("players", {})
-            if isinstance(players_dict, dict):
-                for player_entry in players_dict.values():
-                    if not isinstance(player_entry, dict):
-                        continue
-                    player_array = player_entry.get("player", [])
-                    if not isinstance(player_array, list) or not player_array:
-                        continue
-                    metadata = player_array[0] if isinstance(player_array[0], list) else []
-                    if not isinstance(metadata, list):
-                        continue
+            _collect_from_players_dict(league[1].get("players", {}))
 
-                    player_key = ""
-                    player_id: int | None = None
-                    full_name = ""
-                    display_position = ""
-                    editorial_team_abbr: str | None = None
-
-                    for m in metadata:
-                        if not isinstance(m, dict):
-                            continue
-                        if not player_key and m.get("player_key"):
-                            player_key = str(m.get("player_key"))
-                        if player_id is None and m.get("player_id") is not None:
-                            player_id = to_int(m.get("player_id"), 0)
-                        if not full_name and isinstance(m.get("name"), dict):
-                            full_name = str(m["name"].get("full") or "").strip()
-                        if not display_position and m.get("display_position") is not None:
-                            display_position = str(m.get("display_position") or "").strip()
-                        if editorial_team_abbr is None and m.get("editorial_team_abbr"):
-                            editorial_team_abbr = str(m.get("editorial_team_abbr"))
-
-                    if player_key and player_id is not None and full_name and display_position:
-                        rows_by_key[player_key] = {
-                            "player_key": player_key,
-                            "player_id": player_id,
-                            "game_id": game_id,
-                            "full_name": full_name,
-                            "display_position": display_position,
-                            "editorial_team_abbr": editorial_team_abbr,
-                        }
+        game = payload.get("fantasy_content", {}).get("game", [])
+        if len(game) >= 2 and isinstance(game[1], dict):
+            _collect_from_players_dict(game[1].get("players", {}))
 
         for item in iter_dicts(payload):
             player_key = item.get("player_key")

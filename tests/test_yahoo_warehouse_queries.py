@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 import polars as pl
 
@@ -19,8 +20,16 @@ from nfl.yahoo_fantasy.warehouse import (
     CatalogPaths,
     YahooWarehouseClient,
     find_project_root,
+    normalize_catalog_metadata_locations,
     register_tables_from_warehouse,
 )
+
+
+def _expected_catalog_location(path: Path) -> str:
+    resolved = path.resolve().as_posix()
+    if re.match(r"^[A-Za-z]:/", resolved):
+        return f"file://{resolved}"
+    return path.resolve().as_uri()
 
 
 class _FakeArrowTable:
@@ -116,6 +125,219 @@ def test_register_tables_from_warehouse_registers_latest_metadata(tmp_path: Path
     assert count == 1
     assert catalog.registered[0][0] == "yhnfl.matchups"
     assert catalog.registered[0][1].endswith("00002-bbb.metadata.json")
+
+
+def test_normalize_catalog_metadata_locations_rewrites_relative_and_legacy_paths(tmp_path: Path) -> None:
+    project_root = tmp_path / "repo"
+    project_root.mkdir(parents=True)
+    db_path = project_root / "iceberg_catalog.db"
+
+    import sqlite3
+
+    conn = sqlite3.connect(str(db_path))
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE iceberg_tables (
+            catalog_name TEXT,
+            table_namespace TEXT,
+            table_name TEXT,
+            metadata_location TEXT,
+            previous_metadata_location TEXT
+        )
+        """
+    )
+    cur.execute(
+        """
+        INSERT INTO iceberg_tables (
+            catalog_name,
+            table_namespace,
+            table_name,
+            metadata_location,
+            previous_metadata_location
+        ) VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            "yahoo",
+            "yahoo_common",
+            "player",
+            "./warehouse/yahoo_common/player/metadata/00001.metadata.json",
+            "c:/temp/repo/examples/warehouse/yahoo_common/player/metadata/00000.metadata.json",
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    updated = normalize_catalog_metadata_locations(
+        catalog_db_path=db_path,
+        project_root=project_root,
+    )
+
+    assert updated == 1
+
+    conn = sqlite3.connect(str(db_path))
+    cur = conn.cursor()
+    row = cur.execute(
+        """
+        SELECT metadata_location, previous_metadata_location
+        FROM iceberg_tables
+        WHERE table_namespace = 'yahoo_common' AND table_name = 'player'
+        """
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    metadata_location, previous_metadata_location = row
+    metadata_path = (
+        project_root / "warehouse" / "yahoo_common" / "player" / "metadata" / "00001.metadata.json"
+    ).resolve()
+    prev_metadata_path = (
+        project_root / "warehouse" / "yahoo_common" / "player" / "metadata" / "00000.metadata.json"
+    ).resolve()
+    expected_metadata_location = _expected_catalog_location(metadata_path)
+    expected_prev_location = _expected_catalog_location(prev_metadata_path)
+
+    assert metadata_location == expected_metadata_location
+    assert previous_metadata_location == expected_prev_location
+
+
+def test_normalize_catalog_metadata_locations_rewrites_windows_legacy_rooted_drive_path(tmp_path: Path) -> None:
+    project_root = tmp_path / "repo"
+    project_root.mkdir(parents=True)
+    db_path = project_root / "iceberg_catalog.db"
+
+    import sqlite3
+
+    conn = sqlite3.connect(str(db_path))
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE iceberg_tables (
+            catalog_name TEXT,
+            table_namespace TEXT,
+            table_name TEXT,
+            metadata_location TEXT,
+            previous_metadata_location TEXT
+        )
+        """
+    )
+    cur.execute(
+        """
+        INSERT INTO iceberg_tables (
+            catalog_name,
+            table_namespace,
+            table_name,
+            metadata_location,
+            previous_metadata_location
+        ) VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            "yahoo",
+            "yahoo_common",
+            "player",
+            "/C:/Users/test/repo/warehouse/yahoo_common/player/metadata/00003.metadata.json",
+            "file://C:/Users/test/repo/examples/warehouse/yahoo_common/player/metadata/00002.metadata.json",
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    updated = normalize_catalog_metadata_locations(
+        catalog_db_path=db_path,
+        project_root=project_root,
+    )
+
+    assert updated == 1
+
+    conn = sqlite3.connect(str(db_path))
+    cur = conn.cursor()
+    row = cur.execute(
+        """
+        SELECT metadata_location, previous_metadata_location
+        FROM iceberg_tables
+        WHERE table_namespace = 'yahoo_common' AND table_name = 'player'
+        """
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    metadata_location, previous_metadata_location = row
+    expected_metadata_location = (
+        project_root / "warehouse" / "yahoo_common" / "player" / "metadata" / "00003.metadata.json"
+    )
+    expected_prev_location = (
+        project_root / "warehouse" / "yahoo_common" / "player" / "metadata" / "00002.metadata.json"
+    )
+
+    assert metadata_location == _expected_catalog_location(expected_metadata_location)
+    assert previous_metadata_location == _expected_catalog_location(expected_prev_location)
+
+
+def test_normalize_catalog_metadata_locations_updates_rows_with_null_namespace(tmp_path: Path) -> None:
+    project_root = tmp_path / "repo"
+    project_root.mkdir(parents=True)
+    db_path = project_root / "iceberg_catalog.db"
+
+    import sqlite3
+
+    conn = sqlite3.connect(str(db_path))
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE iceberg_tables (
+            catalog_name TEXT,
+            table_namespace TEXT,
+            table_name TEXT,
+            metadata_location TEXT,
+            previous_metadata_location TEXT
+        )
+        """
+    )
+    cur.execute(
+        """
+        INSERT INTO iceberg_tables (
+            catalog_name,
+            table_namespace,
+            table_name,
+            metadata_location,
+            previous_metadata_location
+        ) VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            "yahoo",
+            None,
+            "player",
+            "/C:/Users/test/repo/warehouse/yahoo_common/player/metadata/00003.metadata.json",
+            None,
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    updated = normalize_catalog_metadata_locations(
+        catalog_db_path=db_path,
+        project_root=project_root,
+    )
+
+    assert updated == 1
+
+    conn = sqlite3.connect(str(db_path))
+    cur = conn.cursor()
+    row = cur.execute(
+        """
+        SELECT metadata_location
+        FROM iceberg_tables
+        WHERE table_name = 'player'
+        """
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    metadata_location = row[0]
+    expected_metadata_location = (
+        project_root / "warehouse" / "yahoo_common" / "player" / "metadata" / "00003.metadata.json"
+    )
+    assert metadata_location == _expected_catalog_location(expected_metadata_location)
 
 
 def test_weekly_points_uses_matchups_fallback_when_player_points_missing() -> None:

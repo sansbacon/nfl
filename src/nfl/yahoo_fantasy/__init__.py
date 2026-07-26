@@ -5,6 +5,13 @@ from nfl.yahoo_fantasy.auth import build_oauth_session
 from nfl.yahoo_fantasy.notebook import configure_polars_display, make_table_loaders
 from nfl.yahoo_fantasy.pipeline import PipelineConfig, PipelineRunResult, run_pipeline
 from nfl.yahoo_fantasy.presentation import format_table_for_display
+from nfl.yahoo_fantasy.historical_auction import (
+    HistoricalAuctionImportResult,
+    HistoricalAuctionPersistResult,
+    load_historical_auction_values,
+    persist_historical_auction_tables,
+    resolve_historical_players,
+)
 from nfl.yahoo_fantasy.queries import (
     average_scoring_by_position_by_team,
     build_player_weekly_points,
@@ -19,6 +26,7 @@ from nfl.yahoo_fantasy.queries import (
     standings_summary,
     team_weekly_fallback_from_matchups,
     team_position_weekly_points,
+    unified_draft_price_analysis,
     weekly_team_points,
     weekly_team_points_resolved,
 )
@@ -44,6 +52,11 @@ __all__ = [
     "configure_polars_display",
     "make_table_loaders",
     "format_table_for_display",
+    "HistoricalAuctionImportResult",
+    "HistoricalAuctionPersistResult",
+    "load_historical_auction_values",
+    "resolve_historical_players",
+    "persist_historical_auction_tables",
     "YahooWarehouseClient",
     "WarehouseQueryError",
     "CatalogPaths",
@@ -64,6 +77,7 @@ __all__ = [
     "league_average_by_position",
     "player_points_health",
     "scoring_quality_by_week",
+    "unified_draft_price_analysis",
 ]
 
 __version__ = "0.1.0"

@@ -47,6 +47,63 @@ def _registry() -> CanonicalRegistry:
     )
 
 
+def _nickname_registry() -> CanonicalRegistry:
+    return CanonicalRegistry(
+        players=[
+            {
+                "canonical_player_id": "P_GAINWELL",
+                "display_name": "Kenneth Gainwell",
+                "first_name": "Kenneth",
+                "last_name": "Gainwell",
+                "current_team": "PHI",
+                "primary_position": "RB",
+                "aliases": ["KENNETH GAINWELL"],
+                "source_version": "v1",
+                "cross_source_ids": {},
+            }
+        ],
+        teams=[],
+        positions=[
+            {"canonical_position_id": "RB", "canonical_position_code": "RB", "aliases": ["RB"]}
+        ],
+        source_to_canonical_map=[],
+    )
+
+
+def _ambiguous_last_name_registry() -> CanonicalRegistry:
+    return CanonicalRegistry(
+        players=[
+            {
+                "canonical_player_id": "P1",
+                "display_name": "Kenneth Gainwell",
+                "first_name": "Kenneth",
+                "last_name": "Gainwell",
+                "current_team": "PHI",
+                "primary_position": "RB",
+                "aliases": ["KENNETH GAINWELL"],
+                "source_version": "v1",
+                "cross_source_ids": {},
+            },
+            {
+                "canonical_player_id": "P2",
+                "display_name": "Kyle Gainwell",
+                "first_name": "Kyle",
+                "last_name": "Gainwell",
+                "current_team": "DAL",
+                "primary_position": "RB",
+                "aliases": ["KYLE GAINWELL"],
+                "source_version": "v1",
+                "cross_source_ids": {},
+            },
+        ],
+        teams=[],
+        positions=[
+            {"canonical_position_id": "RB", "canonical_position_code": "RB", "aliases": ["RB"]}
+        ],
+        source_to_canonical_map=[],
+    )
+
+
 def test_standardize_batch_writes_queue_and_rescues_for_low_confidence() -> None:
     cfg = StandardizationConfig(
         auto_accept_thresholds={"default": {"player": 0.99, "team": 0.99, "position": 1.0}}
@@ -112,3 +169,49 @@ def test_standardize_batch_uses_manual_override() -> None:
     assert row["canonical_player_id"] == "P1"
     assert result.tables["std_match_queue"].height == 0
     assert result.tables["std_manual_overrides"].height == 1
+
+
+def test_player_matching_confidence_does_not_depend_on_team() -> None:
+    standardizer = EntityStandardizer(canonical_registry=_registry())
+
+    same_team, _ = standardizer.standardize_player_name(
+        raw_player_name="Austin Ekeler",
+        canonical_team_id="LAC",
+        canonical_position_code="RB",
+    )
+    different_team, _ = standardizer.standardize_player_name(
+        raw_player_name="Austin Ekeler",
+        canonical_team_id="KC",
+        canonical_position_code="RB",
+    )
+
+    assert same_team["canonical_player_id"] == "P1"
+    assert different_team["canonical_player_id"] == "P1"
+    assert same_team["player_confidence"] == different_team["player_confidence"]
+
+
+def test_player_nickname_heuristic_matches_unique_last_name_same_position() -> None:
+    standardizer = EntityStandardizer(canonical_registry=_nickname_registry())
+
+    player_result, _ = standardizer.standardize_player_name(
+        raw_player_name="Kenny Gainwell",
+        canonical_team_id="",
+        canonical_position_code="RB",
+    )
+
+    assert player_result["canonical_player_id"] == "P_GAINWELL"
+    assert player_result["match_method_player"] == "nickname_heuristic"
+    assert player_result["player_confidence"] >= 0.97
+
+
+def test_player_nickname_heuristic_requires_unique_last_name() -> None:
+    standardizer = EntityStandardizer(canonical_registry=_ambiguous_last_name_registry())
+
+    player_result, _ = standardizer.standardize_player_name(
+        raw_player_name="Kenny Gainwell",
+        canonical_team_id="",
+        canonical_position_code="RB",
+    )
+
+    assert player_result["canonical_player_id"] == ""
+    assert player_result["match_method_player"] == "unresolved"
