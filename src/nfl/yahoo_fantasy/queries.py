@@ -452,3 +452,91 @@ def scoring_quality_by_week(stats_df: pl.DataFrame, roster_df: pl.DataFrame | No
         by_week = by_week.join(roster_by_week, on=["season", "week"], how="left")
 
     return by_week
+
+
+def unified_draft_price_analysis(
+    draft_pick_df: pl.DataFrame,
+    player_df: pl.DataFrame,
+    historical_resolved_df: pl.DataFrame | None = None,
+    include_unresolved_historical: bool = False,
+) -> pl.DataFrame:
+    """Combine API draft picks and historical auction values into one analysis frame."""
+    api_rows = (
+        draft_pick_df.join(
+            player_df.select(["player_key", "player_id", "full_name", "display_position"]),
+            on="player_key",
+            how="left",
+        )
+        .with_columns(
+            [
+                pl.lit("api_draft_pick").alias("source_type"),
+                pl.col("cost").cast(pl.Float64, strict=False).alias("draft_price"),
+                pl.lit("api").alias("resolution_status"),
+                pl.lit(1.0).alias("resolution_confidence"),
+                pl.lit("api").alias("resolution_method"),
+            ]
+        )
+        .select(
+            [
+                "season",
+                "source_type",
+                "league_key",
+                "team_key",
+                "player_key",
+                "player_id",
+                pl.col("full_name").alias("player_name"),
+                pl.col("display_position").alias("position"),
+                "draft_price",
+                "pick_number",
+                "round_number",
+                "resolution_status",
+                "resolution_confidence",
+                "resolution_method",
+            ]
+        )
+    )
+
+    if historical_resolved_df is None or historical_resolved_df.height == 0:
+        return api_rows.sort(["season", "draft_price"], descending=[False, True])
+
+    hist = historical_resolved_df
+    if not include_unresolved_historical and "resolution_status" in hist.columns:
+        hist = hist.filter(pl.col("resolution_status") == "resolved")
+
+    hist_rows = (
+        hist.with_columns(
+            [
+                pl.lit("historical_web_ui").alias("source_type"),
+                pl.lit(None, dtype=pl.Utf8).alias("league_key"),
+                pl.lit(None, dtype=pl.Utf8).alias("team_key"),
+                pl.col("yahoo_player_key").cast(pl.Utf8, strict=False).alias("player_key"),
+                pl.col("yahoo_player_id").cast(pl.Int64, strict=False).alias("player_id"),
+                pl.coalesce([pl.col("resolved_player_name"), pl.col("player_name_raw")]).alias("player_name"),
+                pl.coalesce([pl.col("resolved_position"), pl.col("position_raw")]).alias("position"),
+                pl.col("auction_price").cast(pl.Float64, strict=False).alias("draft_price"),
+                pl.lit(None, dtype=pl.Int64).alias("round_number"),
+            ]
+        )
+        .select(
+            [
+                "season",
+                "source_type",
+                "league_key",
+                "team_key",
+                "player_key",
+                "player_id",
+                "player_name",
+                "position",
+                "draft_price",
+                "pick_number",
+                "round_number",
+                "resolution_status",
+                "resolution_confidence",
+                "resolution_method",
+            ]
+        )
+    )
+
+    return pl.concat([api_rows, hist_rows], how="diagonal_relaxed").sort(
+        ["season", "draft_price"], descending=[False, True]
+    )

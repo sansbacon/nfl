@@ -67,3 +67,31 @@ def test_persist_to_iceberg_dry_run_upsert_and_idempotency(tmp_path: Path) -> No
     assert len(second) == 1
     assert second[0].written_rows == 0
     assert second[0].skipped_by_idempotency is True
+
+
+def test_persist_to_iceberg_normalizes_player_stats_nested_shapes(tmp_path: Path) -> None:
+    frames = {
+        "nfl_player_stats_weekly": pl.DataFrame(
+            {
+                "league_key": ["449.l.327657"],
+                "season": [2024],
+                "week": [1],
+                "player_key": ["449.p.1"],
+                "fantasy_points": [12.5],
+                "status": [None],
+                "bye_week": [None],
+                "stats": [[{"element": {"stat_id": "5", "value": "250"}}, {"stat_id": "6", "value": "2"}]],
+            }
+        )
+    }
+
+    result = persist_to_iceberg(
+        frames=frames,
+        namespace_config=IcebergNamespaceConfig(nfl="yhnfl", nba="ynbna"),
+        idempotency_store_path=tmp_path / "write_log.json",
+        dry_run=True,
+    )
+
+    assert len(result) == 1
+    assert result[0].table_identifier == "yhnfl.player_stats_weekly"
+    assert result[0].written_rows == 1

@@ -405,3 +405,176 @@ def test_api_client_extracts_weekly_player_stats_for_all_players() -> None:
     assert row_123["status"] == "Q"
     assert row_123["bye_week"] == 7
     assert len(row_123["stats"]) == 1
+
+
+def test_api_client_discovers_games_and_loads_players_for_season_without_league_key() -> None:
+    payload_map = {
+        "/games;game_codes=nfl": {
+            "fantasy_content": {
+                "games": {
+                    "0": {"game": [{"game_key": "449"}, {"game_id": "449"}, {"code": "nfl"}, {"season": "2023"}, {"name": "Fantasy Football 2023"}]},
+                    "1": {"game": [{"game_key": "461"}, {"game_id": "461"}, {"code": "nfl"}, {"season": "2025"}, {"name": "Fantasy Football 2025"}]},
+                }
+            }
+        },
+        "/game/449/players;start=0;count=25": {
+            "fantasy_content": {
+                "game": [
+                    {"game_key": "449"},
+                    {
+                        "players": {
+                            "0": {
+                                "player": [
+                                    [
+                                        {"player_key": "449.p.32752"},
+                                        {"player_id": "32752"},
+                                        {"name": {"full": "Kenneth Gainwell"}},
+                                        {"display_position": "RB"},
+                                        {"editorial_team_abbr": "PHI"},
+                                    ]
+                                ]
+                            }
+                        }
+                    },
+                ]
+            }
+        },
+    }
+
+    client = YahooApiClient(oauth_session=_FakeOAuth(payload_map), use_cache=False)
+    games = client.discover_games("nfl")
+    players = client.get_players_for_season(season=2023, sport="nfl")
+
+    assert len(games) == 2
+    assert any(g["game_id"] == 449 and g["season"] == 2023 for g in games)
+    assert len(players) == 1
+    assert players[0]["player_key"] == "449.p.32752"
+    assert players[0]["full_name"] == "Kenneth Gainwell"
+    assert players[0]["game_id"] == 449
+
+
+def test_api_client_get_players_for_season_raises_when_game_missing() -> None:
+    payload_map = {
+        "/games;game_codes=nfl": {
+            "fantasy_content": {
+                "games": {
+                    "0": {"game": [{"game_key": "461"}, {"game_id": "461"}, {"code": "nfl"}, {"season": "2025"}]}
+                }
+            }
+        }
+    }
+
+    client = YahooApiClient(oauth_session=_FakeOAuth(payload_map), use_cache=False)
+
+    try:
+        client.get_players_for_season(season=2019, sport="nfl")
+        assert False, "Expected ValueError when requested season is unavailable"
+    except ValueError as exc:
+        assert "season=2019" in str(exc)
+
+
+def test_api_client_get_players_for_season_range_unions_and_dedupes() -> None:
+    payload_map = {
+        "/games;game_codes=nfl": {
+            "fantasy_content": {
+                "games": {
+                    "0": {"game": [{"game_key": "448"}, {"game_id": "448"}, {"code": "nfl"}, {"season": "2022"}]},
+                    "1": {"game": [{"game_key": "449"}, {"game_id": "449"}, {"code": "nfl"}, {"season": "2023"}]},
+                }
+            }
+        },
+        "/game/448/players;start=0;count=25": {
+            "fantasy_content": {
+                "game": [
+                    {"game_key": "448"},
+                    {
+                        "players": {
+                            "0": {
+                                "player": [
+                                    [
+                                        {"player_key": "448.p.10"},
+                                        {"player_id": "10"},
+                                        {"name": {"full": "Legacy Player"}},
+                                        {"display_position": "RB"},
+                                        {"editorial_team_abbr": "PHI"},
+                                    ]
+                                ]
+                            },
+                            "1": {
+                                "player": [
+                                    [
+                                        {"player_key": "449.p.32752"},
+                                        {"player_id": "32752"},
+                                        {"name": {"full": "Kenneth Gainwell"}},
+                                        {"display_position": "RB"},
+                                        {"editorial_team_abbr": "PHI"},
+                                    ]
+                                ]
+                            },
+                        }
+                    },
+                ]
+            }
+        },
+        "/game/449/players;start=0;count=25": {
+            "fantasy_content": {
+                "game": [
+                    {"game_key": "449"},
+                    {
+                        "players": {
+                            "0": {
+                                "player": [
+                                    [
+                                        {"player_key": "449.p.32752"},
+                                        {"player_id": "32752"},
+                                        {"name": {"full": "Kenny Gainwell"}},
+                                        {"display_position": "RB"},
+                                        {"editorial_team_abbr": "PHI"},
+                                    ]
+                                ]
+                            },
+                            "1": {
+                                "player": [
+                                    [
+                                        {"player_key": "449.p.99"},
+                                        {"player_id": "99"},
+                                        {"name": {"full": "New Player"}},
+                                        {"display_position": "WR"},
+                                        {"editorial_team_abbr": "DAL"},
+                                    ]
+                                ]
+                            },
+                        }
+                    },
+                ]
+            }
+        },
+    }
+
+    client = YahooApiClient(oauth_session=_FakeOAuth(payload_map), use_cache=False)
+    players = client.get_players_for_season_range(start_season=2022, end_season=2023, sport="nfl")
+
+    assert len(players) == 3
+    assert any(p["player_key"] == "448.p.10" for p in players)
+    gainwell = next(p for p in players if p["player_key"] == "449.p.32752")
+    assert gainwell["full_name"] == "Kenny Gainwell"
+
+
+def test_api_client_get_players_for_season_range_raises_when_no_seasons_available() -> None:
+    payload_map = {
+        "/games;game_codes=nfl": {
+            "fantasy_content": {
+                "games": {
+                    "0": {"game": [{"game_key": "461"}, {"game_id": "461"}, {"code": "nfl"}, {"season": "2025"}]}
+                }
+            }
+        }
+    }
+
+    client = YahooApiClient(oauth_session=_FakeOAuth(payload_map), use_cache=False)
+
+    try:
+        client.get_players_for_season_range(start_season=2018, end_season=2019, sport="nfl")
+        assert False, "Expected ValueError when no seasons in range are available"
+    except ValueError as exc:
+        assert "2018-2019" in str(exc)

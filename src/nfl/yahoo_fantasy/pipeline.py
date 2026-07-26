@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
+import time
 from typing import Any, Literal
 
 import polars as pl
@@ -24,6 +26,17 @@ from nfl.entity_standardization.pipeline import EntityStandardizer, Standardizat
 
 StorageTarget = Literal["none", "polars", "iceberg", "both"]
 SportCode = Literal["nfl", "nba"]
+
+
+@dataclass(frozen=True, slots=True)
+class PipelineDiagnosticsConfig:
+    enabled: bool = False
+    include_stage_samples: bool = False
+    sample_limit: int = 5
+    capture_request_stats: bool = True
+    capture_frame_summaries: bool = True
+    emit_warnings: bool = True
+    emit_stage_progress: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,6 +65,36 @@ class PipelineConfig:
     materialized_views: tuple[str, ...] = AVAILABLE_VIEWS
     standardization_enabled: bool = False
     standardization_config: StandardizationConfig | None = None
+    include_non_target_sport_frames: bool = False
+    diagnostics: PipelineDiagnosticsConfig = field(default_factory=PipelineDiagnosticsConfig)
+
+
+@dataclass(frozen=True, slots=True)
+class StageDiagnostic:
+    stage_name: str
+    status: Literal["ok", "warning", "error"]
+    duration_ms: float
+    entity_counts: dict[str, int] = field(default_factory=dict)
+    frame_counts: dict[str, int] = field(default_factory=dict)
+    warnings: tuple[str, ...] = ()
+    error_type: str | None = None
+    error_message: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class PipelineDiagnostics:
+    started_at: str
+    finished_at: str
+    total_duration_ms: float
+    league_key: str
+    sport: SportCode
+    season: int | None
+    weeks: list[int]
+    config_snapshot: dict[str, Any]
+    request_stats: dict[str, Any] | None
+    stages: list[StageDiagnostic]
+    quality_checks: dict[str, Any]
+    summary: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,6 +105,7 @@ class PipelineRunResult:
     polars_outputs: dict[str, Path]
     iceberg_outputs: list[IcebergWriteResult]
     standardization_result: StandardizationResult | None = None
+    diagnostics: PipelineDiagnostics | None = None
 
 
 def _build_client(oauth_session: OAuth2Session, config: PipelineConfig) -> YahooApiClient:
@@ -190,6 +234,67 @@ def _merge_weekly_player_stats(
     return rows
 
 
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _entity_counts(entities: dict[str, list[dict[str, Any]]]) -> dict[str, int]:
+    return {key: len(value) for key, value in entities.items()}
+
+
+def _frame_counts(frames: dict[str, pl.DataFrame]) -> dict[str, int]:
+    return {key: int(frame.height) for key, frame in frames.items()}
+
+
+def _config_snapshot(cfg: PipelineConfig) -> dict[str, Any]:
+    return {
+        "timeout_seconds": cfg.timeout_seconds,
+        "use_cache": cfg.use_cache,
+        "validate_contracts": cfg.validate_contracts,
+        "request_interval_seconds": cfg.request_interval_seconds,
+        "max_request_retries": cfg.max_request_retries,
+        "backoff_base_seconds": cfg.backoff_base_seconds,
+        "player_page_size": cfg.player_page_size,
+        "require_nfl_player_points": cfg.require_nfl_player_points,
+        "include_nfl_unrostered_player_stats": cfg.include_nfl_unrostered_player_stats,
+        "start_week": cfg.start_week,
+        "end_week": cfg.end_week,
+        "storage_target": cfg.storage_target,
+        "polars_file_format": cfg.polars_file_format,
+        "iceberg_mode": cfg.iceberg_mode,
+        "iceberg_dry_run": cfg.iceberg_dry_run,
+        "materialized_views_enabled": cfg.materialized_views_enabled,
+        "standardization_enabled": cfg.standardization_enabled,
+        "include_non_target_sport_frames": cfg.include_non_target_sport_frames,
+        "emit_stage_progress": cfg.diagnostics.emit_stage_progress,
+    }
+
+
+def _filter_frames_for_sport(
+    frames: dict[str, pl.DataFrame],
+    sport: SportCode,
+    include_non_target_sport_frames: bool,
+) -> dict[str, pl.DataFrame]:
+    if include_non_target_sport_frames:
+        return frames
+
+    common_frame_keys = {
+        "league",
+        "team",
+        "player",
+        "draft_pick",
+        "transaction",
+        "stat_category",
+        "scoring_rule",
+    }
+    sport_prefix = f"{sport}_"
+    return {
+        key: value
+        for key, value in frames.items()
+        if key in common_frame_keys or key.startswith(sport_prefix) or key.startswith("std_") or key.startswith("vw_") or key.startswith("v_")
+    }
+
+
 def run_pipeline(
     league_key: str,
     sport: SportCode,
@@ -201,75 +306,272 @@ def run_pipeline(
     if api_client is None and oauth_session is None:
         raise ValueError("oauth_session is required when api_client is not provided")
 
-    client = api_client if api_client is not None else _build_client(oauth_session, cfg)
+    diagnostics_cfg = cfg.diagnostics
+    diagnostics_enabled = diagnostics_cfg.enabled
+    started_at = _utc_now_iso()
+    pipeline_start = time.perf_counter()
+    stages: list[StageDiagnostic] = []
+    quality_checks: dict[str, Any] = {}
+    season: int | None = None
+    weeks: list[int] = []
 
-    common_entities = _collect_common_entities(client, league_key)
-    league_record = common_entities.get("league", [{}])[0]
-    nfl_entities, nba_entities = _collect_sport_entities(
-        client,
-        league_key,
-        sport,
-        league=league_record,
-        teams=common_entities.get("team", []),
-        config=cfg,
-    )
-
-    if sport == "nfl" and cfg.require_nfl_player_points:
-        roster_entries = nfl_entities.get("roster_entries", [])
-        player_stats_weekly = nfl_entities.get("player_stats_weekly", [])
-
-        has_non_null_roster_points = any(row.get("points") is not None for row in roster_entries)
-        has_non_zero_fantasy_points = any(float(row.get("fantasy_points") or 0.0) != 0.0 for row in player_stats_weekly)
-        has_any_player_stats = any(bool(row.get("stats")) for row in player_stats_weekly)
-
-        if not has_non_null_roster_points and not has_non_zero_fantasy_points and not has_any_player_stats:
-            raise ValueError(
-                "NFL player-level scoring data is unavailable (roster points and player stats are empty). "
-                "Rerun with use_cache=False or refresh cache/API permissions before persisting."
+    def add_stage(
+        stage_name: str,
+        stage_start: float,
+        status: Literal["ok", "warning", "error"] = "ok",
+        entity_counts: dict[str, int] | None = None,
+        frame_counts: dict[str, int] | None = None,
+        warnings: list[str] | None = None,
+        error: Exception | None = None,
+    ) -> None:
+        if not diagnostics_enabled:
+            return
+        duration_ms = round((time.perf_counter() - stage_start) * 1000.0, 2)
+        stages.append(
+            StageDiagnostic(
+                stage_name=stage_name,
+                status=status,
+                duration_ms=duration_ms,
+                entity_counts=entity_counts or {},
+                frame_counts=frame_counts or {},
+                warnings=tuple(warnings or []),
+                error_type=type(error).__name__ if error is not None else None,
+                error_message=str(error) if error is not None else None,
+            )
+        )
+        if diagnostics_cfg.emit_stage_progress:
+            warning_suffix = f" warnings={len(warnings or [])}" if warnings else ""
+            error_suffix = f" error={type(error).__name__}: {error}" if error is not None else ""
+            print(
+                f"[pipeline] stage={stage_name} status={status} duration_ms={duration_ms}{warning_suffix}{error_suffix}"
             )
 
-    frames = transform(common_entities=common_entities, nfl_entities=nfl_entities, nba_entities=nba_entities)
+    def raise_with_stage_context(stage_name: str, exc: Exception) -> None:
+        if hasattr(exc, "add_note"):
+            exc.add_note(f"pipeline_stage={stage_name}")
+        raise
+
+    stage_start = time.perf_counter()
+    try:
+        client = api_client if api_client is not None else _build_client(oauth_session, cfg)
+        add_stage("build_client", stage_start)
+    except Exception as exc:
+        add_stage("build_client", stage_start, status="error", error=exc)
+        raise_with_stage_context("build_client", exc)
+
+    stage_start = time.perf_counter()
+    try:
+        common_entities = _collect_common_entities(client, league_key)
+        league_record = common_entities.get("league", [{}])[0]
+        season = int(league_record.get("season") or 0)
+        add_stage("collect_common_entities", stage_start, entity_counts=_entity_counts(common_entities))
+    except Exception as exc:
+        add_stage("collect_common_entities", stage_start, status="error", error=exc)
+        raise_with_stage_context("collect_common_entities", exc)
+
+    league_record = common_entities.get("league", [{}])[0]
+    stage_start = time.perf_counter()
+    try:
+        nfl_entities, nba_entities = _collect_sport_entities(
+            client,
+            league_key,
+            sport,
+            league=league_record,
+            teams=common_entities.get("team", []),
+            config=cfg,
+        )
+        if sport == "nfl":
+            weeks = _resolve_weeks(league_record, cfg)
+            add_stage("collect_sport_entities", stage_start, entity_counts=_entity_counts(nfl_entities))
+        else:
+            add_stage("collect_sport_entities", stage_start, entity_counts=_entity_counts(nba_entities))
+    except Exception as exc:
+        add_stage("collect_sport_entities", stage_start, status="error", error=exc)
+        raise_with_stage_context("collect_sport_entities", exc)
+
+    stage_start = time.perf_counter()
+    try:
+        stage_warnings: list[str] = []
+        if sport == "nfl":
+            roster_entries = nfl_entities.get("roster_entries", [])
+            player_stats_weekly = nfl_entities.get("player_stats_weekly", [])
+
+            has_non_null_roster_points = any(row.get("points") is not None for row in roster_entries)
+            has_non_zero_fantasy_points = any(float(row.get("fantasy_points") or 0.0) != 0.0 for row in player_stats_weekly)
+            has_any_player_stats = any(bool(row.get("stats")) for row in player_stats_weekly)
+
+            observed_weeks = sorted(
+                {
+                    int(row.get("week") or 0)
+                    for row in roster_entries
+                    if int(row.get("week") or 0) > 0
+                }
+            )
+            missing_weeks = sorted(set(weeks) - set(observed_weeks)) if weeks else []
+
+            quality_checks.update(
+                {
+                    "has_non_null_roster_points": has_non_null_roster_points,
+                    "has_non_zero_fantasy_points": has_non_zero_fantasy_points,
+                    "has_any_player_stats": has_any_player_stats,
+                    "expected_weeks": weeks,
+                    "observed_roster_weeks": observed_weeks,
+                    "missing_roster_weeks": missing_weeks,
+                }
+            )
+
+            if diagnostics_cfg.emit_warnings:
+                if not has_non_null_roster_points:
+                    stage_warnings.append("Roster entries contain no non-null points values.")
+                if not has_non_zero_fantasy_points:
+                    stage_warnings.append("Weekly player stats contain no non-zero fantasy_points values.")
+                if not has_any_player_stats:
+                    stage_warnings.append("Weekly player stats contain no detailed stat lines.")
+                if missing_weeks:
+                    stage_warnings.append(f"Roster data is missing expected weeks: {missing_weeks}.")
+
+            if cfg.require_nfl_player_points and not has_non_null_roster_points and not has_non_zero_fantasy_points and not has_any_player_stats:
+                raise ValueError(
+                    "NFL player-level scoring data is unavailable (roster points and player stats are empty). "
+                    "Rerun with use_cache=False or refresh cache/API permissions before persisting."
+                )
+
+        stage_status: Literal["ok", "warning", "error"] = "warning" if stage_warnings else "ok"
+        add_stage("nfl_scoring_guard", stage_start, status=stage_status, warnings=stage_warnings)
+    except Exception as exc:
+        add_stage("nfl_scoring_guard", stage_start, status="error", error=exc)
+        raise_with_stage_context("nfl_scoring_guard", exc)
+
+    stage_start = time.perf_counter()
+    try:
+        frames = transform(common_entities=common_entities, nfl_entities=nfl_entities, nba_entities=nba_entities)
+        add_stage(
+            "transform",
+            stage_start,
+            frame_counts=_frame_counts(frames) if diagnostics_cfg.capture_frame_summaries else None,
+        )
+    except Exception as exc:
+        add_stage("transform", stage_start, status="error", error=exc)
+        raise_with_stage_context("transform", exc)
+
+    stage_start = time.perf_counter()
+    try:
+        frames = _filter_frames_for_sport(
+            frames,
+            sport=sport,
+            include_non_target_sport_frames=cfg.include_non_target_sport_frames,
+        )
+        add_stage(
+            "filter_sport_frames",
+            stage_start,
+            frame_counts=_frame_counts(frames) if diagnostics_cfg.capture_frame_summaries else None,
+        )
+    except Exception as exc:
+        add_stage("filter_sport_frames", stage_start, status="error", error=exc)
+        raise_with_stage_context("filter_sport_frames", exc)
 
     standardization_result: StandardizationResult | None = None
     if cfg.standardization_enabled:
-        standardizer = EntityStandardizer(config=cfg.standardization_config or StandardizationConfig())
-        std_records = [
-            {
-                "source_system": "yahoo",
-                "source_entity_id": str(team.get("team_key") or ""),
-                "raw_player_name": "",
-                "raw_team_name": str(team.get("team_name") or ""),
-                "raw_position": "",
-                "season": common_entities["league"][0]["season"] if common_entities.get("league") else 0,
-            }
-            for team in common_entities.get("team", [])
-        ]
-        standardization_result = standardizer.standardize_batch(std_records)
-        frames.update(
-            {
-                key: value
-                for key, value in standardization_result.tables.items()
-                if key in {"std_standardized_outputs", "std_match_queue", "std_rescued_records", "std_source_to_canonical_map"}
-            }
-        )
+        stage_start = time.perf_counter()
+        try:
+            standardizer = EntityStandardizer(config=cfg.standardization_config or StandardizationConfig())
+            std_records = [
+                {
+                    "source_system": "yahoo",
+                    "source_entity_id": str(team.get("team_key") or ""),
+                    "raw_player_name": "",
+                    "raw_team_name": str(team.get("team_name") or ""),
+                    "raw_position": "",
+                    "season": common_entities["league"][0]["season"] if common_entities.get("league") else 0,
+                }
+                for team in common_entities.get("team", [])
+            ]
+            standardization_result = standardizer.standardize_batch(std_records)
+            frames.update(
+                {
+                    key: value
+                    for key, value in standardization_result.tables.items()
+                    if key in {"std_standardized_outputs", "std_match_queue", "std_rescued_records", "std_source_to_canonical_map"}
+                }
+            )
+            add_stage(
+                "standardization",
+                stage_start,
+                frame_counts=_frame_counts(frames) if diagnostics_cfg.capture_frame_summaries else None,
+            )
+        except Exception as exc:
+            add_stage("standardization", stage_start, status="error", error=exc)
+            raise_with_stage_context("standardization", exc)
 
     if cfg.materialized_views_enabled:
-        frames.update(build_materialized_views(frames, requested_views=cfg.materialized_views))
+        stage_start = time.perf_counter()
+        try:
+            frames.update(build_materialized_views(frames, requested_views=cfg.materialized_views))
+            add_stage(
+                "materialized_views",
+                stage_start,
+                frame_counts=_frame_counts(frames) if diagnostics_cfg.capture_frame_summaries else None,
+            )
+        except Exception as exc:
+            add_stage("materialized_views", stage_start, status="error", error=exc)
+            raise_with_stage_context("materialized_views", exc)
 
     polars_outputs: dict[str, Path] = {}
     iceberg_outputs: list[IcebergWriteResult] = []
 
     if cfg.storage_target in {"polars", "both"}:
-        polars_outputs = persist_with_polars(frames, output_dir=cfg.polars_output_dir, file_format=cfg.polars_file_format)
+        stage_start = time.perf_counter()
+        try:
+            polars_outputs = persist_with_polars(frames, output_dir=cfg.polars_output_dir, file_format=cfg.polars_file_format)
+            add_stage("persist_polars", stage_start)
+        except Exception as exc:
+            add_stage("persist_polars", stage_start, status="error", error=exc)
+            raise_with_stage_context("persist_polars", exc)
 
     if cfg.storage_target in {"iceberg", "both"}:
-        iceberg_outputs = persist_to_iceberg(
-            frames=frames,
-            catalog_config=cfg.iceberg_catalog,
-            namespace_config=cfg.iceberg_namespaces,
-            default_mode=cfg.iceberg_mode,
-            idempotency_store_path=cfg.iceberg_idempotency_store,
-            dry_run=cfg.iceberg_dry_run,
+        stage_start = time.perf_counter()
+        try:
+            iceberg_outputs = persist_to_iceberg(
+                frames=frames,
+                catalog_config=cfg.iceberg_catalog,
+                namespace_config=cfg.iceberg_namespaces,
+                default_mode=cfg.iceberg_mode,
+                idempotency_store_path=cfg.iceberg_idempotency_store,
+                dry_run=cfg.iceberg_dry_run,
+            )
+            add_stage("persist_iceberg", stage_start)
+        except Exception as exc:
+            add_stage("persist_iceberg", stage_start, status="error", error=exc)
+            raise_with_stage_context("persist_iceberg", exc)
+
+    finished_at = _utc_now_iso()
+    total_duration_ms = round((time.perf_counter() - pipeline_start) * 1000.0, 2)
+    request_stats: dict[str, Any] | None = None
+    if diagnostics_enabled and diagnostics_cfg.capture_request_stats:
+        getter = getattr(client, "get_request_stats", None)
+        if callable(getter):
+            request_stats = getter()
+
+    diagnostics: PipelineDiagnostics | None = None
+    if diagnostics_enabled:
+        warning_count = sum(len(stage.warnings) for stage in stages)
+        summary = (
+            f"Pipeline completed with {len(stages)} stages in {total_duration_ms} ms"
+            f" ({warning_count} warning{'s' if warning_count != 1 else ''})."
+        )
+        diagnostics = PipelineDiagnostics(
+            started_at=started_at,
+            finished_at=finished_at,
+            total_duration_ms=total_duration_ms,
+            league_key=league_key,
+            sport=sport,
+            season=season,
+            weeks=weeks,
+            config_snapshot=_config_snapshot(cfg),
+            request_stats=request_stats,
+            stages=stages,
+            quality_checks=quality_checks,
+            summary=summary,
         )
 
     return PipelineRunResult(
@@ -279,4 +581,5 @@ def run_pipeline(
         polars_outputs=polars_outputs,
         iceberg_outputs=iceberg_outputs,
         standardization_result=standardization_result,
+        diagnostics=diagnostics,
     )

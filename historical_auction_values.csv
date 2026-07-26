@@ -1,0 +1,706 @@
+histi,Pick,Salary,Team,Player,Position,Dollar_Rank,Pos_Dollar_Rank
+2023,2,70,Min,Justin Jefferson,WR,1,1
+2023,7,69,SF,Christian McCaffrey,RB,2,1
+2023,4,62,Cin,Ja'Marr Chase,WR,3,2
+2023,3,61,Was,Austin Ekeler,RB,4,2
+2023,9,56,Mia,Tyreek Hill,WR,5,3
+2023,13,52,Hou,Nick Chubb,RB,6,3
+2023,24,50,Phi,Saquon Barkley,RB,7,4
+2023,8,49,Bal,Derrick Henry,RB,8,5
+2023,12,49,Sea,Cooper Kupp,WR,8,4
+2023,6,48,KC,Travis Kelce,TE,9,1
+2023,5,47,Atl,Bijan Robinson,RB,10,6
+2023,14,47,NE,Stefon Diggs,WR,10,5
+2023,11,46,LAR,Davante Adams,WR,11,6
+2023,23,46,Phi,A.J. Brown,WR,11,6
+2023,15,44,Ten,Tony Pollard,RB,12,7
+2023,21,44,GB,Josh Jacobs,RB,12,7
+2023,16,43,Dal,CeeDee Lamb,WR,13,7
+2023,25,42,NYJ,Garrett Wilson,WR,14,8
+2023,20,41,Det,Amon-Ra St. Brown,WR,15,9
+2023,124,39,Jax,Tank Bigsby,RB,16,8
+2023,52,36,NE,Rhamondre Stevenson,RB,17,9
+2023,45,35,LAC,Najee Harris,RB,18,10
+2023,18,34,KC,Patrick Mahomes,QB,19,1
+2023,33,34,Hou,Joe Mixon,RB,19,11
+2023,35,33,Jax,Travis Etienne Jr.,RB,20,12
+2023,134,33,Cin,Samaje Perine,RB,20,12
+2023,10,32,NO,Chris Olave,WR,21,10
+2023,27,32,Mia,Jaylen Waddle,WR,21,10
+2023,17,30,Ind,Jonathan Taylor,RB,22,13
+2023,40,29,Min,Aaron Jones Sr.,RB,23,14
+2023,26,28,Phi,Jalen Hurts,QB,24,2
+2023,48,28,Pit,DK Metcalf,WR,24,11
+2023,39,27,Cin,Tee Higgins,WR,25,12
+2023,44,26,Chi,DJ Moore,WR,26,13
+2023,30,25,Buf,Josh Allen,QB,27,3
+2023,38,25,Bal,Mark Andrews,TE,27,2
+2023,22,24,Ten,Calvin Ridley,WR,28,14
+2023,28,24,Phi,DeVonta Smith,WR,28,14
+2023,31,24,Det,Jahmyr Gibbs,RB,28,15
+2023,50,22,Min,T.J. Hockenson,TE,29,3
+2023,51,22,Buf,Amari Cooper,WR,29,15
+2023,29,21,NYJ,Breece Hall,RB,30,16
+2023,49,21,NYJ,Justin Fields,QB,30,4
+2023,57,21,Hou,Dameon Pierce,RB,30,16
+2023,54,20,Was,Deebo Samuel,WR,31,16
+2023,66,20,Dal,Miles Sanders,RB,31,17
+2023,81,20,Was,Terry McLaurin,WR,31,16
+2023,73,19,Mia,Alexander Mattison,RB,32,18
+2023,68,18,LAC,Keenan Allen,WR,33,17
+2023,60,17,Sea,Kenneth Walker III,RB,34,19
+2023,64,17,Den,J.K. Dobbins,RB,34,19
+2023,63,16,Ten,Tyler Lockett,WR,35,18
+2023,69,16,Bal,Lamar Jackson,QB,35,5
+2023,75,16,Atl,Drake London,WR,35,18
+2023,80,16,Det,David Montgomery,RB,35,20
+2023,100,16,TB,Rachaad White,RB,35,20
+2023,61,15,Ind,Khalil Herbert,RB,36,21
+2023,89,15,Bal,DeAndre Hopkins,WR,36,19
+2023,74,14,NO,Cam Akers,RB,37,22
+2023,72,13,Cin,Joe Burrow,QB,38,6
+2023,83,13,Cle,Jerry Jeudy,WR,38,20
+2023,88,13,Dal,Javonte Williams,RB,38,23
+2023,108,13,Ind,Anthony Richardson Sr.,QB,38,6
+2023,19,12,SF,Brandon Aiyuk,WR,39,21
+2023,92,12,TB,Mike Evans,WR,39,21
+2023,32,11,Ari,James Conner,RB,40,24
+2023,34,11,LAC,Justin Herbert,QB,40,7
+2023,55,11,Mia,Darren Waller,TE,40,4
+2023,62,11,SF,George Kittle,TE,40,4
+2023,84,11,TB,Chris Godwin,WR,40,22
+2023,85,11,Cle,Diontae Johnson,WR,40,22
+2023,42,10,Dal,Dalvin Cook,RB,41,25
+2023,71,10,Atl,Kyle Pitts Sr.,TE,41,5
+2023,95,10,KC,Isiah Pacheco,RB,41,25
+2023,99,10,Cle,David Njoku,TE,41,5
+2023,117,10,Jax,Gabe Davis,WR,41,23
+2023,41,9,GB,Christian Watson,WR,42,24
+2023,56,9,NO,Alvin Kamara,RB,42,26
+2023,58,9,Hou,Christian Kirk,WR,42,24
+2023,76,9,Ind,Michael Pittman Jr.,WR,42,24
+2023,79,9,Phi,Dallas Goedert,TE,42,6
+2023,86,9,Mia,Odell Beckham Jr.,WR,42,24
+2023,82,8,NO,Michael Thomas,WR,43,25
+2023,93,8,Pit,Mike Williams,WR,43,25
+2023,78,7,Buf,James Cook,RB,44,27
+2023,97,7,KC,Hollywood Brown,WR,44,26
+2023,104,7,Dal,George Pickens,WR,44,26
+2023,109,7,Chi,D'Andre Swift,RB,44,27
+2023,43,5,Jax,Trevor Lawrence,QB,45,8
+2023,67,5,Pit,Pat Freiermuth,TE,45,7
+2023,70,5,NO,Jamaal Williams,RB,45,28
+2023,59,4,Dal,Dallas,DEF,46,1
+2023,77,4,Atl,Darnell Mooney,WR,46,27
+2023,87,4,Den,Evan Engram,TE,46,8
+2023,103,4,Cle,Kadarius Toney,WR,46,27
+2023,105,4,Phi,Jahan Dotson,WR,46,27
+2023,112,4,Phi,A.J. Dillon,RB,46,29
+2023,1,3,NE,New England,DEF,47,2
+2023,37,3,SF,San Francisco,DEF,47,2
+2023,47,3,Mia,Miami,DEF,47,2
+2023,94,3,Min,Jordan Addison,WR,47,28
+2023,96,3,Det,Jameson Williams,WR,47,28
+2023,98,3,Was,Brian Robinson Jr.,RB,47,30
+2023,101,3,Mia,Tua Tagovailoa,QB,47,9
+2023,107,3,Bal,Zay Flowers,WR,47,28
+2023,116,3,Dal,Dak Prescott,QB,47,9
+2023,131,3,NE,Antonio Gibson,RB,47,30
+2023,144,3,Phi,Rashaad Penny,RB,47,30
+2023,36,2,Buf,Buffalo,DEF,48,3
+2023,53,2,Buf,Chase Claypool,WR,48,29
+2023,90,2,Phi,Philadelphia,DEF,48,3
+2023,106,2,NO,Brandin Cooks,WR,48,29
+2023,110,2,KC,JuJu Smith-Schuster,WR,48,29
+2023,111,2,Ten,Chig Okonkwo,TE,48,9
+2023,114,2,Sea,Zach Charbonnet,RB,48,31
+2023,115,2,LAC,Quentin Johnston,WR,48,29
+2023,118,2,NYJ,Allen Lazard,WR,48,29
+2023,121,2,Den,Courtland Sutton,WR,48,29
+2023,122,2,NYJ,New York,DEF,48,3
+2023,123,2,KC,Jerick McKinnon,RB,48,31
+2023,125,2,Bal,Rashod Bateman,WR,48,29
+2023,127,2,Cle,Deshaun Watson,QB,48,10
+2023,130,2,Sea,Jaxon Smith-Njigba,WR,48,29
+2023,132,2,Buf,Elijah Moore,WR,48,29
+2023,135,2,Pit,Kenneth Gainwell,RB,48,31
+2023,141,2,Ten,Treylon Burks,WR,48,29
+2023,142,2,LAR,Tyler Higbee,TE,48,9
+2023,143,2,LV,Geno Smith,QB,48,10
+2023,148,2,LV,Jakobi Meyers,WR,48,29
+2023,158,2,Was,Michael Gallup,WR,48,29
+2023,46,1,NO,New Orleans,DEF,49,4
+2023,65,1,Cle,D'Onta Foreman,RB,49,32
+2023,91,1,NYG,Greg Dulcich,TE,49,10
+2023,102,1,Min,Minnesota,DEF,49,4
+2023,113,1,Chi,Roschon Johnson,RB,49,32
+2023,119,1,Chi,Cole Kmet,TE,49,10
+2023,120,1,Pit,Aaron Rodgers,QB,49,11
+2023,126,1,LV,Raheem Mostert,RB,49,32
+2023,128,1,Ind,Daniel Jones,QB,49,11
+2023,129,1,Dal,Ezekiel Elliott,RB,49,32
+2023,133,1,Den,Denver,DEF,49,4
+2023,136,1,KC,Skyy Moore,WR,49,30
+2023,137,1,Bal,Baltimore,DEF,49,4
+2023,138,1,Hou,Nico Collins,WR,49,30
+2023,139,1,Mia,De'Von Achane,RB,49,32
+2023,140,1,Buf,Dalton Kincaid,TE,49,10
+2023,145,1,KC,Elijah Mitchell,RB,49,32
+2023,146,1,Car,Adam Thielen,WR,49,30
+2023,147,1,Atl,Tyler Allgeier,RB,49,32
+2023,149,1,GB,Jordan Love,QB,49,11
+2023,150,1,Det,Allen Robinson,WR,49,30
+2023,151,1,Det,Sam LaPorta,TE,49,10
+2023,152,1,Atl,Kirk Cousins,QB,49,11
+2023,153,1,Den,Marvin Mims Jr.,WR,49,30
+2023,155,1,Pit,Cordarrelle Patterson,RB,49,32
+2023,156,1,Ten,Tyler Boyd,WR,49,30
+2023,157,1,SF,Jeff Wilson,RB,49,32
+2023,159,1,Pit,Jaylen Warren,RB,49,32
+2023,160,1,GB,Romeo Doubs,WR,49,30
+2023,161,1,Hou,Dalton Schultz,TE,49,10
+2023,162,1,KC,Kareem Hunt,RB,49,32
+2023,163,1,NE,DeVante Parker,WR,49,30
+2023,164,1,SF,Brock Purdy,QB,49,11
+2023,165,1,NO,Derek Carr,QB,49,11
+2023,166,1,Atl,DJ Chark,WR,49,30
+2023,167,1,Min,DeWayne McBride,RB,49,32
+2023,168,1,LAR,Matthew Stafford,QB,49,11
+2023,169,1,Dal,Jake Ferguson,TE,49,10
+2023,170,1,Cin,Cincinnati,DEF,49,4
+2023,171,1,NO,Rashid Shaheed,WR,49,30
+2023,172,1,TB,Sterling Shepard,WR,49,30
+2023,173,1,NO,Juwan Johnson,TE,49,10
+2023,174,1,NO,Kendre Miller,RB,49,32
+2023,175,1,Det,Jared Goff,QB,49,11
+2023,176,1,KC,Rashee Rice,WR,49,30
+2023,177,1,Ari,Zay Jones,WR,49,30
+2023,178,1,NYG,Devin Singletary,RB,49,32
+2023,179,1,NYG,Jalin Hyatt,WR,49,30
+2023,180,1,Was,K.J. Osborn,WR,49,30
+2022,2,63,Ind,Jonathan Taylor,RB,1,1
+2022,7,61,SF,Christian McCaffrey,RB,2,2
+2022,4,57,Was,Austin Ekeler,RB,3,3
+2022,5,54,Sea,Cooper Kupp,WR,4,1
+2022,9,53,Cin,Ja'Marr Chase,WR,5,2
+2022,11,53,Bal,Derrick Henry,RB,5,4
+2022,14,53,Dal,Dalvin Cook,RB,5,4
+2022,12,50,Min,Justin Jefferson,WR,6,3
+2022,16,45,NE,Stefon Diggs,WR,7,4
+2022,19,45,Hou,Joe Mixon,RB,7,5
+2022,32,44,Chi,D'Andre Swift,RB,8,6
+2022,13,42,LAR,Davante Adams,WR,9,5
+2022,17,42,LAC,Najee Harris,RB,9,7
+2022,1,40,KC,Travis Kelce,TE,10,1
+2022,28,40,NO,Alvin Kamara,RB,10,8
+2022,15,39,Dal,CeeDee Lamb,WR,11,6
+2022,10,36,Phi,Saquon Barkley,RB,12,9
+2022,18,35,Buf,Leonard Fournette,RB,13,10
+2022,24,35,Mia,Tyreek Hill,WR,13,7
+2022,27,35,Hou,Nick Chubb,RB,13,10
+2022,21,33,Dal,Javonte Williams,RB,14,11
+2022,26,33,Was,Deebo Samuel,WR,14,8
+2022,6,31,Min,Aaron Jones Sr.,RB,15,12
+2022,23,30,TB,Mike Evans,WR,16,9
+2022,31,30,Ari,James Conner,RB,16,13
+2022,38,30,Jax,Travis Etienne Jr.,RB,16,13
+2022,33,29,Det,David Montgomery,RB,17,14
+2022,49,29,LAC,Keenan Allen,WR,17,10
+2022,22,27,Dal,Ezekiel Elliott,RB,18,15
+2022,25,27,Bal,Mark Andrews,TE,18,2
+2022,34,27,Phi,A.J. Brown,WR,18,11
+2022,36,26,Ind,Michael Pittman Jr.,WR,19,12
+2022,3,25,Buf,Josh Allen,QB,20,1
+2022,8,25,Atl,Kyle Pitts Sr.,TE,20,3
+2022,42,24,Pit,Mike Williams,WR,21,13
+2022,48,24,Chi,DJ Moore,WR,21,13
+2022,44,23,NO,Cam Akers,RB,22,16
+2022,29,22,KC,Elijah Mitchell,RB,23,17
+2022,40,22,Cin,Tee Higgins,WR,23,14
+2022,41,22,Was,Terry McLaurin,WR,23,14
+2022,43,20,NYJ,Breece Hall,RB,24,18
+2022,45,20,Phi,Rashaad Penny,RB,24,18
+2022,60,20,Cle,Diontae Johnson,WR,24,15
+2022,72,20,Det,Amon-Ra St. Brown,WR,24,15
+2022,35,19,GB,Josh Jacobs,RB,25,19
+2022,39,19,KC,Patrick Mahomes,QB,25,2
+2022,52,19,Den,Courtland Sutton,WR,25,16
+2022,89,19,NE,Rhamondre Stevenson,RB,25,19
+2022,37,18,SF,George Kittle,TE,26,4
+2022,20,17,Jax,Gabe Davis,WR,27,17
+2022,51,17,Det,Allen Robinson,WR,27,17
+2022,78,17,Mia,Darren Waller,TE,27,5
+2022,50,16,TB,Chase Edmonds,RB,28,20
+2022,65,16,Pit,DK Metcalf,WR,28,18
+2022,59,15,KC,JuJu Smith-Schuster,WR,29,19
+2022,62,15,LAC,Justin Herbert,QB,29,3
+2022,46,14,NO,Michael Thomas,WR,30,20
+2022,54,14,Hou,Dameon Pierce,RB,30,21
+2022,64,14,Mia,Jaylen Waddle,WR,30,20
+2022,75,14,NO,Brandin Cooks,WR,30,20
+2022,83,14,Cle,Jerry Jeudy,WR,30,20
+2022,96,14,Car,Adam Thielen,WR,30,20
+2022,57,13,Hou,Christian Kirk,WR,31,21
+2022,77,13,Atl,Darnell Mooney,WR,31,21
+2022,81,13,Cin,Joe Burrow,QB,31,4
+2022,87,13,Ari,Kyler Murray,QB,31,4
+2022,97,12,TB,Chris Godwin,WR,32,22
+2022,66,11,Den,J.K. Dobbins,RB,33,22
+2022,70,11,Car,Hunter Renfrow,WR,33,23
+2022,84,11,KC,Hollywood Brown,WR,33,23
+2022,93,11,KC,Kareem Hunt,RB,33,22
+2022,112,11,Bal,DeAndre Hopkins,WR,33,23
+2022,47,10,TB,Tom Brady,QB,34,5
+2022,58,10,Buf,Amari Cooper,WR,34,24
+2022,61,10,NO,Clyde Edwards-Helaire,RB,34,23
+2022,71,10,Bal,Lamar Jackson,QB,34,5
+2022,74,10,Phi,DeVonta Smith,WR,34,24
+2022,85,10,Phi,Jalen Hurts,QB,34,5
+2022,109,10,Buf,Dawson Knox,TE,34,6
+2022,55,9,Phi,A.J. Dillon,RB,35,24
+2022,92,9,Pit,Robert Woods,WR,35,25
+2022,108,9,Atl,Drake London,WR,35,25
+2022,113,9,Buf,James Cook,RB,35,24
+2022,122,9,Buf,Buffalo,DEF,35,1
+2022,30,8,LAC,Trey Lance,QB,36,6
+2022,63,8,Hou,Dalton Schultz,TE,36,7
+2022,67,8,NE,Antonio Gibson,RB,36,25
+2022,68,8,Buf,Elijah Moore,WR,36,26
+2022,73,8,Pit,Cordarrelle Patterson,RB,36,25
+2022,76,8,Bal,Rashod Bateman,WR,36,26
+2022,80,8,Phi,Dallas Goedert,TE,36,7
+2022,100,8,NYG,Devin Singletary,RB,36,25
+2022,79,7,Dal,Dak Prescott,QB,37,7
+2022,88,7,Buf,Damien Harris,RB,37,26
+2022,111,7,Chi,Cole Kmet,TE,37,8
+2022,114,7,Buf,Chase Claypool,WR,37,27
+2022,123,7,LAC,Nyheim Miller-Hines,RB,37,26
+2022,130,7,Dal,George Pickens,WR,37,27
+2022,53,6,Mia,Tua Tagovailoa,QB,38,8
+2022,56,6,SF,Brandon Aiyuk,WR,38,28
+2022,90,6,Ten,Tony Pollard,RB,38,27
+2022,95,6,Dal,Miles Sanders,RB,38,27
+2022,99,6,NYJ,Allen Lazard,WR,38,28
+2022,102,6,Ten,Tyler Lockett,WR,38,28
+2022,105,6,Min,T.J. Hockenson,TE,38,9
+2022,115,6,NO,Chris Olave,WR,38,28
+2022,133,6,Mia,Alexander Mattison,RB,38,27
+2022,86,5,NE,DeVante Parker,WR,39,29
+2022,91,5,Bal,Melvin Gordon III,RB,39,28
+2022,94,5,Pit,Aaron Rodgers,QB,39,9
+2022,101,5,NO,James Robinson,RB,39,28
+2022,120,5,Cle,Kadarius Toney,WR,39,29
+2022,125,5,Ind,Khalil Herbert,RB,39,28
+2022,129,5,SF,San Francisco,DEF,39,2
+2022,146,5,LAR,Darrell Henderson Jr.,RB,39,28
+2022,69,4,NYG,Russell Wilson,QB,40,10
+2022,106,4,LAR,Matthew Stafford,QB,40,10
+2022,107,4,Ari,Michael Carter,RB,40,29
+2022,128,4,Sea,Kenneth Walker III,RB,40,29
+2022,150,4,NO,Jarvis Landry,WR,40,30
+2022,82,3,NYJ,Justin Fields,QB,41,11
+2022,119,3,LV,Raheem Mostert,RB,41,30
+2022,121,3,Was,Zach Ertz,TE,41,10
+2022,127,3,KC,Skyy Moore,WR,41,31
+2022,139,3,LAR,Los Angeles,DEF,41,3
+2022,144,3,Ten,Treylon Burks,WR,41,31
+2022,147,3,Hou,Irv Smith Jr.,TE,41,10
+2022,155,3,Atl,DJ Chark,WR,41,31
+2022,161,3,Was,Michael Gallup,WR,41,31
+2022,98,2,Chi,Devin Duvernay,WR,42,32
+2022,117,2,Bal,Sammy Watkins,WR,42,32
+2022,126,2,Bal,Baltimore,DEF,42,4
+2022,131,2,LV,Jakobi Meyers,WR,42,32
+2022,132,2,NE,Hunter Henry,TE,42,11
+2022,136,2,Min,Rondale Moore,WR,42,32
+2022,143,2,TB,Tampa Bay,DEF,42,4
+2022,145,2,Phi,Julio Jones,WR,42,32
+2022,151,2,NO,New Orleans,DEF,42,4
+2022,152,2,NYG,Jameis Winston,QB,42,12
+2022,153,2,GB,Romeo Doubs,WR,42,32
+2022,156,2,NO,Jamaal Williams,RB,42,31
+2022,157,2,Pit,Kenneth Gainwell,RB,42,31
+2022,159,2,NO,Derek Carr,QB,42,12
+2022,170,2,NO,Mark Ingram II,RB,42,31
+2022,103,1,NO,Eno Benjamin,RB,43,32
+2022,104,1,GB,Green Bay,DEF,43,5
+2022,110,1,Mia,Isaiah McKenzie,WR,43,33
+2022,116,1,Pit,Pat Freiermuth,TE,43,12
+2022,118,1,SF,Mac Jones,QB,43,13
+2022,124,1,SF,Russell Gage Jr.,WR,43,33
+2022,134,1,Hou,Nico Collins,WR,43,33
+2022,135,1,Den,Denver,DEF,43,5
+2022,137,1,TB,Rachaad White,RB,43,32
+2022,138,1,Dal,Dallas,DEF,43,5
+2022,140,1,Ten,Tyler Boyd,WR,43,33
+2022,141,1,Cle,David Njoku,TE,43,12
+2022,142,1,Pit,Jaylen Warren,RB,43,32
+2022,148,1,Hou,Rex Burkhead,RB,43,32
+2022,149,1,Ind,Indianapolis,DEF,43,5
+2022,154,1,Atl,Tyler Allgeier,RB,43,32
+2022,158,1,LAC,Los Angeles,DEF,43,5
+2022,160,1,Cin,Noah Fant,TE,43,12
+2022,162,1,Atl,Kirk Cousins,QB,43,13
+2022,163,1,NE,Austin Hooper,TE,43,12
+2022,164,1,Chi,Chicago,DEF,43,5
+2022,165,1,Jax,Trevor Lawrence,QB,43,13
+2022,166,1,Sea,Marquez Valdes-Scantling,WR,43,33
+2022,167,1,LAR,Tyler Higbee,TE,43,12
+2022,168,1,Buf,Joshua Palmer,WR,43,33
+2022,169,1,NE,New England,DEF,43,5
+2022,171,1,Was,J.D. McKissic,RB,43,32
+2022,172,1,Det,Marvin Jones Jr.,WR,43,33
+2022,173,1,NYG,Kenny Golladay,WR,43,33
+2022,174,1,SF,Ameer Abdullah,RB,43,32
+2022,175,1,Phi,Jahan Dotson,WR,43,33
+2022,176,1,Cle,D'Onta Foreman,RB,43,32
+2022,177,1,Was,K.J. Osborn,WR,43,33
+2022,178,1,LV,Isaiah Spiller,RB,43,32
+2022,179,1,Chi,Gerald Everett,TE,43,12
+2022,180,1,Dal,Jalen Tolbert,WR,43,33
+2021,1,69,SF,Christian McCaffrey,RB,1,1
+2021,9,66,NO,Alvin Kamara,RB,2,2
+2021,2,66,Dal,Dalvin Cook,RB,2,2
+2021,10,54,Bal,Derrick Henry,RB,3,3
+2021,21,53,Was,Austin Ekeler,RB,4,4
+2021,5,53,Dal,Ezekiel Elliott,RB,4,4
+2021,13,52,LAR,Davante Adams,WR,5,1
+2021,20,50,Ind,Jonathan Taylor,RB,6,5
+2021,12,50,Hou,Nick Chubb,RB,6,5
+2021,8,49,NE,Antonio Gibson,RB,7,6
+2021,26,48,KC,Travis Kelce,TE,8,1
+2021,24,48,NE,Stefon Diggs,WR,8,2
+2021,17,47,Min,Aaron Jones Sr.,RB,9,7
+2021,14,46,Mia,Tyreek Hill,WR,10,3
+2021,25,44,Ten,Calvin Ridley,WR,11,4
+2021,7,44,Phi,Saquon Barkley,RB,11,8
+2021,29,43,Pit,DK Metcalf,WR,12,5
+2021,23,43,LAC,Najee Harris,RB,12,9
+2021,36,40,Min,Justin Jefferson,WR,13,6
+2021,32,40,Bal,DeAndre Hopkins,WR,13,6
+2021,22,38,NO,Clyde Edwards-Helaire,RB,14,10
+2021,11,37,Hou,Joe Mixon,RB,15,11
+2021,31,36,KC,Patrick Mahomes,QB,16,1
+2021,50,34,Sea,Chris Carson,RB,17,12
+2021,37,33,Phi,A.J. Brown,WR,18,7
+2021,28,33,Mia,Darren Waller,TE,18,2
+2021,4,32,SF,George Kittle,TE,19,3
+2021,38,31,Was,Terry McLaurin,WR,20,8
+2021,49,30,LAC,Keenan Allen,WR,21,9
+2021,41,30,Det,David Montgomery,RB,21,13
+2021,63,29,Chi,D'Andre Swift,RB,22,14
+2021,60,29,Pit,Robert Woods,WR,22,10
+2021,46,27,Det,Allen Robinson,WR,23,11
+2021,48,25,NO,James Robinson,RB,24,15
+2021,123,23,NE,New England,DEF,25,1
+2021,69,22,Car,Adam Thielen,WR,26,12
+2021,52,22,Bal,Myles Gaskin,RB,26,16
+2021,39,22,LAC,Gus Edwards,RB,26,16
+2021,6,22,SF,Brandon Aiyuk,WR,26,12
+2021,57,21,Sea,Cooper Kupp,WR,27,13
+2021,53,21,Ten,Tyler Lockett,WR,27,13
+2021,51,21,Ari,Kyler Murray,QB,27,2
+2021,65,20,Phi,Julio Jones,WR,28,14
+2021,45,20,TB,Chris Godwin,WR,28,14
+2021,40,20,GB,Josh Jacobs,RB,28,17
+2021,27,20,Dal,Miles Sanders,RB,28,17
+2021,78,19,TB,Chase Edmonds,RB,29,18
+2021,58,19,Cle,Diontae Johnson,WR,29,15
+2021,44,18,TB,Mike Evans,WR,30,16
+2021,34,18,Buf,Josh Allen,QB,30,3
+2021,47,17,Dal,CeeDee Lamb,WR,31,17
+2021,43,17,Buf,Amari Cooper,WR,31,17
+2021,35,17,Bal,Mike Davis,RB,31,19
+2021,18,17,Buf,Damien Harris,RB,31,19
+2021,67,16,KC,Kareem Hunt,RB,32,20
+2021,19,16,LAR,Darrell Henderson Jr.,RB,32,20
+2021,83,15,Cle,Jerry Jeudy,WR,33,18
+2021,71,14,Pit,Trey Sermon,RB,34,21
+2021,98,13,Dal,Ronald Jones,RB,35,22
+2021,80,13,Min,T.J. Hockenson,TE,35,4
+2021,79,13,SF,Robbie Chosen,WR,35,19
+2021,16,13,Bal,Mark Andrews,TE,35,4
+2021,108,12,Was,Deebo Samuel,WR,36,20
+2021,84,12,Cin,Tee Higgins,WR,36,20
+2021,66,12,LV,Raheem Mostert,RB,36,23
+2021,62,12,Atl,Kyle Pitts Sr.,TE,36,5
+2021,106,11,NYG,Kenny Golladay,WR,37,21
+2021,76,11,SF,Logan Thomas,TE,37,6
+2021,33,11,Bal,Lamar Jackson,QB,37,4
+2021,94,10,LV,Jakobi Meyers,WR,38,22
+2021,86,10,Dal,Javonte Williams,RB,38,24
+2021,61,10,TB,Tom Brady,QB,38,5
+2021,42,10,Buf,Chase Claypool,WR,38,22
+2021,107,9,KC,JuJu Smith-Schuster,WR,39,23
+2021,93,9,LAR,Tyler Higbee,TE,39,7
+2021,59,9,Chi,DJ Moore,WR,39,23
+2021,140,8,Car,Carolina,DEF,40,2
+2021,119,8,Phi,Dallas Goedert,TE,40,8
+2021,88,8,KC,Robert Tonyan,TE,40,8
+2021,146,7,NO,Michael Thomas,WR,41,24
+2021,103,7,Phi,DeVonta Smith,WR,41,24
+2021,92,7,Cin,Noah Fant,TE,41,9
+2021,77,7,Mia,Odell Beckham Jr.,WR,41,24
+2021,56,7,Dal,Dak Prescott,QB,41,6
+2021,96,6,Buf,Laviska Shenault Jr.,WR,42,25
+2021,87,6,TB,Antonio Brown,WR,42,25
+2021,85,6,Atl,Darnell Mooney,WR,42,25
+2021,70,6,Ari,James Conner,RB,42,25
+2021,160,5,LV,Marquez Callaway,WR,43,26
+2021,116,5,NO,Jarvis Landry,WR,43,26
+2021,113,5,Den,Courtland Sutton,WR,43,26
+2021,81,5,Ten,Tyler Boyd,WR,43,26
+2021,68,5,NYG,Russell Wilson,QB,43,7
+2021,30,5,LAR,Matthew Stafford,QB,43,7
+2021,122,4,Atl,DJ Chark,WR,44,27
+2021,120,4,Mia,Jaylen Waddle,WR,44,27
+2021,117,4,Cin,Zack Moss,RB,44,26
+2021,101,4,Cin,Ja'Marr Chase,WR,44,27
+2021,99,4,NYJ,Corey Davis,WR,44,27
+2021,89,4,Bal,Melvin Gordon III,RB,44,26
+2021,73,4,LAC,Justin Herbert,QB,44,8
+2021,64,4,Pit,Aaron Rodgers,QB,44,8
+2021,55,4,Chi,Chicago,DEF,44,3
+2021,54,4,TB,Tampa Bay,DEF,44,3
+2021,3,4,LAR,Los Angeles,DEF,44,3
+2021,138,3,Pit,Mike Williams,WR,45,28
+2021,137,3,NYG,Devin Singletary,RB,45,27
+2021,128,3,Was,Michael Gallup,WR,45,28
+2021,118,3,LAC,Nyheim Miller-Hines,RB,45,27
+2021,115,3,Phi,Jalen Hurts,QB,45,9
+2021,114,3,LAC,Sony Michel,RB,45,27
+2021,110,3,Buf,Leonard Fournette,RB,45,27
+2021,102,3,NO,Jamaal Williams,RB,45,27
+2021,97,3,LAC,Trey Lance,QB,45,9
+2021,95,3,Phi,A.J. Dillon,RB,45,27
+2021,91,3,NYJ,Justin Fields,QB,45,9
+2021,82,3,NO,Brandin Cooks,WR,45,28
+2021,74,3,Was,Washington,DEF,45,4
+2021,157,2,Chi,Cole Kmet,TE,46,10
+2021,152,2,KC,Hollywood Brown,WR,46,29
+2021,151,2,NYG,Cole Beasley,WR,46,29
+2021,147,2,Det,Tyrell Williams,WR,46,29
+2021,144,2,SF,Tevin Coleman,RB,46,28
+2021,143,2,GB,Mecole Hardman,WR,46,29
+2021,131,2,NE,DeVante Parker,WR,46,29
+2021,126,2,Mia,Will Fuller V,WR,46,29
+2021,124,2,Jax,Trevor Lawrence,QB,46,10
+2021,121,2,Det,Marvin Jones Jr.,WR,46,29
+2021,112,2,Ari,Michael Carter,RB,46,28
+2021,111,2,Buf,Latavius Murray,RB,46,28
+2021,105,2,Cin,Mike Gesicki,TE,46,10
+2021,100,2,Cin,Joe Burrow,QB,46,10
+2021,75,2,Pit,Pittsburgh,DEF,46,5
+2021,15,2,Bal,Baltimore,DEF,46,5
+2021,180,1,Ari,Zay Jones,WR,47,30
+2021,179,1,Pit,Jonnu Smith,TE,47,11
+2021,177,1,Buf,Emmanuel Sanders,WR,47,30
+2021,176,1,Jax,Carlos Hyde,RB,47,29
+2021,175,1,Den,Denver,DEF,47,6
+2021,174,1,Bal,Nelson Agholor,WR,47,30
+2021,173,1,Bal,Sammy Watkins,WR,47,30
+2021,172,1,Jax,Jacksonville,DEF,47,6
+2021,171,1,Cle,Marquise Goodwin,WR,47,30
+2021,170,1,Sea,Marquez Valdes-Scantling,WR,47,30
+2021,169,1,Ten,Tony Pollard,RB,47,29
+2021,168,1,Min,Rondale Moore,WR,47,30
+2021,167,1,KC,Carson Wentz,QB,47,11
+2021,166,1,Jax,Gabe Davis,WR,47,30
+2021,165,1,SF,Russell Gage Jr.,WR,47,30
+2021,164,1,Buf,Ty Johnson,RB,47,29
+2021,163,1,Ari,Darrel Williams,RB,47,29
+2021,162,1,TB,Sterling Shepard,WR,47,30
+2021,161,1,Buf,Elijah Moore,WR,47,30
+2021,159,1,TB,Giovani Bernard,RB,47,29
+2021,158,1,Dal,T.Y. Hilton,WR,47,30
+2021,156,1,LAC,Jalen Reagor,WR,47,30
+2021,155,1,Was,Jamison Crowder,WR,47,30
+2021,154,1,Mia,Alexander Mattison,RB,47,29
+2021,153,1,Atl,Kirk Cousins,QB,47,11
+2021,150,1,NYG,Jameis Winston,QB,47,11
+2021,148,1,TB,Baker Mayfield,QB,47,11
+2021,145,1,Buf,Curtis Samuel,WR,47,30
+2021,142,1,Ari,A.J. Green,WR,47,30
+2021,141,1,Phi,Parris Campbell,WR,47,30
+2021,139,1,KC,Kansas City,DEF,47,6
+2021,136,1,Ind,Michael Pittman Jr.,WR,47,30
+2021,135,1,NE,James White,RB,47,29
+2021,134,1,Ind,Matt Ryan,QB,47,11
+2021,133,1,Ind,Indianapolis,DEF,47,6
+2021,132,1,Hou,Christian Kirk,WR,47,30
+2021,130,1,Chi,Gerald Everett,TE,47,11
+2021,129,1,Bal,Kenyan Drake,RB,47,29
+2021,127,1,Ten,Ryan Tannehill,QB,47,11
+2021,125,1,NO,David Johnson,RB,47,29
+2021,109,1,SF,Mac Jones,QB,47,11
+2021,104,1,SF,San Francisco,DEF,47,6
+2021,90,1,Ind,Phillip Lindsay,RB,47,29
+2021,72,1,Buf,Buffalo,DEF,47,6
+2020,1,75,SF,Christian McCaffrey,RB,1,1
+2020,9,69,Phi,Saquon Barkley,RB,2,2
+2020,21,64,Dal,Dalvin Cook,RB,3,3
+2020,3,62,NO,Michael Thomas,WR,4,1
+2020,5,59,Dal,Ezekiel Elliott,RB,5,4
+2020,11,54,NO,Clyde Edwards-Helaire,RB,6,5
+2020,12,54,NO,Alvin Kamara,RB,6,5
+2020,22,54,Hou,Nick Chubb,RB,6,5
+2020,7,53,Bal,Derrick Henry,RB,7,6
+2020,13,48,LAR,Davante Adams,WR,8,2
+2020,16,44,Was,Austin Ekeler,RB,9,7
+2020,14,43,GB,Josh Jacobs,RB,10,8
+2020,10,42,Bal,DeAndre Hopkins,WR,11,3
+2020,25,42,Phi,Julio Jones,WR,11,3
+2020,19,41,Mia,Tyreek Hill,WR,12,4
+2020,17,40,Hou,Joe Mixon,RB,13,9
+2020,15,39,SF,George Kittle,TE,14,1
+2020,33,39,Min,Aaron Jones Sr.,RB,14,10
+2020,34,39,TB,Chris Godwin,WR,14,5
+2020,8,37,KC,Travis Kelce,TE,15,2
+2020,46,36,NO,David Johnson,RB,16,11
+2020,23,34,Bal,Lamar Jackson,QB,17,1
+2020,27,34,Bal,Kenyan Drake,RB,17,12
+2020,2,33,Dal,Miles Sanders,RB,18,13
+2020,24,32,KC,Patrick Mahomes,QB,19,2
+2020,30,32,TB,Mike Evans,WR,19,6
+2020,39,30,Ari,James Conner,RB,20,14
+2020,56,30,TB,Le'Veon Bell,RB,20,14
+2020,35,29,Bal,Melvin Gordon III,RB,21,15
+2020,41,29,Sea,Chris Carson,RB,21,15
+2020,26,28,Ind,Jonathan Taylor,RB,22,16
+2020,29,28,Car,Adam Thielen,WR,22,7
+2020,37,28,NYG,Kenny Golladay,WR,22,7
+2020,6,27,KC,JuJu Smith-Schuster,WR,23,8
+2020,31,27,Chi,DJ Moore,WR,23,8
+2020,42,27,Atl,Todd Gurley,RB,23,17
+2020,18,25,Mia,Odell Beckham Jr.,WR,24,9
+2020,52,23,NO,Cam Akers,RB,25,18
+2020,66,22,Pit,DK Metcalf,WR,26,10
+2020,36,21,Det,Allen Robinson,WR,27,11
+2020,43,21,Phi,A.J. Brown,WR,27,11
+2020,60,21,KC,Kareem Hunt,RB,27,19
+2020,73,21,NYG,Devin Singletary,RB,27,19
+2020,76,21,Buf,Leonard Fournette,RB,27,19
+2020,4,20,Ari,Kyler Murray,QB,28,3
+2020,54,20,Den,Courtland Sutton,WR,28,12
+2020,65,20,Atl,DJ Chark,WR,28,12
+2020,45,19,NO,Mark Ingram II,RB,29,20
+2020,53,19,Buf,Amari Cooper,WR,29,13
+2020,69,19,NYG,Russell Wilson,QB,29,4
+2020,98,19,TB,Tom Brady,QB,29,4
+2020,38,18,LV,Raheem Mostert,RB,30,21
+2020,49,18,Was,Zach Ertz,TE,30,3
+2020,55,18,Sea,Cooper Kupp,WR,30,14
+2020,57,18,Was,Terry McLaurin,WR,30,14
+2020,61,18,Ten,Calvin Ridley,WR,30,14
+2020,59,17,Ten,Tyler Lockett,WR,31,15
+2020,70,17,Pit,Robert Woods,WR,31,15
+2020,78,16,Cle,Deshaun Watson,QB,32,5
+2020,63,15,LAC,Keenan Allen,WR,33,16
+2020,83,15,Det,David Montgomery,RB,33,22
+2020,88,15,Den,J.K. Dobbins,RB,33,22
+2020,93,15,KC,Hollywood Brown,WR,33,16
+2020,28,13,Was,Michael Gallup,WR,34,17
+2020,81,13,Dal,T.Y. Hilton,WR,34,17
+2020,47,12,Bal,Mark Andrews,TE,35,4
+2020,48,11,Dal,Dak Prescott,QB,36,6
+2020,50,11,Chi,D'Andre Swift,RB,36,23
+2020,58,11,NE,Antonio Gibson,RB,36,23
+2020,109,11,Det,Marvin Jones Jr.,WR,36,18
+2020,32,10,NO,Drew Brees,QB,37,7
+2020,77,10,LAR,Tyler Higbee,TE,37,5
+2020,91,10,Ten,Tyler Boyd,WR,37,19
+2020,103,10,NO,Jordan Howard,RB,37,24
+2020,71,9,NE,Stefon Diggs,WR,38,20
+2020,84,9,Mia,Darren Waller,TE,38,6
+2020,85,9,NO,Jarvis Landry,WR,38,20
+2020,64,8,Buf,Latavius Murray,RB,39,25
+2020,87,8,GB,Mecole Hardman,WR,39,21
+2020,114,8,NE,Julian Edelman,WR,39,21
+2020,136,8,Ind,Phillip Lindsay,RB,39,25
+2020,86,7,Ari,A.J. Green,WR,40,22
+2020,89,7,NE,DeVante Parker,WR,40,22
+2020,97,7,Was,Deebo Samuel,WR,40,22
+2020,20,6,Pit,Aaron Rodgers,QB,41,8
+2020,51,6,Cin,Zack Moss,RB,41,26
+2020,67,6,Dal,Ronald Jones,RB,41,26
+2020,101,6,LAC,Sony Michel,RB,41,26
+2020,102,6,KC,Carson Wentz,QB,41,8
+2020,116,6,NE,James White,RB,41,26
+2020,125,6,Car,Tarik Cohen,RB,41,26
+2020,68,5,SF,San Francisco,DEF,42,1
+2020,90,5,Mia,Will Fuller V,WR,42,23
+2020,94,5,LAC,Jared Cook,TE,42,7
+2020,107,5,Cle,Diontae Johnson,WR,42,23
+2020,40,4,LAC,Hayden Hurst,TE,43,8
+2020,62,4,TB,Rob Gronkowski,TE,43,8
+2020,79,4,Buf,Josh Allen,QB,43,9
+2020,95,4,SF,Kerryon Johnson,RB,43,27
+2020,100,4,Pit,Pittsburgh,DEF,43,2
+2020,105,4,SF,Matt Breida,RB,43,27
+2020,117,4,Was,Jamison Crowder,WR,43,24
+2020,145,4,Ari,Marlon Mack,RB,43,27
+2020,75,3,TB,Sterling Shepard,WR,44,25
+2020,82,3,Car,Cam Newton,QB,44,10
+2020,92,3,LAR,Matthew Stafford,QB,44,10
+2020,99,3,Phi,Parris Campbell,WR,44,25
+2020,106,3,SF,Tevin Coleman,RB,44,28
+2020,112,3,Buf,Buffalo,DEF,44,3
+2020,115,3,Ind,Michael Pittman Jr.,WR,44,25
+2020,118,3,SF,Chris Thompson,RB,44,28
+2020,119,3,LAR,Darrell Henderson Jr.,RB,44,28
+2020,121,3,Buf,John Brown,WR,44,25
+2020,122,3,Buf,Damien Harris,RB,44,28
+2020,128,3,NO,Brandin Cooks,WR,44,25
+2020,135,3,Mia,Alexander Mattison,RB,44,28
+2020,44,2,Chi,Cole Kmet,TE,45,9
+2020,72,2,Ind,Matt Ryan,QB,45,11
+2020,74,2,Chi,Chicago,DEF,45,4
+2020,96,2,NE,Hunter Henry,TE,45,9
+2020,104,2,Cin,Joe Burrow,QB,45,11
+2020,108,2,Car,Hunter Renfrow,WR,45,26
+2020,111,2,Bal,Sammy Watkins,WR,45,26
+2020,120,2,LV,Henry Ruggs III,WR,45,26
+2020,124,2,Dal,CeeDee Lamb,WR,45,26
+2020,129,2,Den,Evan Engram,TE,45,9
+2020,133,2,NYG,Darius Slayton,WR,45,26
+2020,142,2,Bal,Anthony Miller,WR,45,26
+2020,150,2,Cin,Noah Fant,TE,45,9
+2020,80,1,LAR,Los Angeles,DEF,46,5
+2020,110,1,Ind,Indianapolis,DEF,46,5
+2020,113,1,Bal,Baltimore,DEF,46,5
+2020,123,1,Min,Minnesota,DEF,46,5
+2020,126,1,NE,Austin Hooper,TE,46,10
+2020,127,1,Bal,DeSean Jackson,WR,46,27
+2020,130,1,Cin,Mike Gesicki,TE,46,10
+2020,131,1,Phi,Philadelphia,DEF,46,5
+2020,132,1,Det,Jared Goff,QB,46,12
+2020,134,1,Pit,Ben Roethlisberger,QB,46,12
+2020,137,1,Cle,Jerry Jeudy,WR,46,27
+2020,138,1,Buf,Emmanuel Sanders,WR,46,27
+2020,139,1,Hou,Christian Kirk,WR,46,27
+2020,140,1,Pit,Boston Scott,RB,46,29
+2020,141,1,Sea,Adrian Peterson,RB,46,29
+2020,143,1,Dal,Blake Jarwin,TE,46,10
+2020,144,1,Ind,Daniel Jones,QB,46,12
+2020,146,1,Min,Justin Jefferson,WR,46,27
+2020,147,1,Buf,Duke Johnson,RB,46,29
+2020,148,1,Min,T.J. Hockenson,TE,46,10
+2020,149,1,LAC,Nyheim Miller-Hines,RB,46,29
+2020,151,1,Min,Chris Herndon,TE,46,10
+2020,152,1,SF,Ke'Shawn Vaughn,RB,46,29
+2020,153,1,TB,Baker Mayfield,QB,46,12
+2020,154,1,NO,New Orleans,DEF,46,5
+2020,155,1,Ten,Golden Tate,WR,46,27
+2020,156,1,TB,Chase Edmonds,RB,46,29
+2020,157,1,Buf,Darrynton Evans,RB,46,29
+2020,158,1,Pit,Mike Williams,WR,46,27
+2020,159,1,Ten,Ryan Tannehill,QB,46,12
+2020,160,1,LAC,Los Angeles,DEF,46,5
+2020,161,1,Ari,Darrel Williams,RB,46,29
+2020,162,1,Phi,A.J. Dillon,RB,46,29
+2020,163,1,Phi,Dallas Goedert,TE,46,10
+2020,164,1,KC,Gardner Minshew,QB,46,12
+2020,165,1,KC,Kansas City,DEF,46,5
+2020,166,1,Pit,Jonnu Smith,TE,46,10
+2020,167,1,Buf,Curtis Samuel,WR,46,27
+2020,168,1,NO,Ryquell Armstead,RB,46,29
