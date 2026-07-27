@@ -1,3 +1,6 @@
+# credentials
+.secrets/
+
 # archives
 *.tar.gz
 *.zip
