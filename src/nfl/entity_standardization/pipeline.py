@@ -17,9 +17,14 @@ from nfl.entity_standardization.overrides import build_override_index
 from nfl.entity_standardization.storage import (
     StandardizationIcebergNamespaceConfig,
     StandardizationIcebergWriteResult,
+    StandardizationUCTableConfig,
+    StandardizationUCVolumeConfig,
     persist_to_iceberg,
     persist_with_polars,
+    persist_to_uc_tables_std,
+    persist_to_uc_volume_std,
 )
+from nfl.storage_uc import UCWriteResult
 from nfl.entity_standardization.validation import validate
 
 

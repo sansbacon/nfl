@@ -20,11 +20,18 @@ from nfl.yahoo_fantasy.storage.iceberg import (
     persist_to_iceberg,
 )
 from nfl.yahoo_fantasy.storage.polars import persist_with_polars
+from nfl.yahoo_fantasy.storage.unity_catalog import (
+    YahooUCTableConfig,
+    YahooUCVolumeConfig,
+    persist_yahoo_to_uc_tables,
+    persist_yahoo_to_uc_volume,
+)
+from nfl.storage_uc import UCWriteResult
 from nfl.yahoo_fantasy.transforms import transform
 from nfl.yahoo_fantasy.views import AVAILABLE_VIEWS, build_materialized_views
 from nfl.entity_standardization.pipeline import EntityStandardizer, StandardizationConfig, StandardizationResult
 
-StorageTarget = Literal["none", "polars", "iceberg", "both"]
+StorageTarget = Literal["none", "polars", "iceberg", "both", "unity_catalog", "uc_volume"]
 SportCode = Literal["nfl", "nba"]
 
 
@@ -67,6 +74,9 @@ class PipelineConfig:
     standardization_config: StandardizationConfig | None = None
     include_non_target_sport_frames: bool = False
     diagnostics: PipelineDiagnosticsConfig = field(default_factory=PipelineDiagnosticsConfig)
+    uc_table_config: YahooUCTableConfig = field(default_factory=YahooUCTableConfig)
+    uc_volume_config: YahooUCVolumeConfig = field(default_factory=YahooUCVolumeConfig)
+    uc_dry_run: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -105,6 +115,7 @@ class PipelineRunResult:
     polars_outputs: dict[str, Path]
     iceberg_outputs: list[IcebergWriteResult]
     standardization_result: StandardizationResult | None = None
+    uc_outputs: list[UCWriteResult] = field(default_factory=list)
     diagnostics: PipelineDiagnostics | None = None
 
 
