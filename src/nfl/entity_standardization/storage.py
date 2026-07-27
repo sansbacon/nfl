@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal, Mapping
 
@@ -128,3 +128,68 @@ def persist_to_iceberg(
     store_path.parent.mkdir(parents=True, exist_ok=True)
     store_path.write_text(json.dumps(sorted(entries), indent=2), encoding="utf-8")
     return results
+
+
+@dataclass(frozen=True, slots=True)
+class StandardizationUCTableConfig:
+    """UC table configuration for entity standardization."""
+
+    catalog: str = "nfl"
+    schema: str = "std"
+    write_mode: UCWriteMode = "overwrite"
+    merge_keys: tuple[str, ...] = ()
+    table_prefix: str = "std_"
+    table_properties: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class StandardizationUCVolumeConfig:
+    """UC volume configuration for entity standardization."""
+
+    catalog: str = "nfl"
+    schema: str = "std"
+    volume: str = "std_volume"
+    file_format: VolumeFileFormat = "parquet"
+    subdirectory: str = "standardization_output"
+
+    @property
+    def base_path(self) -> str:
+        parts = f"/Volumes/{self.catalog}/{self.schema}/{self.volume}"
+        if self.subdirectory:
+            parts = f"{parts}/{self.subdirectory.strip('/')}"
+        return parts
+
+
+def persist_to_uc_tables_std(
+    frames: Mapping[str, pl.DataFrame],
+    config: StandardizationUCTableConfig | None = None,
+    dry_run: bool = False,
+) -> list[UCWriteResult]:
+    """Write standardization DataFrames as UC Delta tables."""
+    cfg = config or StandardizationUCTableConfig()
+    table_config = UCTableConfig(
+        catalog=cfg.catalog,
+        schema=cfg.schema,
+        write_mode=cfg.write_mode,
+        merge_keys=cfg.merge_keys,
+        table_prefix=cfg.table_prefix,
+        table_properties=cfg.table_properties,
+    )
+    return persist_to_uc_tables(frames, config=table_config, dry_run=dry_run)
+
+
+def persist_to_uc_volume_std(
+    frames: Mapping[str, pl.DataFrame],
+    config: StandardizationUCVolumeConfig | None = None,
+    dry_run: bool = False,
+) -> list[UCWriteResult]:
+    """Write standardization DataFrames as files to a UC Volume."""
+    cfg = config or StandardizationUCVolumeConfig()
+    volume_config = UCVolumeConfig(
+        catalog=cfg.catalog,
+        schema=cfg.schema,
+        volume=cfg.volume,
+        file_format=cfg.file_format,
+        subdirectory=cfg.subdirectory,
+    )
+    return persist_to_uc_volume(frames, config=volume_config, dry_run=dry_run)

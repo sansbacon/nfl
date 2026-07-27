@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 from nfl.fantasypros_fantasy.validation import validate
 
 FP_BASE_URL = "https://www.fantasypros.com/nfl"
+FP_PARTNERS_API = "https://partners.fantasypros.com/api/v1"
 FP_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -104,11 +105,105 @@ class FantasyProsApiClient:
             return f"{FP_BASE_URL}/adp/ppr-overall.php?year={season}"
         return f"{FP_BASE_URL}/adp/ppr-overall.php"
 
+    def _build_adp_csv_url(self, season: int) -> str:
+        return (
+            f"{FP_PARTNERS_API}/consensus-rankings.php"
+            f"?sport=NFL&year={season}&week=0&id=0&position=ALL&type=ADP&scoring=PPR&export=xls"
+        )
+
     def fetch_adp_page(self, season: int) -> str:
         url = self._build_adp_url(season)
         response = self.session.get(url, headers=FP_HEADERS, timeout=self.timeout_seconds)
         response.raise_for_status()
         return response.text
+
+    def fetch_adp_csv(self, season: int) -> str:
+        """Fetch full ADP data from the FantasyPros partners CSV export API."""
+        url = self._build_adp_csv_url(season)
+        response = self.session.get(url, headers=FP_HEADERS, timeout=self.timeout_seconds)
+        response.raise_for_status()
+        return response.text
+
+    def parse_adp_csv(
+        self, csv_text: str, season: int, effective_date: date | None = None,
+    ) -> AdpPageData:
+        """Parse CSV export into AdpPageData (same schema as HTML parser)."""
+        import csv as _csv
+        import io as _io
+
+        lines = csv_text.splitlines()
+        # Skip metadata header lines (first 4 lines are title/blank)
+        data_start = 0
+        for i, line in enumerate(lines):
+            if line.strip().lower().startswith("rank,"):
+                data_start = i
+                break
+
+        reader = _csv.DictReader(lines[data_start:])
+        effective = effective_date or date.today()
+        player_rows: list[dict[str, Any]] = []
+        adp_rows: list[dict[str, Any]] = []
+
+        for idx, row in enumerate(reader):
+            full_name = (row.get("Player Name") or "").strip()
+            if not full_name:
+                continue
+            team = (row.get("Team") or "").strip().upper()
+            position = (row.get("Position") or "").strip().upper()
+            first_name, last_name = _normalize_name(full_name)
+
+            # Derive a stable player ID from name + team
+            slug = re.sub(r"[^a-z0-9]+", "-", full_name.lower()).strip("-")
+            fp_player_id = slug
+
+            player_rows.append({
+                "fp_player_id": fp_player_id,
+                "full_name": full_name,
+                "first_name": first_name,
+                "last_name": last_name,
+                "position": position,
+                "team": team,
+            })
+
+            rank = _safe_int(row.get("Rank")) or (idx + 1)
+            high = _safe_int(row.get("Min"))
+            low = _safe_int(row.get("Max"))
+            stdev = _safe_float(row.get("STD Dev"))
+            # Use average of min/max as ADP estimate
+            adp = round((high + low) / 2.0, 1) if high is not None and low is not None else float(rank)
+
+            round_num = int((adp - 1) // 12) + 1
+            pick_num = int((adp - 1) % 12) + 1
+            adp_formatted = f"{round_num}.{pick_num:02d}"
+
+            adp_rows.append({
+                "fp_player_id": fp_player_id,
+                "season": season,
+                "rank": rank,
+                "adp": adp,
+                "adp_espn": None,
+                "adp_sleeper": None,
+                "adp_cbs": None,
+                "adp_nfl": None,
+                "adp_rtsports": None,
+                "adp_fantrax": None,
+                "adp_realtime": None,
+                "adp_formatted": adp_formatted,
+                "high": high,
+                "low": low,
+                "stdev": stdev,
+                "bye_week": None,
+                "effective_date": effective,
+                "end_date": None,
+                "is_current": True,
+            })
+
+        if self.validate_contracts and player_rows:
+            validate(player_rows, entity="fp_player")
+        if self.validate_contracts and adp_rows:
+            validate(adp_rows, entity="fp_adp_snapshot", sport="nfl")
+
+        return AdpPageData(players=player_rows, adp_rows=adp_rows)
 
     def parse_adp_page(self, html: str, season: int, effective_date: date | None = None) -> AdpPageData:
         soup = BeautifulSoup(html, "lxml")
@@ -429,10 +524,21 @@ class FantasyProsApiClient:
 
         return AdpPageData(players=player_rows, adp_rows=adp_rows)
 
-    def get_players(self, season: int) -> list[dict[str, Any]]:
+    def _fetch_and_parse(self, season: int, effective_date: date | None = None) -> AdpPageData:
+        """Fetch ADP data, preferring CSV export (full data) over HTML (registration-gated)."""
+        try:
+            csv_text = self.fetch_adp_csv(season)
+            result = self.parse_adp_csv(csv_text, season=season, effective_date=effective_date)
+            if result.players:
+                return result
+        except Exception:
+            pass
+        # Fallback to HTML scraping (may return limited rows due to registrationFence)
         html = self.fetch_adp_page(season)
-        return self.parse_adp_page(html, season=season).players
+        return self.parse_adp_page(html, season=season, effective_date=effective_date)
+
+    def get_players(self, season: int) -> list[dict[str, Any]]:
+        return self._fetch_and_parse(season).players
 
     def get_adp_snapshots(self, season: int, effective_date: date | None = None) -> list[dict[str, Any]]:
-        html = self.fetch_adp_page(season)
-        return self.parse_adp_page(html, season=season, effective_date=effective_date).adp_rows
+        return self._fetch_and_parse(season, effective_date=effective_date).adp_rows
