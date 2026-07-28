@@ -55,17 +55,17 @@ BACKFILL_SEASONS = [2021, 2022, 2023, 2024]
 assert all((CATALOG, YAHOO_SCHEMA, FP_SCHEMA)), f'ERROR: {CATALOG=}, {YAHOO_SCHEMA=}, {FP_SCHEMA=} must be set'
 
 print(f"Season: {SEASON}")
-print(f"Yahoo source: {CATALOG}.{YAHOO_SCHEMA}.player")
+print(f"Yahoo source: {CATALOG}.{YAHOO_SCHEMA}.player_deduped")
 print(f"FP target: {CATALOG}.{FP_SCHEMA} (mode={WRITE_MODE})")
 
 # COMMAND ----------
 
 # DBTITLE 1,Load Yahoo Players from UC
-# Read Yahoo players from Unity Catalog
-yahoo_player_spark = spark.table(f"{CATALOG}.{YAHOO_SCHEMA}.player")
+# Read deduplicated Yahoo players (one row per player_id, latest season)
+yahoo_player_spark = spark.table(f"{CATALOG}.{YAHOO_SCHEMA}.player_deduped")
 yahoo_players = yahoo_player_spark.toPandas().to_dict(orient="records")
 
-print(f"Yahoo players loaded from UC: {len(yahoo_players)}")
+print(f"Yahoo players loaded from UC (deduped): {len(yahoo_players)}")
 
 # COMMAND ----------
 

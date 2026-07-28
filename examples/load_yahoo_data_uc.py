@@ -68,7 +68,7 @@ pl.Config.set_fmt_str_lengths(100)
 
 # DBTITLE 1,Inputs and Run Controls
 # --- Required Inputs ---
-LEAGUE_KEY = "449.l.327657"
+LEAGUE_KEY = "461.l.717896"
 SPORT = "nfl"
 
 # --- Run Controls ---
@@ -192,3 +192,6 @@ print(f"\n--- Validation: {CATALOG}.{SCHEMA}.player_stats_weekly ---")
 df = spark.table(f"{CATALOG}.{SCHEMA}.player_stats_weekly")
 print(f"  Row count: {df.count()}")
 df.show(5, truncate=False)
+
+# COMMAND ----------
+
