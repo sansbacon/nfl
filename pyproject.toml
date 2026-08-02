@@ -3,9 +3,9 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "yahoo-fantasy"
-version = "0.1.0"
-description = "Yahoo Fantasy data library"
+name = "nfl"
+version = "0.2.0"
+description = "Unified NFL fantasy football data library: extraction, normalization, and persistence across Yahoo, FantasyPros, ESPN, Sleeper, and NFLverse sources."
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }

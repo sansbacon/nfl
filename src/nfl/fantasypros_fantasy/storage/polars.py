@@ -1,34 +1,5 @@
-"""Polars local analytical storage interfaces."""
+"""Polars local storage — delegates to nfl.common.storage.polars."""
 
-from __future__ import annotations
+from nfl.common.storage.polars import persist_with_polars
 
-from pathlib import Path
-from typing import Mapping
-
-import polars as pl
-
-
-def persist_with_polars(
-    frames: Mapping[str, pl.DataFrame],
-    output_dir: str | Path,
-    file_format: str = "parquet",
-) -> dict[str, Path]:
-    fmt = file_format.strip().lower()
-    if fmt not in {"parquet", "csv", "ndjson"}:
-        raise ValueError("file_format must be one of: parquet, csv, ndjson")
-
-    base = Path(output_dir)
-    base.mkdir(parents=True, exist_ok=True)
-
-    written: dict[str, Path] = {}
-    for entity, frame in frames.items():
-        path = base / f"{entity}.{fmt}"
-        if fmt == "parquet":
-            frame.write_parquet(path)
-        elif fmt == "csv":
-            frame.write_csv(path)
-        else:
-            frame.write_ndjson(path)
-        written[entity] = path
-
-    return written
+__all__ = ["persist_with_polars"]

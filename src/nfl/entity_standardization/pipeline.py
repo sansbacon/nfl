@@ -24,7 +24,7 @@ from nfl.entity_standardization.storage import (
     persist_to_uc_tables_std,
     persist_to_uc_volume_std,
 )
-from nfl.storage_uc import UCWriteResult
+from nfl.common.storage import UCWriteResult
 from nfl.entity_standardization.validation import validate
 
 

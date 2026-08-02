@@ -1,18 +1,27 @@
-"""PyIceberg persistence adapter interfaces."""
+"""PyIceberg persistence adapter for Yahoo Fantasy datasets.
+
+Delegates to nfl.common.storage.iceberg with Yahoo-specific namespace
+routing, contract resolution, and stats-list serialization.
+"""
 
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Literal
+from typing import Any, Literal, Mapping
 
 import polars as pl
 
+from nfl.common.storage.iceberg import (
+    IcebergCatalogConfig as _BaseCatalogConfig,
+    IcebergNamespaceConfig as _BaseNamespaceConfig,
+    IcebergWriteResult,
+    IcebergWriteMode as WriteMode,
+    persist_to_iceberg as _persist,
+)
 from nfl.yahoo_fantasy.validation import get_contract
 
-WriteMode = Literal["append", "upsert"]
 SportCode = Literal["nfl", "nba"]
 
 

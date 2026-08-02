@@ -26,7 +26,7 @@ from nfl.yahoo_fantasy.storage.unity_catalog import (
     persist_yahoo_to_uc_tables,
     persist_yahoo_to_uc_volume,
 )
-from nfl.storage_uc import UCWriteResult
+from nfl.common.storage import UCWriteResult
 from nfl.yahoo_fantasy.transforms import transform
 from nfl.yahoo_fantasy.views import AVAILABLE_VIEWS, build_materialized_views
 from nfl.entity_standardization.pipeline import EntityStandardizer, StandardizationConfig, StandardizationResult

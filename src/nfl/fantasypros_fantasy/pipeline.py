@@ -25,7 +25,7 @@ from nfl.fantasypros_fantasy.storage.unity_catalog import (
     persist_fp_to_uc_tables,
     persist_fp_to_uc_volume,
 )
-from nfl.storage_uc import UCWriteResult
+from nfl.common.storage import UCWriteResult
 from nfl.fantasypros_fantasy.transforms import transform
 from nfl.fantasypros_fantasy.validation import get_contract, validate_polars_frame
 from nfl.entity_standardization.pipeline import EntityStandardizer, StandardizationConfig, StandardizationResult

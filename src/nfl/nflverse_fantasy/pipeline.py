@@ -18,7 +18,7 @@ from nfl.nflverse_fantasy.storage.unity_catalog import (
     persist_nflverse_to_uc_tables,
     persist_nflverse_to_uc_volume,
 )
-from nfl.storage_uc import UCWriteResult
+from nfl.common.storage import UCWriteResult
 from nfl.nflverse_fantasy.transforms import transform
 
 

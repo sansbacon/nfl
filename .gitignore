@@ -1,6 +1,13 @@
 # credentials
 .secrets/
 
+# local Iceberg warehouse and catalog
+warehouse/
+iceberg_catalog.db
+
+# pipeline output
+output/
+
 # archives
 *.tar.gz
 *.zip

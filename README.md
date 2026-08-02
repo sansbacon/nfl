@@ -49,10 +49,11 @@ print(result.polars_outputs)
 ```
 
 ## Persistence Defaults
-- Iceberg catalog type: `sql`
+- **Production**: Unity Catalog Delta tables (`nfl.*` catalog)
+- **Local dev**: Iceberg (SQLite catalog) + Polars parquet files
 - Iceberg namespaces:
   - NFL: `yhnfl`
-  - NBA: `ynbna`
+  - NBA: `ynba`
 
 ## Warehouse Query Quickstart
 

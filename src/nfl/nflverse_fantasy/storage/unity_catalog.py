@@ -7,7 +7,7 @@ from typing import Mapping
 
 import polars as pl
 
-from nfl.storage_uc import (
+from nfl.common.storage import (
     UCTableConfig,
     UCVolumeConfig,
     UCWriteResult,
