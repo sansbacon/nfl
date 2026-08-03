@@ -1,0 +1,113 @@
+"""Pipeline orchestration for Sleeper Fantasy data."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import date
+from pathlib import Path
+from typing import Literal
+
+import polars as pl
+
+from nfl.common.storage import UCWriteResult, persist_with_polars
+from nfl.sleeper_fantasy.api import SleeperClient
+from nfl.sleeper_fantasy.storage.unity_catalog import (
+    SleeperUCTableConfig,
+    SleeperUCVolumeConfig,
+    persist_sleeper_to_uc_tables,
+    persist_sleeper_to_uc_volume,
+)
+from nfl.sleeper_fantasy.transforms import players_to_adp_rows, players_to_dim_rows
+
+StorageTarget = Literal["none", "polars", "unity_catalog", "uc_volume"]
+
+
+@dataclass(frozen=True, slots=True)
+class PipelineConfig:
+    """Configuration for the Sleeper data pipeline."""
+
+    season: int = 2025
+    storage_target: StorageTarget = "none"
+    polars_output_dir: str | Path = "./output/sleeper_polars"
+    polars_file_format: str = "parquet"
+    uc_table_config: SleeperUCTableConfig = field(default_factory=SleeperUCTableConfig)
+    uc_volume_config: SleeperUCVolumeConfig = field(default_factory=SleeperUCVolumeConfig)
+    uc_dry_run: bool = True
+    ingestion_date: date | None = None
+    timeout_seconds: int = 60
+
+
+@dataclass(frozen=True, slots=True)
+class PipelineRunResult:
+    """Result of a Sleeper pipeline run."""
+
+    season: int
+    frames: dict[str, pl.DataFrame]
+    polars_outputs: dict[str, Path]
+    uc_outputs: list[UCWriteResult]
+    player_count: int
+    adp_count: int
+
+
+def run_pipeline(
+    config: PipelineConfig | None = None,
+) -> PipelineRunResult:
+    """Run the Sleeper data pipeline.
+
+    Fetches ADP and player data from Sleeper's public API,
+    transforms into dim/fact tables, and optionally persists
+    to local Polars files or Unity Catalog.
+
+    Parameters
+    ----------
+    config : PipelineConfig | None
+        Pipeline configuration. Defaults to sensible values.
+
+    Returns
+    -------
+    PipelineRunResult
+        Frames, file outputs, and UC write results.
+    """
+    cfg = config or PipelineConfig()
+
+    # --- Extract ---
+    client = SleeperClient(timeout_seconds=cfg.timeout_seconds)
+    players = client.fetch_players_with_adp(cfg.season)
+
+    # --- Transform ---
+    effective_date = cfg.ingestion_date or date.today()
+    dim_rows = players_to_dim_rows(players)
+    adp_rows = players_to_adp_rows(players, season=cfg.season, ingestion_date=effective_date)
+
+    frames: dict[str, pl.DataFrame] = {
+        "dim_sl_players": pl.DataFrame(dim_rows) if dim_rows else pl.DataFrame(),
+        "fact_sl_adp": pl.DataFrame(adp_rows) if adp_rows else pl.DataFrame(),
+    }
+
+    # --- Load ---
+    polars_outputs: dict[str, Path] = {}
+    uc_outputs: list[UCWriteResult] = []
+
+    if cfg.storage_target in ("polars",):
+        polars_outputs = persist_with_polars(
+            frames, output_dir=cfg.polars_output_dir, file_format=cfg.polars_file_format
+        )
+
+    if cfg.storage_target == "unity_catalog":
+        uc_outputs = persist_sleeper_to_uc_tables(
+            frames, config=cfg.uc_table_config, dry_run=cfg.uc_dry_run
+        )
+
+    if cfg.storage_target == "uc_volume":
+        uc_outputs = persist_sleeper_to_uc_volume(
+            frames, config=cfg.uc_volume_config, dry_run=cfg.uc_dry_run
+        )
+
+    return PipelineRunResult(
+        season=cfg.season,
+        frames=frames,
+        polars_outputs=polars_outputs,
+        uc_outputs=uc_outputs,
+        player_count=len(dim_rows),
+        adp_count=len(adp_rows),
+    )
