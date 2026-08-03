@@ -26,9 +26,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "black>=24.0.0",
     "mypy>=1.11.0",
+    "pre-commit>=3.8.0",
     "pytest>=8.3.0",
+    "pytest-cov>=5.0.0",
+    "pytest-mock>=3.14.0",
     "ruff>=0.6.0",
 ]
 
@@ -36,19 +38,47 @@ dev = [
 where = ["src"]
 include = ["nfl", "nfl.*"]
 
-[tool.black]
-line-length = 100
-target-version = ["py312"]
-
 [tool.mypy]
 python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    "--strict-markers",
+    "--tb=short",
+    "-q",
+]
+markers = [
+    "integration: marks tests requiring external APIs or Spark (deselect with '-m not integration')",
+    "slow: marks tests that take >10s",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:pyiceberg.*",
+]
+
+[tool.coverage.run]
+source = ["nfl"]
+omit = ["tests/*", "examples/*", "scripts/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B"]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["nfl"]

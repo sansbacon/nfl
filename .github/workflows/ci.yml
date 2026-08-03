@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Lint with ruff
+        run: |
+          uv tool run ruff check src/ tests/
+          uv tool run ruff format --check src/ tests/
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install package with dev dependencies
+        run: uv pip install -e ".[dev]" --system
+
+      - name: Run tests
+        run: pytest -m "not integration" --cov --cov-report=term-missing
+
+  typecheck:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install package with dev dependencies
+        run: uv pip install -e ".[dev]" --system
+
+      - name: Type check with mypy
+        run: mypy src/nfl/ --ignore-missing-imports
