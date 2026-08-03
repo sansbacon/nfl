@@ -76,7 +76,13 @@ def _get_spark() -> Any:
 
 
 def _polars_to_spark(frame: pl.DataFrame, spark: Any) -> Any:
-    """Convert a Polars DataFrame to a PySpark DataFrame via Arrow."""
+    """Convert a Polars DataFrame to a PySpark DataFrame via Arrow.
+
+    TODO(Phase 5): Replace .to_pandas() intermediate with direct Arrow path.
+    Spark 3.5+ supports createDataFrame(arrow_table) via PyArrow, which
+    avoids the pandas memory copy. Blocked on verifying Databricks Runtime
+    version compatibility. See: spark.conf('spark.sql.execution.arrow.pyspark.enabled').
+    """
     arrow_table = frame.to_arrow()
     return spark.createDataFrame(arrow_table.to_pandas())
 

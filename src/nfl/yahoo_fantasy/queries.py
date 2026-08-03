@@ -8,9 +8,26 @@ import polars as pl
 
 PointsSource = Literal["player_stats", "matchups", "unavailable"]
 
+# Technical key columns that are useful for downstream joins but
+# clutter human-readable summary outputs.  Functions below default
+# to include_keys=False so callers get friendly output by default.
+_KEY_COLUMNS = {"league_key", "team_key", "player_key", "player_id"}
 
-def league_team_info(league_df: pl.DataFrame, team_df: pl.DataFrame) -> pl.DataFrame:
-    return (
+
+def _drop_keys(df: pl.DataFrame, include_keys: bool) -> pl.DataFrame:
+    """Drop technical key columns unless the caller explicitly wants them."""
+    if include_keys:
+        return df
+    to_drop = [c for c in _KEY_COLUMNS if c in df.columns]
+    return df.drop(to_drop) if to_drop else df
+
+
+def league_team_info(
+    league_df: pl.DataFrame,
+    team_df: pl.DataFrame,
+    include_keys: bool = False,
+) -> pl.DataFrame:
+    result = (
         team_df.join(
             league_df.select(["league_key", "season", "league_name"]),
             on="league_key",
@@ -19,12 +36,14 @@ def league_team_info(league_df: pl.DataFrame, team_df: pl.DataFrame) -> pl.DataF
         .select(["league_key", "season", "league_name", "team_key", "team_name", "owner_name"])
         .sort(["season", "league_key", "team_key"])
     )
+    return _drop_keys(result, include_keys)
 
 
 def standings_summary(
     standings_df: pl.DataFrame,
     league_df: pl.DataFrame | None = None,
     team_df: pl.DataFrame | None = None,
+    include_keys: bool = False,
 ) -> pl.DataFrame:
     out = standings_df
 
@@ -46,7 +65,7 @@ def standings_summary(
         if col_name not in out.columns:
             out = out.with_columns(pl.lit(None, dtype=pl.Utf8).alias(col_name))
 
-    return out.sort(["season", "wins", "points_for"], descending=[False, True, True]).select(
+    result = out.sort(["season", "wins", "points_for"], descending=[False, True, True]).select(
         [
             "league_key",
             "season",
@@ -61,6 +80,7 @@ def standings_summary(
             "team_key",
         ]
     )
+    return _drop_keys(result, include_keys)
 
 
 def build_player_weekly_points(roster_df: pl.DataFrame, stats_df: pl.DataFrame) -> pl.DataFrame:
@@ -171,6 +191,7 @@ def enrich_weekly_team_points(
     weekly_points: pl.DataFrame,
     league_df: pl.DataFrame | None = None,
     team_df: pl.DataFrame | None = None,
+    include_keys: bool = False,
 ) -> pl.DataFrame:
     """Attach optional league/team friendly names and return a stable column layout."""
     out = weekly_points
@@ -206,7 +227,8 @@ def enrich_weekly_team_points(
     desired.extend(["league_key", "team_key"])
 
     select_cols = [c for c in desired if c in out.columns]
-    return out.select(select_cols)
+    result = out.select(select_cols)
+    return _drop_keys(result, include_keys)
 
 
 def league_average_by_position(avg_scoring_by_team_position: pl.DataFrame) -> pl.DataFrame:

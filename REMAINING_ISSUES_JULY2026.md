@@ -62,7 +62,7 @@ Copy/paste this section when adding a new issue.
 ## Issues
 
 ### ISSUE-20260723-01: Summary Outputs Show Technical Keys Instead of Human-Friendly Names
-- Status: OPEN
+- Status: DONE
 - Reported by: Eric Truett
 - Date reported: 2026-07-23
 - Area: yahoo_fantasy queries, notebook presentation
@@ -100,10 +100,14 @@ Query helpers and notebook display selections currently preserve technical ident
 	- If compatibility concerns arise, keep old behavior behind include_keys=True and document migration.
 
 #### Implementation Notes
-- Target files likely include src/nfl/yahoo_fantasy/queries.py and examples/query_tables_fixed.ipynb.
+- Added `_KEY_COLUMNS` set and `_drop_keys()` helper to `src/nfl/yahoo_fantasy/queries.py`.
+- Added `include_keys: bool = False` parameter to `league_team_info()`, `standings_summary()`, and `enrich_weekly_team_points()`.
+- Default behavior now drops `league_key`, `team_key`, `player_key`, `player_id` from output.
+- Callers needing keys for downstream joins pass `include_keys=True`.
+- Phase 5 commit (August 2026).
 
 #### Verification Evidence
-Pending implementation.
+Functions now return only human-friendly columns by default. Passing `include_keys=True` restores full column set for programmatic use.
 
 #### Final Outcome
-Pending implementation.
+Presentation helpers default to friendly names. Technical keys available on demand via `include_keys=True`. No breaking changes — existing code passing positional args is unaffected since `include_keys` is keyword-only at the end.
