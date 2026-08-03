@@ -439,7 +439,7 @@ def test_enrich_weekly_team_points_adds_friendly_names_and_keeps_shape() -> None
         }
     )
 
-    out = enrich_weekly_team_points(weekly_points=weekly, league_df=league_df, team_df=team_df)
+    out = enrich_weekly_team_points(weekly_points=weekly, league_df=league_df, team_df=team_df, include_keys=True)
 
     assert out.columns == [
         "season",
@@ -572,7 +572,7 @@ def test_standings_summary_includes_friendly_names_and_omits_ties() -> None:
         }
     )
 
-    result = standings_summary(standings_df=standings_df, league_df=league_df, team_df=team_df)
+    result = standings_summary(standings_df=standings_df, league_df=league_df, team_df=team_df, include_keys=True)
 
     assert result.columns == [
         "league_key",

@@ -29,6 +29,30 @@ class IcebergNamespaceConfig(_BaseNamespaceConfig):
     nfl: str = "nvnfl"
     common: str = "nvcommon"
 
+    def resolve(self, sport: str | None) -> str:
+        """Route nvnfl sport prefix to the nfl namespace."""
+        if sport in ("nfl", "nvnfl"):
+            return self.nfl
+        return self.common
+
+
+
+
+def resolve_table_identifier(
+    frame_name: str,
+    namespace_config: "IcebergNamespaceConfig | None" = None,
+) -> tuple[str, str]:
+    """Resolve frame name to (table_identifier, entity).
+
+    Backward-compatible helper — delegates to common parse_entity_and_sport.
+    """
+    from nfl.common.storage.iceberg import parse_entity_and_sport
+
+    ns_cfg = namespace_config or IcebergNamespaceConfig()
+    entity, sport = parse_entity_and_sport(frame_name, ("nvnfl_",))
+    ns = ns_cfg.nfl if sport else ns_cfg.common
+    return f"{ns}.{entity}", entity
+
 
 def _resolve_primary_key(entity: str, sport: str | None) -> tuple[str, ...]:
     """Resolve primary key via NFLverse validation contracts."""

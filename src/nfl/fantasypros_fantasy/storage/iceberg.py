@@ -37,6 +37,28 @@ class IcebergNamespaceConfig(_BaseNamespaceConfig):
     common: str = "fpcommon"
 
 
+
+
+def resolve_table_identifier(
+    frame_name: str,
+    namespace_config: "IcebergNamespaceConfig",
+) -> tuple[str, str, str | None]:
+    """Resolve frame name to (table_identifier, entity, sport).
+
+    Backward-compatible helper — delegates to common parse_entity_and_sport.
+    """
+    from nfl.common.storage.iceberg import parse_entity_and_sport
+
+    entity, sport = parse_entity_and_sport(frame_name, ("nfl_", "nba_"))
+    if sport == "nfl":
+        ns = namespace_config.nfl
+    elif sport == "nba" and hasattr(namespace_config, "nba"):
+        ns = namespace_config.nba
+    else:
+        ns = namespace_config.common
+    return f"{ns}.{entity}", entity, sport
+
+
 def _resolve_primary_key(entity: str, sport: str | None) -> tuple[str, ...]:
     """Resolve primary key via FantasyPros validation contracts."""
     contract = get_contract(entity=entity, sport=sport)

@@ -109,7 +109,7 @@ def test_persist_to_iceberg_creates_missing_table(monkeypatch, tmp_path: Path) -
     }
 
     fake_catalog = _FakeCatalog()
-    monkeypatch.setattr("nfl.fantasypros_fantasy.storage.iceberg._load_pyiceberg_catalog", lambda _cfg: fake_catalog)
+    monkeypatch.setattr("nfl.common.storage.iceberg.load_pyiceberg_catalog", lambda _cfg: fake_catalog)
 
     results = persist_to_iceberg(
         frames=frames,
@@ -150,7 +150,7 @@ def test_idempotency_does_not_skip_when_table_missing(monkeypatch, tmp_path: Pat
     )
 
     fake_catalog = _FakeCatalog()
-    monkeypatch.setattr("nfl.fantasypros_fantasy.storage.iceberg._load_pyiceberg_catalog", lambda _cfg: fake_catalog)
+    monkeypatch.setattr("nfl.common.storage.iceberg.load_pyiceberg_catalog", lambda _cfg: fake_catalog)
 
     results = persist_to_iceberg(
         frames=frames,
@@ -194,7 +194,7 @@ def test_persist_to_iceberg_handles_null_typed_columns(monkeypatch, tmp_path: Pa
     }
 
     fake_catalog = _FakeCatalog()
-    monkeypatch.setattr("nfl.fantasypros_fantasy.storage.iceberg._load_pyiceberg_catalog", lambda _cfg: fake_catalog)
+    monkeypatch.setattr("nfl.common.storage.iceberg.load_pyiceberg_catalog", lambda _cfg: fake_catalog)
 
     results = persist_to_iceberg(
         frames=frames,
