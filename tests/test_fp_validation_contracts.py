@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import polars as pl
 import pytest
@@ -45,7 +45,7 @@ def test_fp_adp_snapshot_requires_adp() -> None:
 
 
 def test_fp_yahoo_map_duplicate_primary_key_is_rejected() -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     records = [
         {
             "fp_player_id": "justin-jefferson",

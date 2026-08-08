@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from difflib import SequenceMatcher
+import contextlib
 import hashlib
 import json
+from dataclasses import dataclass
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
@@ -355,10 +356,8 @@ def persist_historical_auction_tables(
         warehouse=cfg.warehouse,
     )
 
-    try:
+    with contextlib.suppress(NamespaceAlreadyExistsError):
         catalog.create_namespace(namespace)
-    except NamespaceAlreadyExistsError:
-        pass
 
     targets: list[tuple[str, pl.DataFrame]] = [
         (f"{namespace}.historical_auction_values_raw", import_result.raw),
@@ -369,10 +368,8 @@ def persist_historical_auction_tables(
     results: list[HistoricalAuctionPersistResult] = []
     for table_identifier, frame in targets:
         if replace_existing:
-            try:
+            with contextlib.suppress(NoSuchTableError):
                 catalog.drop_table(table_identifier)
-            except NoSuchTableError:
-                pass
             table = catalog.create_table(identifier=table_identifier, schema=frame.to_arrow().schema)
             if frame.height > 0:
                 table.append(frame.to_arrow())

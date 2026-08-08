@@ -6,17 +6,23 @@ namespace routing and contract resolution.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Mapping
 
 import polars as pl
 
 from nfl.common.storage.iceberg import (
     IcebergCatalogConfig,
-    IcebergNamespaceConfig as _BaseNamespaceConfig,
     IcebergWriteResult,
+)
+from nfl.common.storage.iceberg import (
+    IcebergNamespaceConfig as _BaseNamespaceConfig,
+)
+from nfl.common.storage.iceberg import (
     IcebergWriteMode as WriteMode,
+)
+from nfl.common.storage.iceberg import (
     persist_to_iceberg as _persist,
 )
 from nfl.nflverse_fantasy.validation import get_contract
@@ -40,7 +46,7 @@ class IcebergNamespaceConfig(_BaseNamespaceConfig):
 
 def resolve_table_identifier(
     frame_name: str,
-    namespace_config: "IcebergNamespaceConfig | None" = None,
+    namespace_config: IcebergNamespaceConfig | None = None,
 ) -> tuple[str, str]:
     """Resolve frame name to (table_identifier, entity).
 

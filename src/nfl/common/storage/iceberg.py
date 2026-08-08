@@ -7,11 +7,13 @@ configs and contract resolvers, then delegate to persist_to_iceberg().
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Literal, Mapping, Protocol
+from typing import Any, Literal, Protocol
 
 import polars as pl
 
@@ -172,10 +174,8 @@ def ensure_table_exists(
         return catalog.load_table(table_identifier)
     except (NoSuchTableError, Exception):
         namespace, _table_name = table_identifier.rsplit(".", 1)
-        try:
+        with contextlib.suppress(NamespaceAlreadyExistsError, Exception):
             catalog.create_namespace(namespace)
-        except (NamespaceAlreadyExistsError, Exception):
-            pass
         try:
             return catalog.create_table(
                 identifier=table_identifier, schema=frame.to_arrow().schema

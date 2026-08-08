@@ -6,9 +6,8 @@ ownership data from ESPN's public fantasy football endpoints.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import date
 import json
+from dataclasses import dataclass, field
 from typing import Any
 
 import requests

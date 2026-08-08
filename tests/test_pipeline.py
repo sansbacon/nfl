@@ -516,7 +516,7 @@ def test_run_pipeline_diagnostics_captures_failure_stage() -> None:
                 diagnostics=PipelineDiagnosticsConfig(enabled=True),
             ),
         )
-        assert False, "Expected ValueError for missing player-level scoring data"
+        raise AssertionError("Expected ValueError for missing player-level scoring data")
     except ValueError as exc:
         notes = list(getattr(exc, "__notes__", []))
         assert any("pipeline_stage=nfl_scoring_guard" in note for note in notes)

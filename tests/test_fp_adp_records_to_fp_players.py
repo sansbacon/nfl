@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from nfl.fantasypros_fantasy.matching import fp_adp_records_to_fp_players
 
 

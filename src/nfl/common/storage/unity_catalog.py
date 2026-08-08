@@ -7,9 +7,10 @@ Provides write utilities for persisting Polars DataFrames to:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal, Mapping
+from typing import Any, Literal
 
 import polars as pl
 
@@ -210,7 +211,7 @@ def load_uc_table(
     table_identifier: str,
     *,
     spark: Any | None = None,
-) -> "pl.DataFrame":
+) -> pl.DataFrame:
     """Load a Unity Catalog Delta table as a Polars DataFrame.
 
     Reads the Spark DataFrame and converts it to Polars via Pandas.

@@ -6,14 +6,14 @@ from nfl.common.matching import normalize_name
 from nfl.common.utils import find_project_root
 
 __all__ = [
-    "config",
-    "crosswalk",
-    "matching",
-    "storage",
-    "utils",
     "PipelineConfigBase",
     "StorageTarget",
-    "load_canonical_crosswalk",
-    "normalize_name",
+    "config",
+    "crosswalk",
     "find_project_root",
+    "load_canonical_crosswalk",
+    "matching",
+    "normalize_name",
+    "storage",
+    "utils",
 ]

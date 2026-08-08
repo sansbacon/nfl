@@ -6,11 +6,10 @@ Sleeper's public endpoints.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 import requests
-
 
 SLEEPER_PLAYERS_URL = "https://api.sleeper.app/v1/players/nfl"
 SLEEPER_PROJECTIONS_URL = "https://api.sleeper.com/projections/nfl"

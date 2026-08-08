@@ -6,7 +6,11 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 from typing import Any
 
-from nfl.entity_standardization.normalize import normalize_player_name, normalize_position, normalize_team_code
+from nfl.entity_standardization.normalize import (
+    normalize_player_name,
+    normalize_position,
+    normalize_team_code,
+)
 
 
 @dataclass(frozen=True, slots=True)

@@ -85,7 +85,7 @@ def match_sleeper_to_crosswalk(
         (F.col("norm_last") != "") & (F.col("norm_first_prefix") != "")
     )
 
-    crosswalk_parts = crosswalk.withColumn(
+    crosswalk.withColumn(
         "cw_last", normalize_name_udf(F.col("name"))
     ).filter(F.col("cw_last") != "")
 

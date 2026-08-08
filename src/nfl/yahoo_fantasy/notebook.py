@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Callable, Protocol
+from collections.abc import Callable
+from typing import Protocol
 
 import polars as pl
 

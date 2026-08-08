@@ -9,6 +9,12 @@ from typing import Any, Literal
 
 import polars as pl
 
+from nfl.common.storage import UCWriteResult
+from nfl.entity_standardization.pipeline import (
+    EntityStandardizer,
+    StandardizationConfig,
+    StandardizationResult,
+)
 from nfl.fantasypros_fantasy.api import FantasyProsApiClient
 from nfl.fantasypros_fantasy.matching import build_fp_yahoo_crosswalk
 from nfl.fantasypros_fantasy.storage.iceberg import (
@@ -22,13 +28,9 @@ from nfl.fantasypros_fantasy.storage.polars import persist_with_polars
 from nfl.fantasypros_fantasy.storage.unity_catalog import (
     FantasyProsUCTableConfig,
     FantasyProsUCVolumeConfig,
-    persist_fp_to_uc_tables,
-    persist_fp_to_uc_volume,
 )
-from nfl.common.storage import UCWriteResult
 from nfl.fantasypros_fantasy.transforms import transform
 from nfl.fantasypros_fantasy.validation import get_contract, validate_polars_frame
-from nfl.entity_standardization.pipeline import EntityStandardizer, StandardizationConfig, StandardizationResult
 
 StorageTarget = Literal["none", "polars", "iceberg", "both", "unity_catalog", "uc_volume"]
 SportCode = Literal["nfl"]
@@ -82,7 +84,7 @@ def _materialize_current_adp_table(frames: dict[str, pl.DataFrame]) -> pl.DataFr
         validate_polars_frame(empty, contract)
         return empty
 
-    current_adp = adp.filter(pl.col("is_current") == True)
+    current_adp = adp.filter(pl.col("is_current"))
 
     materialized = (
         current_adp.join(players, on="fp_player_id", how="inner")

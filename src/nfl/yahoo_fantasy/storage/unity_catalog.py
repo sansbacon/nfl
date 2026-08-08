@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Literal, Mapping
+from typing import Literal
 
 import polars as pl
 
@@ -11,8 +12,8 @@ from nfl.common.storage import (
     UCTableConfig,
     UCVolumeConfig,
     UCWriteResult,
-    WriteMode,
     VolumeFileFormat,
+    WriteMode,
     persist_to_uc_tables,
     persist_to_uc_volume,
 )

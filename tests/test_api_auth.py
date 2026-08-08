@@ -468,7 +468,7 @@ def test_api_client_get_players_for_season_raises_when_game_missing() -> None:
 
     try:
         client.get_players_for_season(season=2019, sport="nfl")
-        assert False, "Expected ValueError when requested season is unavailable"
+        raise AssertionError("Expected ValueError when requested season is unavailable")
     except ValueError as exc:
         assert "season=2019" in str(exc)
 
@@ -575,6 +575,6 @@ def test_api_client_get_players_for_season_range_raises_when_no_seasons_availabl
 
     try:
         client.get_players_for_season_range(start_season=2018, end_season=2019, sport="nfl")
-        assert False, "Expected ValueError when no seasons in range are available"
+        raise AssertionError("Expected ValueError when no seasons in range are available")
     except ValueError as exc:
         assert "2018-2019" in str(exc)

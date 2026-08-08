@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import re
+from datetime import UTC, datetime
 from typing import Any
 
 from nfl.fantasypros_fantasy.validation import validate
@@ -99,7 +99,7 @@ def build_fp_yahoo_crosswalk(
     matched_at: datetime | None = None,
 ) -> list[dict[str, Any]]:
     adp_rank = _adp_rank_map(adp_rows or [])
-    ts = matched_at or datetime.now(timezone.utc)
+    ts = matched_at or datetime.now(UTC)
 
     exact_candidates: list[dict[str, Any]] = []
     fuzzy_candidates: list[dict[str, Any]] = []
@@ -133,9 +133,8 @@ def build_fp_yahoo_crosswalk(
                 exact_candidates.append({**candidate, "match_method": "exact", "method_priority": 1})
                 continue
 
-            if fp_last and yh_last and fp_last == yh_last and fp_pos and yh_pos and fp_pos == yh_pos:
-                if fp_first[:3] and yh_first[:3] and fp_first[:3] == yh_first[:3]:
-                    fuzzy_candidates.append({**candidate, "match_method": "fuzzy", "method_priority": 2})
+            if fp_last and yh_last and fp_last == yh_last and fp_pos and yh_pos and fp_pos == yh_pos and fp_first[:3] and yh_first[:3] and fp_first[:3] == yh_first[:3]:
+                fuzzy_candidates.append({**candidate, "match_method": "fuzzy", "method_priority": 2})
 
     exact_fp_ids = {c["fp_player_id"] for c in exact_candidates}
     candidates = exact_candidates + [c for c in fuzzy_candidates if c["fp_player_id"] not in exact_fp_ids]

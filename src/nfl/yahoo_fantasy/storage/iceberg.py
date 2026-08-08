@@ -6,20 +6,18 @@ routing, contract resolution, and stats-list serialization.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, Mapping
+from typing import Any, Literal
 
 import polars as pl
 
 from nfl.common.storage.iceberg import (
-    IcebergCatalogConfig as _BaseCatalogConfig,
-    IcebergNamespaceConfig as _BaseNamespaceConfig,
-    IcebergWriteResult,
     IcebergWriteMode as WriteMode,
-    persist_to_iceberg as _persist,
 )
 from nfl.yahoo_fantasy.validation import get_contract
 
@@ -199,10 +197,8 @@ def _ensure_table_exists(catalog: Any, table_identifier: str, frame: pl.DataFram
         return catalog.load_table(table_identifier)
     except NoSuchTableError:
         namespace, _table_name = table_identifier.rsplit(".", 1)
-        try:
+        with contextlib.suppress(NamespaceAlreadyExistsError):
             catalog.create_namespace(namespace)
-        except NamespaceAlreadyExistsError:
-            pass
         return catalog.create_table(identifier=table_identifier, schema=frame.to_arrow().schema)
 
 

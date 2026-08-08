@@ -10,8 +10,8 @@ import time
 from pathlib import Path
 from typing import Any
 
-from requests_oauthlib import OAuth2Session
 from requests.exceptions import JSONDecodeError as RequestsJSONDecodeError
+from requests_oauthlib import OAuth2Session
 
 from nfl.yahoo_fantasy.validation import validate
 
@@ -1097,9 +1097,7 @@ class YahooApiClient:
             return True
         if candidate_has_stats and not current_has_stats:
             return True
-        if candidate_points > current_points:
-            return True
-        return False
+        return candidate_points > current_points
 
     def _extract_weekly_player_stats_from_league_payload(
         self,

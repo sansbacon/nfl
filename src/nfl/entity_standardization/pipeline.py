@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
 import hashlib
 import json
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -17,14 +17,9 @@ from nfl.entity_standardization.overrides import build_override_index
 from nfl.entity_standardization.storage import (
     StandardizationIcebergNamespaceConfig,
     StandardizationIcebergWriteResult,
-    StandardizationUCTableConfig,
-    StandardizationUCVolumeConfig,
     persist_to_iceberg,
     persist_with_polars,
-    persist_to_uc_tables_std,
-    persist_to_uc_volume_std,
 )
-from nfl.common.storage import UCWriteResult
 from nfl.entity_standardization.validation import validate
 
 
@@ -225,8 +220,8 @@ class EntityStandardizer:
         mapping_row = None
 
         if needs_review:
-            now = datetime.now(timezone.utc).isoformat()
-            queue_id = hashlib.sha256(f"{source_system}|{source_entity_id}|{raw_player_name}|{raw_team_name}|{raw_position}".encode("utf-8")).hexdigest()
+            now = datetime.now(UTC).isoformat()
+            queue_id = hashlib.sha256(f"{source_system}|{source_entity_id}|{raw_player_name}|{raw_team_name}|{raw_position}".encode()).hexdigest()
             queue_row = {
                 "queue_id": queue_id,
                 "source_system": source_system,

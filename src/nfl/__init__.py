@@ -12,11 +12,11 @@ Sub-packages:
 
 __all__ = [
     "common",
-    "yahoo_fantasy",
-    "fantasypros_fantasy",
-    "espn_fantasy",
-    "sleeper_fantasy",
-    "nflverse_fantasy",
     "entity_standardization",
+    "espn_fantasy",
+    "fantasypros_fantasy",
+    "nflverse_fantasy",
+    "sleeper_fantasy",
+    "yahoo_fantasy",
 ]
 

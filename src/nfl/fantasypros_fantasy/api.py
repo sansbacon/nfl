@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import json
+import re
 from dataclasses import dataclass
 from datetime import date
-import json
 from pathlib import Path
-import re
 from typing import Any
 
 import requests
@@ -130,7 +130,6 @@ class FantasyProsApiClient:
     ) -> AdpPageData:
         """Parse CSV export into AdpPageData (same schema as HTML parser)."""
         import csv as _csv
-        import io as _io
 
         lines = csv_text.splitlines()
         # Skip metadata header lines (first 4 lines are title/blank)
@@ -546,7 +545,7 @@ class FantasyProsApiClient:
 
     def parse_adp_volume_csv(
         self,
-        file_path: "str | Path",
+        file_path: str | Path,
         season: int,
         effective_date: date | None = None,
     ) -> AdpPageData:
@@ -600,7 +599,7 @@ class FantasyProsApiClient:
             .str.strip_chars()
             .alias("_cleaned")
         )
-        # Extract trailing 2–3-letter team abbreviation, then strip it from the name
+        # Extract trailing 2-3-letter team abbreviation, then strip it from the name
         df = df.with_columns(
             _pl.col("_cleaned").str.extract(r"\s+([A-Z]{2,3})$").alias("team"),
             _pl.col("_cleaned")

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Any, Iterable, Literal, Mapping
+from typing import Any, Literal
 
 from nfl.fantasypros_fantasy.models.nfl import NFL_CONTRACTS
 

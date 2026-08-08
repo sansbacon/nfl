@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from contextlib import contextmanager
 import os
 import re
 import sqlite3
+from collections.abc import Iterable
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import polars as pl
 
@@ -60,7 +61,7 @@ class YahooWarehouseClient:
         catalog_name: str = "yahoo",
         catalog_db_name: str = "iceberg_catalog.db",
         warehouse_dir: str = "warehouse",
-    ) -> "YahooWarehouseClient":
+    ) -> YahooWarehouseClient:
         paths = _resolve_catalog_paths(
             project_root=project_root,
             catalog_db_name=catalog_db_name,
@@ -314,10 +315,8 @@ def register_tables_from_warehouse(
         if not ns_dir.exists():
             continue
 
-        try:
+        with suppress(Exception):
             catalog.create_namespace(namespace)
-        except Exception:
-            pass
 
         for table_dir in [p for p in ns_dir.iterdir() if p.is_dir()]:
             table_identifier = f"{namespace}.{table_dir.name}"

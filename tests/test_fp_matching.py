@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from nfl.fantasypros_fantasy.matching import build_fp_yahoo_crosswalk
 
@@ -44,7 +44,7 @@ def test_crosswalk_prefers_exact_and_enforces_one_to_one() -> None:
         fp_players=fp_players,
         yahoo_players=yahoo_players,
         adp_rows=adp_rows,
-        matched_at=datetime(2026, 7, 18, tzinfo=timezone.utc),
+        matched_at=datetime(2026, 7, 18, tzinfo=UTC),
     )
 
     assert len(rows) == 1

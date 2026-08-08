@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 import polars as pl
 
-from nfl.nflverse_fantasy.validation import ContractValidationError, get_contract, validate, validate_polars_frame
+from nfl.nflverse_fantasy.validation import (
+    ContractValidationError,
+    get_contract,
+    validate,
+    validate_polars_frame,
+)
 
 
 class TransformValidationError(ValueError):

@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from pathlib import Path
 import time
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any, Literal
 
 import polars as pl
 from requests_oauthlib import OAuth2Session
 
+from nfl.common.storage import UCWriteResult
+from nfl.entity_standardization.pipeline import (
+    EntityStandardizer,
+    StandardizationConfig,
+    StandardizationResult,
+)
 from nfl.yahoo_fantasy.api import YahooApiClient
 from nfl.yahoo_fantasy.storage.iceberg import (
     IcebergCatalogConfig,
@@ -23,13 +29,9 @@ from nfl.yahoo_fantasy.storage.polars import persist_with_polars
 from nfl.yahoo_fantasy.storage.unity_catalog import (
     YahooUCTableConfig,
     YahooUCVolumeConfig,
-    persist_yahoo_to_uc_tables,
-    persist_yahoo_to_uc_volume,
 )
-from nfl.common.storage import UCWriteResult
 from nfl.yahoo_fantasy.transforms import transform
 from nfl.yahoo_fantasy.views import AVAILABLE_VIEWS, build_materialized_views
-from nfl.entity_standardization.pipeline import EntityStandardizer, StandardizationConfig, StandardizationResult
 
 StorageTarget = Literal["none", "polars", "iceberg", "both", "unity_catalog", "uc_volume"]
 SportCode = Literal["nfl", "nba"]
@@ -246,7 +248,7 @@ def _merge_weekly_player_stats(
 
 
 def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _entity_counts(entities: dict[str, list[dict[str, Any]]]) -> dict[str, int]:

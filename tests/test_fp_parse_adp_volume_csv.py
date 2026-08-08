@@ -10,7 +10,6 @@ import pytest
 
 from nfl.fantasypros_fantasy.api import FantasyProsApiClient
 
-
 _SAMPLE_CSV_PLAYER_BYE = textwrap.dedent("""\
     Rank,Player (Bye),POS,ESPN,Sleeper,AVG
     1,Christian McCaffrey   SF (9),RB1,1.0,1.0,1.0
