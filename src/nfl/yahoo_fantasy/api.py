@@ -130,7 +130,9 @@ class YahooApiClient:
         if should_use_cache and cache_file.exists():
             try:
                 self._request_stats["cache_hits"] += 1
-                return json.loads(cache_file.read_text(encoding="utf-8"))
+                cached_payload = json.loads(cache_file.read_text(encoding="utf-8"))
+                if isinstance(cached_payload, dict):
+                    return cached_payload
             except (OSError, json.JSONDecodeError):
                 pass
 

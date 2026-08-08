@@ -74,7 +74,13 @@ class SleeperClient:
             raise SleeperApiError(
                 f"Sleeper players API returned {resp.status_code}: {resp.text[:200]}"
             )
-        return resp.json()
+        payload = resp.json()
+        if not isinstance(payload, dict) or not all(
+            isinstance(player_id, str) and isinstance(player_data, dict)
+            for player_id, player_data in payload.items()
+        ):
+            raise SleeperApiError("Sleeper players API returned an unexpected payload shape.")
+        return payload
 
     def fetch_adp(self, season: int) -> list[dict[str, Any]]:
         """Fetch ADP projections for a given season.
@@ -98,7 +104,10 @@ class SleeperClient:
             raise SleeperApiError(
                 f"Sleeper projections API returned {resp.status_code}: {resp.text[:200]}"
             )
-        return resp.json()
+        payload = resp.json()
+        if not isinstance(payload, list) or not all(isinstance(item, dict) for item in payload):
+            raise SleeperApiError("Sleeper projections API returned an unexpected payload shape.")
+        return payload
 
     def fetch_players_with_adp(self, season: int) -> list[SleeperPlayer]:
         """Fetch players and ADP, returning merged SleeperPlayer objects.

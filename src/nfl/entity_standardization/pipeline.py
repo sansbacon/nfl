@@ -23,6 +23,14 @@ from nfl.entity_standardization.storage import (
 from nfl.entity_standardization.validation import validate
 
 
+def _coerce_float(value: object) -> float:
+    if isinstance(value, bool):
+        return float(value)
+    if isinstance(value, int | float | str):
+        return float(value)
+    raise TypeError(f"Expected numeric confidence value, got {type(value).__name__}.")
+
+
 @dataclass(frozen=True, slots=True)
 class StandardizationConfig:
     auto_accept_thresholds: dict[str, dict[str, float]] = field(
@@ -209,9 +217,9 @@ class EntityStandardizer:
             "standardized_player_name": raw_player_name,
             "standardized_team_name": team_result["canonical_team_id"] or raw_team_name,
             "standardized_position": position_result["canonical_position_code"] or raw_position,
-            "player_confidence": float(player_result["player_confidence"]),
-            "team_confidence": float(team_result["team_confidence"]),
-            "position_confidence": float(position_result["position_confidence"]),
+            "player_confidence": _coerce_float(player_result["player_confidence"]),
+            "team_confidence": _coerce_float(team_result["team_confidence"]),
+            "position_confidence": _coerce_float(position_result["position_confidence"]),
             "match_method_player": player_result["match_method_player"],
             "match_method_team": team_result["match_method_team"],
             "match_method_position": position_result["match_method_position"],

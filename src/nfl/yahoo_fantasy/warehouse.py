@@ -132,7 +132,8 @@ class YahooWarehouseClient:
             # Relative metadata/manifest paths should resolve from project root.
             with _temporary_cwd(self.paths.project_root):
                 table = self._catalog.load_table(table_identifier)
-                return pl.from_arrow(table.scan().to_arrow())
+                frame = pl.from_arrow(table.scan().to_arrow())
+                return frame if isinstance(frame, pl.DataFrame) else frame.to_frame()
         except Exception as exc:
             raise WarehouseQueryError(f"Could not load table '{table_identifier}': {exc}") from exc
 

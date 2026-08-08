@@ -115,14 +115,14 @@ class FantasyProsApiClient:
         url = self._build_adp_url(season)
         response = self.session.get(url, headers=FP_HEADERS, timeout=self.timeout_seconds)
         response.raise_for_status()
-        return response.text
+        return str(response.text)
 
     def fetch_adp_csv(self, season: int) -> str:
         """Fetch full ADP data from the FantasyPros partners CSV export API."""
         url = self._build_adp_csv_url(season)
         response = self.session.get(url, headers=FP_HEADERS, timeout=self.timeout_seconds)
         response.raise_for_status()
-        return response.text
+        return str(response.text)
 
     def parse_adp_csv(
         self,
@@ -303,7 +303,8 @@ class FantasyProsApiClient:
         if not isinstance(rows, list) or not rows:
             return AdpPageData(players=[], adp_rows=[])
 
-        fields = table_data.get("fields") if isinstance(table_data.get("fields"), list) else []
+        raw_fields = table_data.get("fields")
+        fields: list[Any] = raw_fields if isinstance(raw_fields, list) else []
         source_key_by_label: dict[str, str] = {}
         for field in fields:
             if not isinstance(field, dict):

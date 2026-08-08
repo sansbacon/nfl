@@ -108,7 +108,7 @@ class CanonicalRegistryLoader:
                 - {""}
             )
 
-            record = {
+            record: dict[str, Any] = {
                 "canonical_player_id": canonical_player_id,
                 "display_name": display_name,
                 "first_name": first_name,
@@ -149,7 +149,8 @@ class CanonicalRegistryLoader:
             player_by_id[canonical_player_id]["cross_source_ids"] = cross_source_ids
 
         for record in players:
-            record.setdefault("cross_source_ids", {})
+            if "cross_source_ids" not in record:
+                record["cross_source_ids"] = {}
 
         team_codes = {
             normalize_team_code(str(row.get("home_team") or "")) for row in schedules_raw

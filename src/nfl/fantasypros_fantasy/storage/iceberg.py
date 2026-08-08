@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 import polars as pl
 
@@ -67,7 +68,8 @@ def resolve_table_identifier(
 
 def _resolve_primary_key(entity: str, sport: str | None) -> tuple[str, ...]:
     """Resolve primary key via FantasyPros validation contracts."""
-    contract = get_contract(entity=entity, sport=sport)
+    scoped_sport: Literal["nfl"] | None = "nfl" if sport == "nfl" else None
+    contract = get_contract(entity=entity, sport=scoped_sport)
     return contract.primary_key
 
 
