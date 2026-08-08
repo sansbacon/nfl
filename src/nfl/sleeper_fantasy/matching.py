@@ -85,10 +85,6 @@ def match_sleeper_to_crosswalk(
         (F.col("norm_last") != "") & (F.col("norm_first_prefix") != "")
     )
 
-    crosswalk.withColumn(
-        "cw_last", normalize_name_udf(F.col("name"))
-    ).filter(F.col("cw_last") != "")
-
     # For crosswalk: extract last name portion (everything after first space)
     # merge_name is already "firstname lastname" normalized
     crosswalk_split = crosswalk.withColumn(

@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 def load_token(token_path: Path) -> dict | None:
     if not token_path.exists():
         return None
-    return json.loads(token_path.read_text(encoding="utf-8"))
+    payload = json.loads(token_path.read_text(encoding="utf-8"))
+    return payload if isinstance(payload, dict) else None
 
 
 def save_token(token_path: Path, token: dict) -> None:

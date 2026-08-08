@@ -172,9 +172,9 @@ def ensure_table_exists(
 
     try:
         return catalog.load_table(table_identifier)
-    except (NoSuchTableError, Exception):
+    except NoSuchTableError:
         namespace, _table_name = table_identifier.rsplit(".", 1)
-        with contextlib.suppress(NamespaceAlreadyExistsError, Exception):
+        with contextlib.suppress(NamespaceAlreadyExistsError):
             catalog.create_namespace(namespace)
         try:
             return catalog.create_table(
