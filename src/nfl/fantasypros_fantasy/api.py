@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 import json
+from pathlib import Path
 import re
 from typing import Any
 
@@ -542,3 +543,170 @@ class FantasyProsApiClient:
 
     def get_adp_snapshots(self, season: int, effective_date: date | None = None) -> list[dict[str, Any]]:
         return self._fetch_and_parse(season, effective_date=effective_date).adp_rows
+
+    def parse_adp_volume_csv(
+        self,
+        file_path: "str | Path",
+        season: int,
+        effective_date: date | None = None,
+    ) -> AdpPageData:
+        """Parse a FantasyPros ADP CSV file downloaded to a local path or UC Volume.
+
+        This handles the CSV format produced by FantasyPros' rankings export
+        (e.g. ``FantasyPros_2024_Overall_ADP_Rankings.csv``) that users
+        download and store in Unity Catalog Volumes.  The format differs from
+        the web API export: it uses a ``"Player (Bye)"`` column that bundles
+        name, team abbreviation, and bye week together.
+
+        Parameters
+        ----------
+        file_path:
+            Path to the CSV file (local path or UC Volume path such as
+            ``/Volumes/nfl/default/nfl_volume/FantasyPros_2024_...csv``).
+        season:
+            NFL season year to tag on returned records.
+        effective_date:
+            Override for the snapshot effective date.  Defaults to today.
+
+        Returns
+        -------
+        AdpPageData
+            Parsed player and ADP records in the standard library schema.
+
+        Examples
+        --------
+        .. code-block:: python
+
+            from nfl.fantasypros_fantasy.api import FantasyProsApiClient
+
+            client = FantasyProsApiClient()
+            data = client.parse_adp_volume_csv(
+                "/Volumes/nfl/default/nfl_volume/FantasyPros_2024_Overall_ADP_Rankings.csv",
+                season=2024,
+            )
+            print(len(data.players), "players parsed")
+        """
+        import polars as _pl
+
+        path = Path(file_path)
+        df = _pl.read_csv(str(path), truncate_ragged_lines=True, null_values=["—"])
+
+        player_col = "Player (Bye)" if "Player (Bye)" in df.columns else "Player"
+
+        # Strip bye week annotation, e.g. "Christian McCaffrey   SF (9)" → "Christian McCaffrey   SF"
+        df = df.with_columns(
+            _pl.col(player_col)
+            .str.replace(r"\s*\(\d+\)\s*$", "")
+            .str.strip_chars()
+            .alias("_cleaned")
+        )
+        # Extract trailing 2–3-letter team abbreviation, then strip it from the name
+        df = df.with_columns(
+            _pl.col("_cleaned").str.extract(r"\s+([A-Z]{2,3})$").alias("team"),
+            _pl.col("_cleaned")
+            .str.replace(r"\s+[A-Z]{2,3}$", "")
+            .str.strip_chars()
+            .alias("player_name"),
+        )
+        # Strip positional rank number, e.g. "RB1" → "RB"
+        pos_col = "POS" if "POS" in df.columns else ("Pos" if "Pos" in df.columns else None)
+        if pos_col:
+            df = df.with_columns(
+                _pl.col(pos_col).str.extract(r"^([A-Z]+)").alias("position")
+            )
+        else:
+            df = df.with_columns(_pl.lit(None).cast(_pl.String).alias("position"))
+
+        effective = effective_date or date.today()
+        player_rows: list[dict[str, Any]] = []
+        adp_rows: list[dict[str, Any]] = []
+
+        rank_col = "Rank" if "Rank" in df.columns else None
+        adp_col = "AVG" if "AVG" in df.columns else None
+
+        platform_map = {
+            "ESPN": "adp_espn",
+            "Sleeper": "adp_sleeper",
+            "CBS": "adp_cbs",
+            "NFL": "adp_nfl",
+            "RTSports": "adp_rtsports",
+            "Fantrax": "adp_fantrax",
+        }
+
+        for row in df.iter_rows(named=True):
+            name = str(row.get("player_name") or "").strip()
+            if not name:
+                continue
+            first_name, last_name = _normalize_name(name)
+            team = str(row.get("team") or "").strip().upper()
+            position = str(row.get("position") or "").strip().upper()
+
+            slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+            fp_player_id = f"{slug}_{team.lower()}" if team else slug
+
+            player_rows.append(
+                {
+                    "fp_player_id": fp_player_id,
+                    "full_name": name,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "position": position,
+                    "team": team,
+                }
+            )
+
+            rank = _safe_int(str(row.get(rank_col) or "")) if rank_col else None
+            if rank is None:
+                rank = len(player_rows)
+            adp = _safe_float(row.get(adp_col)) if adp_col else float(rank)
+            if adp is None:
+                adp = float(rank)
+
+            platform_values: dict[str, float | None] = {}
+            for csv_col, adp_field in platform_map.items():
+                platform_values[adp_field] = _safe_float(row.get(csv_col))
+
+            valid_platforms = [v for v in platform_values.values() if v is not None]
+            high = int(min(valid_platforms)) if valid_platforms else None
+            low = int(max(valid_platforms)) if valid_platforms else None
+
+            stdev: float | None = None
+            if len(valid_platforms) >= 2:
+                mean = sum(valid_platforms) / len(valid_platforms)
+                variance = sum((x - mean) ** 2 for x in valid_platforms) / len(valid_platforms)
+                stdev = round(variance ** 0.5, 2)
+
+            round_num = int((adp - 1) // 12) + 1
+            pick_num = int((adp - 1) % 12) + 1
+            adp_formatted = f"{round_num}.{pick_num:02d}"
+
+            adp_rows.append(
+                {
+                    "fp_player_id": fp_player_id,
+                    "season": season,
+                    "rank": rank,
+                    "adp": adp,
+                    "adp_espn": platform_values.get("adp_espn"),
+                    "adp_sleeper": platform_values.get("adp_sleeper"),
+                    "adp_cbs": platform_values.get("adp_cbs"),
+                    "adp_nfl": platform_values.get("adp_nfl"),
+                    "adp_rtsports": platform_values.get("adp_rtsports"),
+                    "adp_fantrax": platform_values.get("adp_fantrax"),
+                    "adp_realtime": None,
+                    "adp_formatted": adp_formatted,
+                    "high": high,
+                    "low": low,
+                    "stdev": stdev,
+                    "bye_week": None,
+                    "effective_date": effective,
+                    "end_date": None,
+                    "is_current": True,
+                }
+            )
+
+        if self.validate_contracts and player_rows:
+            validate(player_rows, entity="fp_player")
+        if self.validate_contracts and adp_rows:
+            validate(adp_rows, entity="fp_adp_snapshot", sport="nfl")
+
+        return AdpPageData(players=player_rows, adp_rows=adp_rows)

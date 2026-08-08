@@ -36,13 +36,9 @@ import sys
 
 import polars as pl
 
-# Ensure src is importable (workspace path resolution)
-notebook_dir = Path.cwd()
-candidates = [
-    notebook_dir.parent,                          # /Workspace/Users/.../nfl
-    Path("/Workspace/Users/etruett@alas.com/nfl"),
-]
-project_root = next((p for p in candidates if (p / "pyproject.toml").exists()), notebook_dir)
+from nfl.common.utils import find_project_root
+
+project_root = find_project_root()
 src_path = str(project_root / "src")
 if src_path not in sys.path:
     sys.path.insert(0, src_path)

@@ -13,6 +13,7 @@ from nfl.common.storage.unity_catalog import (
     UCWriteResult,
     WriteMode,
     VolumeFileFormat,
+    load_uc_table,
     persist_to_uc_tables,
     persist_to_uc_volume,
 )
@@ -33,6 +34,7 @@ __all__ = [
     "UCWriteResult",
     "WriteMode",
     "VolumeFileFormat",
+    "load_uc_table",
     "persist_to_uc_tables",
     "persist_to_uc_volume",
     # Polars

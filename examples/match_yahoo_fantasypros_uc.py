@@ -28,12 +28,14 @@ from pathlib import Path
 
 import polars as pl
 
-project_root = Path.cwd().parent if (Path.cwd().parent / "pyproject.toml").exists() else Path.cwd()
+from nfl.common.utils import find_project_root
+
+project_root = find_project_root()
 src_path = str(project_root / "src")
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
-from nfl.fantasypros_fantasy import PipelineConfig, run_pipeline
+from nfl.fantasypros_fantasy import PipelineConfig, fp_adp_records_to_fp_players, run_pipeline
 from nfl.fantasypros_fantasy.storage.unity_catalog import FantasyProsUCTableConfig
 from nfl.storage_uc import UCTableConfig, persist_to_uc_tables
 
@@ -77,21 +79,8 @@ fp_adp_spark = spark.table(f"{CATALOG}.{FP_SCHEMA}.fp_adp")
 fp_adp_records = fp_adp_spark.filter(f"season = {SEASON}").toPandas().to_dict(orient="records")
 print(f"FP ADP players from UC (season={SEASON}): {len(fp_adp_records)}")
 
-# Transform to the format expected by build_fp_yahoo_crosswalk
-fp_players = []
-for row in fp_adp_records:
-    name = str(row.get("player_name", ""))
-    parts = name.strip().split(" ", 1)
-    first_name = parts[0] if parts else ""
-    last_name = parts[1] if len(parts) > 1 else ""
-    fp_players.append({
-        "fp_player_id": f"{name.lower().replace(' ', '-')}_{row.get('team', '')}".lower(),
-        "full_name": name,
-        "first_name": first_name,
-        "last_name": last_name,
-        "position": str(row.get("position", "")),
-        "team": str(row.get("team", "")),
-    })
+# Convert FP ADP table records to fp_player format for the crosswalk builder
+fp_players = fp_adp_records_to_fp_players(fp_adp_records)
 
 # Build crosswalk
 crosswalk_records = build_fp_yahoo_crosswalk(
