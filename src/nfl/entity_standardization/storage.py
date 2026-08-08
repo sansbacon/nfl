@@ -102,6 +102,7 @@ def persist_to_iceberg(
 
     ns = namespace_config or StandardizationIcebergNamespaceConfig()
 
+    store_path: Path | None
     if idempotency_store_path is not None:
         warnings.warn(
             "The .iceberg/write_log.json idempotency store is deprecated and will be "
@@ -109,7 +110,7 @@ def persist_to_iceberg(
             DeprecationWarning,
             stacklevel=2,
         )
-        store_path: Path | None = Path(idempotency_store_path)
+        store_path = Path(idempotency_store_path)
         if store_path.exists():
             entries: set[str] = set(json.loads(store_path.read_text(encoding="utf-8")))
         else:
