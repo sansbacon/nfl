@@ -80,7 +80,9 @@ def test_persist_to_iceberg_normalizes_player_stats_nested_shapes(tmp_path: Path
                 "fantasy_points": [12.5],
                 "status": [None],
                 "bye_week": [None],
-                "stats": [[{"element": {"stat_id": "5", "value": "250"}}, {"stat_id": "6", "value": "2"}]],
+                "stats": [
+                    [{"element": {"stat_id": "5", "value": "250"}}, {"stat_id": "6", "value": "2"}]
+                ],
             }
         )
     }

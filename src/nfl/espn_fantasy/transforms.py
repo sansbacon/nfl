@@ -29,22 +29,24 @@ def players_to_ranks_rows(
     for p in players:
         if p.rank_ppr is None and p.rank_standard is None:
             continue
-        rows.append({
-            "espn_id": p.espn_id,
-            "player": p.full_name,
-            "position": p.position,
-            "team": p.team,
-            "rank_ppr": p.rank_ppr,
-            "rank_standard": p.rank_standard,
-            "auction_value_ppr": p.auction_value_ppr,
-            "auction_value_standard": p.auction_value_standard,
-            "percent_owned": p.percent_owned,
-            "percent_started": p.percent_started,
-            "season": season,
-            "ingestion_date": effective,
-            "end_date": None,
-            "is_current": True,
-        })
+        rows.append(
+            {
+                "espn_id": p.espn_id,
+                "player": p.full_name,
+                "position": p.position,
+                "team": p.team,
+                "rank_ppr": p.rank_ppr,
+                "rank_standard": p.rank_standard,
+                "auction_value_ppr": p.auction_value_ppr,
+                "auction_value_standard": p.auction_value_standard,
+                "percent_owned": p.percent_owned,
+                "percent_started": p.percent_started,
+                "season": season,
+                "ingestion_date": effective,
+                "end_date": None,
+                "is_current": True,
+            }
+        )
 
     return rows
 

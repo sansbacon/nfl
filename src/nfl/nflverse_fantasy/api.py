@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
 import hashlib
 import json
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 from nfl.nflverse_fantasy.validation import validate
@@ -27,7 +27,7 @@ def _to_dicts(payload: Any) -> list[dict[str, Any]]:
 
 
 def _add_metadata(dataset: str, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    loaded_at = datetime.now(timezone.utc).isoformat()
+    loaded_at = datetime.now(UTC).isoformat()
     out: list[dict[str, Any]] = []
     for row in rows:
         row_copy = dict(row)

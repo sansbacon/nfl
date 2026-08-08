@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import date
 import json
 import re
+from dataclasses import dataclass
+from datetime import date
 from typing import Any
 
 import requests
@@ -115,21 +115,23 @@ class FantasyProsApiClient:
         url = self._build_adp_url(season)
         response = self.session.get(url, headers=FP_HEADERS, timeout=self.timeout_seconds)
         response.raise_for_status()
-        return response.text
+        return str(response.text)
 
     def fetch_adp_csv(self, season: int) -> str:
         """Fetch full ADP data from the FantasyPros partners CSV export API."""
         url = self._build_adp_csv_url(season)
         response = self.session.get(url, headers=FP_HEADERS, timeout=self.timeout_seconds)
         response.raise_for_status()
-        return response.text
+        return str(response.text)
 
     def parse_adp_csv(
-        self, csv_text: str, season: int, effective_date: date | None = None,
+        self,
+        csv_text: str,
+        season: int,
+        effective_date: date | None = None,
     ) -> AdpPageData:
         """Parse CSV export into AdpPageData (same schema as HTML parser)."""
         import csv as _csv
-        import io as _io
 
         lines = csv_text.splitlines()
         # Skip metadata header lines (first 4 lines are title/blank)
@@ -156,47 +158,55 @@ class FantasyProsApiClient:
             slug = re.sub(r"[^a-z0-9]+", "-", full_name.lower()).strip("-")
             fp_player_id = slug
 
-            player_rows.append({
-                "fp_player_id": fp_player_id,
-                "full_name": full_name,
-                "first_name": first_name,
-                "last_name": last_name,
-                "position": position,
-                "team": team,
-            })
+            player_rows.append(
+                {
+                    "fp_player_id": fp_player_id,
+                    "full_name": full_name,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "position": position,
+                    "team": team,
+                }
+            )
 
             rank = _safe_int(row.get("Rank")) or (idx + 1)
             high = _safe_int(row.get("Min"))
             low = _safe_int(row.get("Max"))
             stdev = _safe_float(row.get("STD Dev"))
             # Use average of min/max as ADP estimate
-            adp = round((high + low) / 2.0, 1) if high is not None and low is not None else float(rank)
+            adp = (
+                round((high + low) / 2.0, 1)
+                if high is not None and low is not None
+                else float(rank)
+            )
 
             round_num = int((adp - 1) // 12) + 1
             pick_num = int((adp - 1) % 12) + 1
             adp_formatted = f"{round_num}.{pick_num:02d}"
 
-            adp_rows.append({
-                "fp_player_id": fp_player_id,
-                "season": season,
-                "rank": rank,
-                "adp": adp,
-                "adp_espn": None,
-                "adp_sleeper": None,
-                "adp_cbs": None,
-                "adp_nfl": None,
-                "adp_rtsports": None,
-                "adp_fantrax": None,
-                "adp_realtime": None,
-                "adp_formatted": adp_formatted,
-                "high": high,
-                "low": low,
-                "stdev": stdev,
-                "bye_week": None,
-                "effective_date": effective,
-                "end_date": None,
-                "is_current": True,
-            })
+            adp_rows.append(
+                {
+                    "fp_player_id": fp_player_id,
+                    "season": season,
+                    "rank": rank,
+                    "adp": adp,
+                    "adp_espn": None,
+                    "adp_sleeper": None,
+                    "adp_cbs": None,
+                    "adp_nfl": None,
+                    "adp_rtsports": None,
+                    "adp_fantrax": None,
+                    "adp_realtime": None,
+                    "adp_formatted": adp_formatted,
+                    "high": high,
+                    "low": low,
+                    "stdev": stdev,
+                    "bye_week": None,
+                    "effective_date": effective,
+                    "end_date": None,
+                    "is_current": True,
+                }
+            )
 
         if self.validate_contracts and player_rows:
             validate(player_rows, entity="fp_player")
@@ -205,7 +215,9 @@ class FantasyProsApiClient:
 
         return AdpPageData(players=player_rows, adp_rows=adp_rows)
 
-    def parse_adp_page(self, html: str, season: int, effective_date: date | None = None) -> AdpPageData:
+    def parse_adp_page(
+        self, html: str, season: int, effective_date: date | None = None
+    ) -> AdpPageData:
         soup = BeautifulSoup(html, "lxml")
         table = soup.find("table", {"id": "data"})
         if table:
@@ -223,11 +235,17 @@ class FantasyProsApiClient:
                 effective_date=effective_date,
             )
 
-        raise ExtractionError("Could not find FantasyPros ADP payload (legacy table or reportConfig JSON).")
+        raise ExtractionError(
+            "Could not find FantasyPros ADP payload (legacy table or reportConfig JSON)."
+        )
 
     def _extract_report_config(self, soup: BeautifulSoup) -> dict[str, Any] | None:
         for script in soup.find_all("script"):
-            script_text = script.string if isinstance(script.string, str) else script.get_text("", strip=False)
+            script_text = (
+                script.string
+                if isinstance(script.string, str)
+                else script.get_text("", strip=False)
+            )
             if not script_text or "window.FP.reportConfig" not in script_text:
                 continue
 
@@ -285,7 +303,8 @@ class FantasyProsApiClient:
         if not isinstance(rows, list) or not rows:
             return AdpPageData(players=[], adp_rows=[])
 
-        fields = table_data.get("fields") if isinstance(table_data.get("fields"), list) else []
+        raw_fields = table_data.get("fields")
+        fields: list[Any] = raw_fields if isinstance(raw_fields, list) else []
         source_key_by_label: dict[str, str] = {}
         for field in fields:
             if not isinstance(field, dict):
@@ -375,7 +394,7 @@ class FantasyProsApiClient:
             if len(valid_platforms) >= 2:
                 mean = sum(valid_platforms) / len(valid_platforms)
                 variance = sum((x - mean) ** 2 for x in valid_platforms) / len(valid_platforms)
-                stdev = round(variance ** 0.5, 2)
+                stdev = round(variance**0.5, 2)
 
             round_num = int((adp - 1) // 12) + 1
             pick_num = int((adp - 1) % 12) + 1
@@ -412,7 +431,9 @@ class FantasyProsApiClient:
 
         return AdpPageData(players=player_rows, adp_rows=adp_rows)
 
-    def _parse_legacy_adp_table(self, table: Any, season: int, effective_date: date | None) -> AdpPageData:
+    def _parse_legacy_adp_table(
+        self, table: Any, season: int, effective_date: date | None
+    ) -> AdpPageData:
 
         tbody = table.find("tbody")
         if not tbody:
@@ -487,7 +508,7 @@ class FantasyProsApiClient:
             if len(valid_platforms) >= 2:
                 mean = sum(valid_platforms) / len(valid_platforms)
                 variance = sum((x - mean) ** 2 for x in valid_platforms) / len(valid_platforms)
-                stdev = round(variance ** 0.5, 2)
+                stdev = round(variance**0.5, 2)
 
             round_num = int((adp - 1) // 12) + 1
             pick_num = int((adp - 1) % 12) + 1
@@ -540,5 +561,7 @@ class FantasyProsApiClient:
     def get_players(self, season: int) -> list[dict[str, Any]]:
         return self._fetch_and_parse(season).players
 
-    def get_adp_snapshots(self, season: int, effective_date: date | None = None) -> list[dict[str, Any]]:
+    def get_adp_snapshots(
+        self, season: int, effective_date: date | None = None
+    ) -> list[dict[str, Any]]:
         return self._fetch_and_parse(season, effective_date=effective_date).adp_rows

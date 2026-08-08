@@ -4,7 +4,11 @@ from pathlib import Path
 
 import polars as pl
 
-from nfl.nflverse_fantasy.storage.iceberg import IcebergNamespaceConfig, persist_to_iceberg, resolve_table_identifier
+from nfl.nflverse_fantasy.storage.iceberg import (
+    IcebergNamespaceConfig,
+    persist_to_iceberg,
+    resolve_table_identifier,
+)
 
 
 def test_resolve_table_identifier_uses_nvnfl_namespace() -> None:

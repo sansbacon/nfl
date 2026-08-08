@@ -65,9 +65,7 @@ def match_espn_to_crosswalk(spark, catalog: str, espn_schema: str, common_schema
 
     normalize_name_udf = F.udf(normalize_name, T.StringType())
 
-    unmatched_norm = unmatched.withColumn(
-        "merge_name", normalize_name_udf(F.col("player"))
-    )
+    unmatched_norm = unmatched.withColumn("merge_name", normalize_name_udf(F.col("player")))
     crosswalk_norm = crosswalk.filter(F.col("merge_name").isNotNull())
 
     name_match = (
@@ -91,11 +89,7 @@ def match_espn_to_crosswalk(spark, catalog: str, espn_schema: str, common_schema
     w = Window.partitionBy("espn_id").orderBy(
         F.when(F.col("match_method") == "direct_espn_id", 1).otherwise(2)
     )
-    deduped = (
-        all_matches.withColumn("rn", F.row_number().over(w))
-        .filter("rn = 1")
-        .drop("rn")
-    )
+    deduped = all_matches.withColumn("rn", F.row_number().over(w)).filter("rn = 1").drop("rn")
 
     # Persist to espn_player_map
     map_table = f"{espn_prefix}.espn_player_map"

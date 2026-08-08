@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 import polars as pl
 
@@ -25,12 +26,33 @@ class TransformResult:
 
 
 _INT_COLUMNS = {
-    "game_id", "season", "num_teams", "team_id", "draft_position", "pick_number", "round_number",
-    "cost", "rank", "wins", "losses", "ties", "week", "bye_week", "category_rank",
+    "game_id",
+    "season",
+    "num_teams",
+    "team_id",
+    "draft_position",
+    "pick_number",
+    "round_number",
+    "cost",
+    "rank",
+    "wins",
+    "losses",
+    "ties",
+    "week",
+    "bye_week",
+    "category_rank",
 }
 _FLOAT_COLUMNS = {
-    "points_for", "points_against", "fantasy_points", "points", "opponent_points", "projected_points", "category_value",
-    "points_per_unit", "bonus_target", "bonus_points",
+    "points_for",
+    "points_against",
+    "fantasy_points",
+    "points",
+    "opponent_points",
+    "projected_points",
+    "category_value",
+    "points_per_unit",
+    "bonus_target",
+    "bonus_points",
 }
 _BOOL_COLUMNS = {"is_playoff", "is_consolation", "is_starting"}
 
@@ -98,8 +120,12 @@ def transform_nfl(
         frames={
             "standings": transform_entity(standings or [], entity="standings", sport="nfl"),
             "matchups": transform_entity(matchups or [], entity="matchups", sport="nfl"),
-            "roster_entries": transform_entity(roster_entries or [], entity="roster_entries", sport="nfl"),
-            "player_stats_weekly": transform_entity(player_stats_weekly or [], entity="player_stats_weekly", sport="nfl"),
+            "roster_entries": transform_entity(
+                roster_entries or [], entity="roster_entries", sport="nfl"
+            ),
+            "player_stats_weekly": transform_entity(
+                player_stats_weekly or [], entity="player_stats_weekly", sport="nfl"
+            ),
         }
     )
 
@@ -113,9 +139,15 @@ def transform_nba(
     return TransformResult(
         frames={
             "standings": transform_entity(standings or [], entity="standings", sport="nba"),
-            "standing_category_scores": transform_entity(standing_category_scores or [], entity="standing_category_scores", sport="nba"),
-            "roster_entries": transform_entity(roster_entries or [], entity="roster_entries", sport="nba"),
-            "player_projections": transform_entity(player_projections or [], entity="player_projections", sport="nba"),
+            "standing_category_scores": transform_entity(
+                standing_category_scores or [], entity="standing_category_scores", sport="nba"
+            ),
+            "roster_entries": transform_entity(
+                roster_entries or [], entity="roster_entries", sport="nba"
+            ),
+            "player_projections": transform_entity(
+                player_projections or [], entity="player_projections", sport="nba"
+            ),
         }
     )
 
@@ -134,9 +166,15 @@ def transform(
         "team": transform_entity(common_entities.get("team", []), entity="team"),
         "player": transform_entity(common_entities.get("player", []), entity="player"),
         "draft_pick": transform_entity(common_entities.get("draft_pick", []), entity="draft_pick"),
-        "transaction": transform_entity(common_entities.get("transaction", []), entity="transaction"),
-        "stat_category": transform_entity(common_entities.get("stat_category", []), entity="stat_category"),
-        "scoring_rule": transform_entity(common_entities.get("scoring_rule", []), entity="scoring_rule"),
+        "transaction": transform_entity(
+            common_entities.get("transaction", []), entity="transaction"
+        ),
+        "stat_category": transform_entity(
+            common_entities.get("stat_category", []), entity="stat_category"
+        ),
+        "scoring_rule": transform_entity(
+            common_entities.get("scoring_rule", []), entity="scoring_rule"
+        ),
     }
 
     nfl = transform_nfl(

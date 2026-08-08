@@ -400,7 +400,9 @@ def test_persist_historical_auction_tables_replaces_existing_tables(monkeypatch)
         ),
     )
 
-    results = persist_historical_auction_tables(import_result, dry_run=False, namespace="yhnfl_manual")
+    results = persist_historical_auction_tables(
+        import_result, dry_run=False, namespace="yhnfl_manual"
+    )
 
     expected_tables = {
         "yhnfl_manual.historical_auction_values_raw",
@@ -412,4 +414,6 @@ def test_persist_historical_auction_tables_replaces_existing_tables(monkeypatch)
     assert expected_tables.issubset(set(fake_catalog.create_calls))
     assert fake_catalog.tables["yhnfl_manual.historical_auction_values_raw"].append_calls == 1
     assert fake_catalog.tables["yhnfl_manual.historical_auction_values_resolved"].append_calls == 1
-    assert fake_catalog.tables["yhnfl_manual.historical_auction_values_match_queue"].append_calls == 0
+    assert (
+        fake_catalog.tables["yhnfl_manual.historical_auction_values_match_queue"].append_calls == 0
+    )

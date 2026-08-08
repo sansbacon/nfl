@@ -42,8 +42,12 @@ class _FakeCatalog:
 def test_resolve_table_identifier_uses_fantasypros_namespaces() -> None:
     namespaces = IcebergNamespaceConfig(nfl="fpnfl", common="fpcommon")
 
-    nfl_identifier, nfl_entity, nfl_sport = resolve_table_identifier("nfl_fp_adp_snapshot", namespaces)
-    common_identifier, common_entity, common_sport = resolve_table_identifier("fp_player", namespaces)
+    nfl_identifier, nfl_entity, nfl_sport = resolve_table_identifier(
+        "nfl_fp_adp_snapshot", namespaces
+    )
+    common_identifier, common_entity, common_sport = resolve_table_identifier(
+        "fp_player", namespaces
+    )
 
     assert nfl_identifier == "fpnfl.fp_adp_snapshot"
     assert nfl_entity == "fp_adp_snapshot"
@@ -109,7 +113,9 @@ def test_persist_to_iceberg_creates_missing_table(monkeypatch, tmp_path: Path) -
     }
 
     fake_catalog = _FakeCatalog()
-    monkeypatch.setattr("nfl.common.storage.iceberg.load_pyiceberg_catalog", lambda _cfg: fake_catalog)
+    monkeypatch.setattr(
+        "nfl.common.storage.iceberg.load_pyiceberg_catalog", lambda _cfg: fake_catalog
+    )
 
     results = persist_to_iceberg(
         frames=frames,
@@ -150,7 +156,9 @@ def test_idempotency_does_not_skip_when_table_missing(monkeypatch, tmp_path: Pat
     )
 
     fake_catalog = _FakeCatalog()
-    monkeypatch.setattr("nfl.common.storage.iceberg.load_pyiceberg_catalog", lambda _cfg: fake_catalog)
+    monkeypatch.setattr(
+        "nfl.common.storage.iceberg.load_pyiceberg_catalog", lambda _cfg: fake_catalog
+    )
 
     results = persist_to_iceberg(
         frames=frames,
@@ -194,7 +202,9 @@ def test_persist_to_iceberg_handles_null_typed_columns(monkeypatch, tmp_path: Pa
     }
 
     fake_catalog = _FakeCatalog()
-    monkeypatch.setattr("nfl.common.storage.iceberg.load_pyiceberg_catalog", lambda _cfg: fake_catalog)
+    monkeypatch.setattr(
+        "nfl.common.storage.iceberg.load_pyiceberg_catalog", lambda _cfg: fake_catalog
+    )
 
     results = persist_to_iceberg(
         frames=frames,

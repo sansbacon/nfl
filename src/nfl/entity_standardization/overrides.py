@@ -5,7 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 
-def build_override_index(overrides: list[dict[str, Any]] | None) -> dict[tuple[str, str], dict[str, Any]]:
+def build_override_index(
+    overrides: list[dict[str, Any]] | None,
+) -> dict[tuple[str, str], dict[str, Any]]:
     if not overrides:
         return {}
     index: dict[tuple[str, str], dict[str, Any]] = {}

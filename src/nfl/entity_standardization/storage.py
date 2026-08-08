@@ -4,12 +4,24 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal, Mapping
+from typing import Literal
 
 import polars as pl
 
+from nfl.common.storage import (
+    UCTableConfig,
+    UCVolumeConfig,
+    UCWriteResult,
+    VolumeFileFormat,
+    persist_to_uc_tables,
+    persist_to_uc_volume,
+)
+from nfl.common.storage import (
+    WriteMode as UCWriteMode,
+)
 from nfl.entity_standardization.validation import get_contract
 
 WriteMode = Literal["append", "upsert"]
@@ -74,7 +86,9 @@ def _frame_digest(table_identifier: str, mode: WriteMode, frame: pl.DataFrame) -
         "columns": frame.columns,
         "rows": frame.to_dicts(),
     }
-    return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode("utf-8")).hexdigest()
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, default=str).encode("utf-8")
+    ).hexdigest()
 
 
 def persist_to_iceberg(

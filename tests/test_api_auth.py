@@ -35,7 +35,9 @@ def test_extract_auth_code_from_url() -> None:
 
 def test_build_oauth_session_uses_cached_token(tmp_path: Path) -> None:
     token_path = tmp_path / ".yahoo_token.json"
-    token_path.write_text(json.dumps({"access_token": "x", "token_type": "bearer"}), encoding="utf-8")
+    token_path.write_text(
+        json.dumps({"access_token": "x", "token_type": "bearer"}), encoding="utf-8"
+    )
 
     session = build_oauth_session(
         client_id="client",
@@ -79,11 +81,7 @@ def test_api_client_normalizes_league_and_teams() -> None:
                                         {"team_key": "461.l.717896.t.1"},
                                         {"team_id": "1"},
                                         {"name": "Team One"},
-                                        {
-                                            "managers": [
-                                                {"manager": {"nickname": "Owner One"}}
-                                            ]
-                                        },
+                                        {"managers": [{"manager": {"nickname": "Owner One"}}]},
                                         {"draft_position": "2"},
                                     ]
                                 ]
@@ -222,7 +220,11 @@ def test_api_client_extracts_players_and_weekly_nfl_entities() -> None:
                                 "matchups": {
                                     "0": {
                                         "matchup": [
-                                            {"week": "1", "is_playoffs": "0", "is_consolation": "0"},
+                                            {
+                                                "week": "1",
+                                                "is_playoffs": "0",
+                                                "is_consolation": "0",
+                                            },
                                             {
                                                 "teams": {
                                                     "0": {
@@ -296,7 +298,9 @@ def test_api_client_extracts_players_and_weekly_nfl_entities() -> None:
     assert rosters[0]["selected_position"] == "WR"
     assert rosters[0]["is_starting"] is True
 
-    stats_weekly = client.get_player_stats_weekly("461.l.717896", season=2025, roster_entries=rosters)
+    stats_weekly = client.get_player_stats_weekly(
+        "461.l.717896", season=2025, roster_entries=rosters
+    )
     assert len(stats_weekly) == 1
     assert stats_weekly[0]["fantasy_points"] == 18.3
     assert stats_weekly[0]["bye_week"] == 7
@@ -329,8 +333,20 @@ def test_api_client_extracts_scoring_rules_and_stat_categories() -> None:
                     {
                         "stat_categories": {
                             "stats": {
-                                "0": {"stat": [{"stat_id": "5"}, {"name": "Passing Yards"}, {"display_name": "Pass Yds"}]},
-                                "1": {"stat": [{"stat_id": "6"}, {"name": "Passing TD"}, {"display_name": "Pass TD"}]},
+                                "0": {
+                                    "stat": [
+                                        {"stat_id": "5"},
+                                        {"name": "Passing Yards"},
+                                        {"display_name": "Pass Yds"},
+                                    ]
+                                },
+                                "1": {
+                                    "stat": [
+                                        {"stat_id": "6"},
+                                        {"name": "Passing TD"},
+                                        {"display_name": "Pass TD"},
+                                    ]
+                                },
                             }
                         }
                     },
@@ -412,8 +428,24 @@ def test_api_client_discovers_games_and_loads_players_for_season_without_league_
         "/games;game_codes=nfl": {
             "fantasy_content": {
                 "games": {
-                    "0": {"game": [{"game_key": "449"}, {"game_id": "449"}, {"code": "nfl"}, {"season": "2023"}, {"name": "Fantasy Football 2023"}]},
-                    "1": {"game": [{"game_key": "461"}, {"game_id": "461"}, {"code": "nfl"}, {"season": "2025"}, {"name": "Fantasy Football 2025"}]},
+                    "0": {
+                        "game": [
+                            {"game_key": "449"},
+                            {"game_id": "449"},
+                            {"code": "nfl"},
+                            {"season": "2023"},
+                            {"name": "Fantasy Football 2023"},
+                        ]
+                    },
+                    "1": {
+                        "game": [
+                            {"game_key": "461"},
+                            {"game_id": "461"},
+                            {"code": "nfl"},
+                            {"season": "2025"},
+                            {"name": "Fantasy Football 2025"},
+                        ]
+                    },
                 }
             }
         },
@@ -458,7 +490,14 @@ def test_api_client_get_players_for_season_raises_when_game_missing() -> None:
         "/games;game_codes=nfl": {
             "fantasy_content": {
                 "games": {
-                    "0": {"game": [{"game_key": "461"}, {"game_id": "461"}, {"code": "nfl"}, {"season": "2025"}]}
+                    "0": {
+                        "game": [
+                            {"game_key": "461"},
+                            {"game_id": "461"},
+                            {"code": "nfl"},
+                            {"season": "2025"},
+                        ]
+                    }
                 }
             }
         }
@@ -468,7 +507,7 @@ def test_api_client_get_players_for_season_raises_when_game_missing() -> None:
 
     try:
         client.get_players_for_season(season=2019, sport="nfl")
-        assert False, "Expected ValueError when requested season is unavailable"
+        raise AssertionError("Expected ValueError when requested season is unavailable")
     except ValueError as exc:
         assert "season=2019" in str(exc)
 
@@ -478,8 +517,22 @@ def test_api_client_get_players_for_season_range_unions_and_dedupes() -> None:
         "/games;game_codes=nfl": {
             "fantasy_content": {
                 "games": {
-                    "0": {"game": [{"game_key": "448"}, {"game_id": "448"}, {"code": "nfl"}, {"season": "2022"}]},
-                    "1": {"game": [{"game_key": "449"}, {"game_id": "449"}, {"code": "nfl"}, {"season": "2023"}]},
+                    "0": {
+                        "game": [
+                            {"game_key": "448"},
+                            {"game_id": "448"},
+                            {"code": "nfl"},
+                            {"season": "2022"},
+                        ]
+                    },
+                    "1": {
+                        "game": [
+                            {"game_key": "449"},
+                            {"game_id": "449"},
+                            {"code": "nfl"},
+                            {"season": "2023"},
+                        ]
+                    },
                 }
             }
         },
@@ -565,7 +618,14 @@ def test_api_client_get_players_for_season_range_raises_when_no_seasons_availabl
         "/games;game_codes=nfl": {
             "fantasy_content": {
                 "games": {
-                    "0": {"game": [{"game_key": "461"}, {"game_id": "461"}, {"code": "nfl"}, {"season": "2025"}]}
+                    "0": {
+                        "game": [
+                            {"game_key": "461"},
+                            {"game_id": "461"},
+                            {"code": "nfl"},
+                            {"season": "2025"},
+                        ]
+                    }
                 }
             }
         }
@@ -575,6 +635,6 @@ def test_api_client_get_players_for_season_range_raises_when_no_seasons_availabl
 
     try:
         client.get_players_for_season_range(start_season=2018, end_season=2019, sport="nfl")
-        assert False, "Expected ValueError when no seasons in range are available"
+        raise AssertionError("Expected ValueError when no seasons in range are available")
     except ValueError as exc:
         assert "2018-2019" in str(exc)

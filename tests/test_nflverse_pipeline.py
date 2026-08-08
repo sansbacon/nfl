@@ -175,7 +175,9 @@ def test_run_pipeline_with_standardization_enabled(monkeypatch) -> None:
     monkeypatch.setattr("nfl.nflverse_fantasy.pipeline.EntityStandardizer", _FakeStandardizer)
 
     result = run_pipeline(
-        config=PipelineConfig(storage_target="none", standardization_enabled=True, enabled_entities=["players"]),
+        config=PipelineConfig(
+            storage_target="none", standardization_enabled=True, enabled_entities=["players"]
+        ),
         api_client=_FakeClient(),
     )
 

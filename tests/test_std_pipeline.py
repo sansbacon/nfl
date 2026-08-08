@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from nfl.entity_standardization.canonical import CanonicalRegistry
 from nfl.entity_standardization.pipeline import EntityStandardizer, StandardizationConfig
@@ -32,7 +32,11 @@ def _registry() -> CanonicalRegistry:
             }
         ],
         positions=[
-            {"canonical_position_id": "RB", "canonical_position_code": "RB", "aliases": ["RB", "HB", "FB"]}
+            {
+                "canonical_position_id": "RB",
+                "canonical_position_code": "RB",
+                "aliases": ["RB", "HB", "FB"],
+            }
         ],
         source_to_canonical_map=[
             {
@@ -146,7 +150,7 @@ def test_standardize_batch_uses_manual_override() -> None:
             "canonical_team_id": "LAC",
             "canonical_position_code": "RB",
             "approved_by": "tester",
-            "approved_at": datetime.now(timezone.utc).isoformat(),
+            "approved_at": datetime.now(UTC).isoformat(),
             "notes": "manual",
         }
     ]

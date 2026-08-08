@@ -3,7 +3,12 @@ from __future__ import annotations
 import polars as pl
 import pytest
 
-from nfl.yahoo_fantasy.transforms import TransformValidationError, transform, transform_entity, transform_nfl
+from nfl.yahoo_fantasy.transforms import (
+    TransformValidationError,
+    transform,
+    transform_entity,
+    transform_nfl,
+)
 
 
 def test_transform_entity_coerces_and_sorts_nfl_standings() -> None:

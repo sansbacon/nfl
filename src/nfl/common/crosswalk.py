@@ -29,9 +29,9 @@ def load_canonical_crosswalk(spark, catalog: str, schema: str) -> None:
 
     fq_table = f"{catalog}.{schema}.dim_ff_player_ids"
     spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog}.{schema}")
-    spark_df.write.format("delta").mode("overwrite").option(
-        "overwriteSchema", "true"
-    ).saveAsTable(fq_table)
+    spark_df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable(
+        fq_table
+    )
 
     count = spark.table(fq_table).count()
     print(f"  \u2713 {fq_table}: {count} players loaded from nflreadpy")
