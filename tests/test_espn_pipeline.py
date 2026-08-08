@@ -94,7 +94,7 @@ class TestEspnPipeline:
         result = run_pipeline(config=PipelineConfig(season=2025))
 
         weekly = result.frames["fact_espn_weekly_projections"]
-        # 2 players × 2 weeks each = 4 rows
+        # 2 players x 2 weeks each = 4 rows
         assert weekly.height == 4
         assert "week" in weekly.columns
 

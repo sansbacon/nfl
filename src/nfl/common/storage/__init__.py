@@ -16,7 +16,6 @@ from nfl.common.storage.iceberg import (
     persist_to_iceberg,
 )
 from nfl.common.storage.polars import persist_with_polars
-from nfl.common.storage.polars import persist_with_polars, write_parquet
 from nfl.common.storage.unity_catalog import (
     UCTableConfig,
     UCVolumeConfig,

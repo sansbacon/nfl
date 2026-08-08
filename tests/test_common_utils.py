@@ -51,7 +51,9 @@ def test_find_project_root_raises_when_not_found(tmp_path: Path) -> None:
         _bounded_search(isolated)
 
 
-def test_find_project_root_default_start_is_cwd(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_find_project_root_default_start_is_cwd(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """When start is None the function uses Path.cwd()."""
     (tmp_path / "pyproject.toml").touch()
     monkeypatch.chdir(tmp_path)

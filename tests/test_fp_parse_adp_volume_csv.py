@@ -45,9 +45,7 @@ def test_parse_adp_volume_csv_returns_adp_page_data(
     assert result.adp_rows
 
 
-def test_parse_adp_volume_csv_player_count(
-    client: FantasyProsApiClient, tmp_path: Path
-) -> None:
+def test_parse_adp_volume_csv_player_count(client: FantasyProsApiClient, tmp_path: Path) -> None:
     csv_path = _write_csv(tmp_path, _SAMPLE_CSV_PLAYER_BYE)
     result = client.parse_adp_volume_csv(csv_path, season=2024)
 
@@ -67,9 +65,7 @@ def test_parse_adp_volume_csv_player_name_extracted(
     assert "Tyreek Hill" in names
 
 
-def test_parse_adp_volume_csv_team_extracted(
-    client: FantasyProsApiClient, tmp_path: Path
-) -> None:
+def test_parse_adp_volume_csv_team_extracted(client: FantasyProsApiClient, tmp_path: Path) -> None:
     csv_path = _write_csv(tmp_path, _SAMPLE_CSV_PLAYER_BYE)
     result = client.parse_adp_volume_csv(csv_path, season=2024)
 
@@ -90,9 +86,7 @@ def test_parse_adp_volume_csv_position_stripped_of_rank(
     assert positions["Justin Jefferson"] == "WR"
 
 
-def test_parse_adp_volume_csv_adp_season_set(
-    client: FantasyProsApiClient, tmp_path: Path
-) -> None:
+def test_parse_adp_volume_csv_adp_season_set(client: FantasyProsApiClient, tmp_path: Path) -> None:
     csv_path = _write_csv(tmp_path, _SAMPLE_CSV_PLAYER_BYE)
     result = client.parse_adp_volume_csv(csv_path, season=2023)
 
@@ -100,9 +94,7 @@ def test_parse_adp_volume_csv_adp_season_set(
         assert row["season"] == 2023
 
 
-def test_parse_adp_volume_csv_rank_assigned(
-    client: FantasyProsApiClient, tmp_path: Path
-) -> None:
+def test_parse_adp_volume_csv_rank_assigned(client: FantasyProsApiClient, tmp_path: Path) -> None:
     csv_path = _write_csv(tmp_path, _SAMPLE_CSV_PLAYER_BYE)
     result = client.parse_adp_volume_csv(csv_path, season=2024)
 
@@ -123,9 +115,7 @@ def test_parse_adp_volume_csv_effective_date_override(
         assert row["effective_date"] == effective
 
 
-def test_parse_adp_volume_csv_adp_formatted(
-    client: FantasyProsApiClient, tmp_path: Path
-) -> None:
+def test_parse_adp_volume_csv_adp_formatted(client: FantasyProsApiClient, tmp_path: Path) -> None:
     csv_path = _write_csv(tmp_path, _SAMPLE_CSV_PLAYER_BYE)
     result = client.parse_adp_volume_csv(csv_path, season=2024)
 
