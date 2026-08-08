@@ -13,6 +13,7 @@ from nfl.entity_standardization.pipeline import (
     StandardizationConfig,
     StandardizationResult,
 )
+from nfl.common.config import PipelineConfigBase, StorageTarget
 from nfl.nflverse_fantasy.api import NflverseApiClient
 from nfl.nflverse_fantasy.storage.iceberg import (
     IcebergNamespaceConfig,

@@ -8,6 +8,7 @@ from typing import Any, Literal
 
 import polars as pl
 
+from nfl.common.config import PipelineConfigBase, StorageTarget
 from nfl.common.storage import UCWriteResult
 from nfl.entity_standardization.pipeline import (
     EntityStandardizer,
