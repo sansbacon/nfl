@@ -135,8 +135,20 @@ def build_fp_yahoo_crosswalk(
                 )
                 continue
 
-            if fp_last and yh_last and fp_last == yh_last and fp_pos and yh_pos and fp_pos == yh_pos and fp_first[:3] and yh_first[:3] and fp_first[:3] == yh_first[:3]:
-                fuzzy_candidates.append({**candidate, "match_method": "fuzzy", "method_priority": 2})
+            if (
+                fp_last
+                and yh_last
+                and fp_last == yh_last
+                and fp_pos
+                and yh_pos
+                and fp_pos == yh_pos
+                and fp_first[:3]
+                and yh_first[:3]
+                and fp_first[:3] == yh_first[:3]
+            ):
+                fuzzy_candidates.append(
+                    {**candidate, "match_method": "fuzzy", "method_priority": 2}
+                )
 
     exact_fp_ids = {c["fp_player_id"] for c in exact_candidates}
     candidates = exact_candidates + [

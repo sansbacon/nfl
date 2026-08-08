@@ -7,7 +7,7 @@ from pathlib import Path
 
 import polars as pl
 
-from nfl.common.config import PipelineConfigBase, StorageTarget
+from nfl.common.config import PipelineConfigBase
 from nfl.common.storage import UCWriteResult, persist_with_polars
 from nfl.sleeper_fantasy.api import SleeperClient
 from nfl.sleeper_fantasy.storage.unity_catalog import (

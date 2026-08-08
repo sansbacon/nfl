@@ -634,9 +634,7 @@ class FantasyProsApiClient:
         # Strip positional rank number, e.g. "RB1" → "RB"
         pos_col = "POS" if "POS" in df.columns else ("Pos" if "Pos" in df.columns else None)
         if pos_col:
-            df = df.with_columns(
-                _pl.col(pos_col).str.extract(r"^([A-Z]+)").alias("position")
-            )
+            df = df.with_columns(_pl.col(pos_col).str.extract(r"^([A-Z]+)").alias("position"))
         else:
             df = df.with_columns(_pl.lit(None).cast(_pl.String).alias("position"))
 
@@ -697,7 +695,7 @@ class FantasyProsApiClient:
             if len(valid_platforms) >= 2:
                 mean = sum(valid_platforms) / len(valid_platforms)
                 variance = sum((x - mean) ** 2 for x in valid_platforms) / len(valid_platforms)
-                stdev = round(variance ** 0.5, 2)
+                stdev = round(variance**0.5, 2)
 
             round_num = int((adp - 1) // 12) + 1
             pick_num = int((adp - 1) % 12) + 1

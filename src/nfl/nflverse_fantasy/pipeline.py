@@ -8,6 +8,7 @@ from typing import Any
 
 import polars as pl
 
+from nfl.common.config import PipelineConfigBase
 from nfl.entity_standardization.pipeline import (
     EntityStandardizer,
     StandardizationConfig,

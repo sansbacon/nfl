@@ -242,7 +242,9 @@ class EntityStandardizer:
 
         if needs_review:
             now = datetime.now(UTC).isoformat()
-            queue_id = hashlib.sha256(f"{source_system}|{source_entity_id}|{raw_player_name}|{raw_team_name}|{raw_position}".encode()).hexdigest()
+            queue_id = hashlib.sha256(
+                f"{source_system}|{source_entity_id}|{raw_player_name}|{raw_team_name}|{raw_position}".encode()
+            ).hexdigest()
             queue_row = {
                 "queue_id": queue_id,
                 "source_system": source_system,
