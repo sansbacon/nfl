@@ -8,6 +8,7 @@ from typing import Any
 
 import polars as pl
 
+from nfl.common.config import PipelineConfigBase, StorageTarget
 from nfl.entity_standardization.pipeline import (
     EntityStandardizer,
     StandardizationConfig,
@@ -24,12 +25,34 @@ from nfl.nflverse_fantasy.transforms import transform
 
 
 @dataclass(frozen=True, slots=True)
-class PipelineConfig:
+class PipelineConfig(PipelineConfigBase):
+    """Configuration for the NFLverse data pipeline.
+
+    Inherits common fields from :class:`~nfl.common.config.PipelineConfigBase`
+    and adds NFLverse-specific options.
+
+    Parameters
+    ----------
+    seasons : list[int] | None
+        Seasons to load. If ``None``, defaults to the most recent available
+        season for each dataset.
+    enabled_entities : list[str] | None
+        Subset of entity names to load. If ``None``, all entities are loaded.
+    iceberg_namespaces : IcebergNamespaceConfig
+        Iceberg namespace configuration.
+    iceberg_idempotency_store : str | Path | None
+        Path to the idempotency store for Iceberg writes.
+    iceberg_dry_run : bool
+        If True, reports what would be written without executing Iceberg writes.
+    standardization_enabled : bool
+        Whether to run entity standardization after extraction.
+    standardization_config : StandardizationConfig | None
+        Standardization configuration. Uses defaults if ``None``.
+    """
+
+    polars_output_dir: str | Path = "./output/nflverse_polars"
     seasons: list[int] | None = None
     enabled_entities: list[str] | None = None
-    storage_target: str = "none"
-    polars_output_dir: str | Path = "./output/nflverse_polars"
-    polars_file_format: str = "parquet"
     iceberg_namespaces: IcebergNamespaceConfig = field(default_factory=IcebergNamespaceConfig)
     iceberg_idempotency_store: str | Path | None = None
     iceberg_dry_run: bool = True

@@ -79,7 +79,7 @@ class TestSleeperPipeline:
             config=PipelineConfig(
                 season=2025,
                 storage_target="unity_catalog",
-                uc_dry_run=True,
+                dry_run=True,
                 ingestion_date=date(2025, 8, 1),
             )
         )

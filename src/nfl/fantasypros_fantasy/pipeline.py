@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date
 from pathlib import Path
 from typing import Any, Literal
 
 import polars as pl
 
+from nfl.common.config import PipelineConfigBase, StorageTarget
 from nfl.common.storage import UCWriteResult
 from nfl.entity_standardization.pipeline import (
     EntityStandardizer,
@@ -32,18 +32,20 @@ from nfl.fantasypros_fantasy.storage.unity_catalog import (
 from nfl.fantasypros_fantasy.transforms import transform
 from nfl.fantasypros_fantasy.validation import get_contract, validate_polars_frame
 
-StorageTarget = Literal["none", "polars", "iceberg", "both", "unity_catalog", "uc_volume"]
 SportCode = Literal["nfl"]
 
 
 @dataclass(frozen=True, slots=True)
-class PipelineConfig:
+class PipelineConfig(PipelineConfigBase):
+    """Configuration for the FantasyPros data pipeline.
+
+    Inherits common fields from :class:`~nfl.common.config.PipelineConfigBase`
+    and adds FantasyPros-specific options.
+    """
+
+    polars_output_dir: str | Path = "./output/fantasypros_polars"
     timeout_seconds: int = 30
     validate_contracts: bool = True
-    effective_date: date | None = None
-    storage_target: StorageTarget = "none"
-    polars_output_dir: str | Path = "./output/fantasypros_polars"
-    polars_file_format: str = "parquet"
     iceberg_catalog: IcebergCatalogConfig = field(default_factory=IcebergCatalogConfig)
     iceberg_namespaces: IcebergNamespaceConfig = field(default_factory=IcebergNamespaceConfig)
     iceberg_mode: WriteMode = "upsert"
