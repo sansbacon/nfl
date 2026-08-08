@@ -47,7 +47,7 @@ class PipelineConfig:
     iceberg_catalog: IcebergCatalogConfig = field(default_factory=IcebergCatalogConfig)
     iceberg_namespaces: IcebergNamespaceConfig = field(default_factory=IcebergNamespaceConfig)
     iceberg_mode: WriteMode = "upsert"
-    iceberg_idempotency_store: str | Path = ".iceberg/fantasypros_write_log.json"
+    iceberg_idempotency_store: str | Path | None = None
     iceberg_dry_run: bool = True
     standardization_enabled: bool = False
     standardization_config: StandardizationConfig | None = None

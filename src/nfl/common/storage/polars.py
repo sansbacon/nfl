@@ -12,6 +12,33 @@ from pathlib import Path
 import polars as pl
 
 
+def write_parquet(
+    frames: Mapping[str, pl.DataFrame],
+    output_dir: str | Path = "./output",
+) -> dict[str, Path]:
+    """Write Polars DataFrames as Parquet files with no catalog setup required.
+
+    This is the lowest-friction persistence path: no Iceberg catalog, no
+    additional infrastructure.  The resulting Parquet files are directly
+    readable by DuckDB (``read_parquet``), Spark, and Unity Catalog external
+    tables without re-ingestion.
+
+    Parameters
+    ----------
+    frames : Mapping[str, pl.DataFrame]
+        Entity name to DataFrame mapping.
+    output_dir : str | Path
+        Directory to write files into (created if missing).
+        Defaults to ``./output``.
+
+    Returns
+    -------
+    dict[str, Path]
+        Entity name to written file path mapping.
+    """
+    return persist_with_polars(frames, output_dir=output_dir, file_format="parquet")
+
+
 def persist_with_polars(
     frames: Mapping[str, pl.DataFrame],
     output_dir: str | Path,
