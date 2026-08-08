@@ -12,7 +12,7 @@ from datetime import date
 from pathlib import Path
 from typing import Literal
 
-StorageTarget = Literal["none", "polars", "unity_catalog", "uc_volume", "iceberg"]
+StorageTarget = Literal["none", "polars", "unity_catalog", "uc_volume", "iceberg", "both"]
 
 
 @dataclass(frozen=True, slots=True)

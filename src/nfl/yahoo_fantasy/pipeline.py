@@ -11,6 +11,7 @@ from typing import Any, Literal
 import polars as pl
 from requests_oauthlib import OAuth2Session
 
+from nfl.common.config import PipelineConfigBase, StorageTarget
 from nfl.common.storage import UCWriteResult
 from nfl.entity_standardization.pipeline import (
     EntityStandardizer,
@@ -33,7 +34,6 @@ from nfl.yahoo_fantasy.storage.unity_catalog import (
 from nfl.yahoo_fantasy.transforms import transform
 from nfl.yahoo_fantasy.views import AVAILABLE_VIEWS, build_materialized_views
 
-StorageTarget = Literal["none", "polars", "iceberg", "both", "unity_catalog", "uc_volume"]
 SportCode = Literal["nfl", "nba"]
 
 
@@ -49,7 +49,14 @@ class PipelineDiagnosticsConfig:
 
 
 @dataclass(frozen=True, slots=True)
-class PipelineConfig:
+class PipelineConfig(PipelineConfigBase):
+    """Configuration for the Yahoo Fantasy data pipeline.
+
+    Inherits common fields from :class:`~nfl.common.config.PipelineConfigBase`
+    and adds Yahoo-specific options.
+    """
+
+    polars_output_dir: str | Path = "./output/polars"
     timeout_seconds: int = 30
     cache_dir: str | Path = ".cache"
     use_cache: bool = True
@@ -62,9 +69,6 @@ class PipelineConfig:
     include_nfl_unrostered_player_stats: bool = False
     start_week: int | None = None
     end_week: int | None = None
-    storage_target: StorageTarget = "none"
-    polars_output_dir: str | Path = "./output/polars"
-    polars_file_format: str = "parquet"
     iceberg_catalog: IcebergCatalogConfig = field(default_factory=IcebergCatalogConfig)
     iceberg_namespaces: IcebergNamespaceConfig = field(default_factory=IcebergNamespaceConfig)
     iceberg_mode: WriteMode = "upsert"
