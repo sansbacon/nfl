@@ -20,7 +20,6 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import json
-import warnings
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -194,9 +193,9 @@ def ensure_table_exists(catalog: Any, table_identifier: str, frame: pl.DataFrame
 
     try:
         return catalog.load_table(table_identifier)
-    except _no_such_table_exc:
+    except NoSuchTableError:
         namespace, _table_name = table_identifier.rsplit(".", 1)
-        with contextlib.suppress(_namespace_exists_exc):
+        with contextlib.suppress(NamespaceAlreadyExistsError):
             catalog.create_namespace(namespace)
         try:
             return catalog.create_table(identifier=table_identifier, schema=frame.to_arrow().schema)

@@ -21,6 +21,62 @@ def _name_parts(full_name: str | None) -> tuple[str, str]:
     return first, last
 
 
+def fp_adp_records_to_fp_players(
+    fp_adp_records: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Convert flat FP ADP table records to the ``fp_player`` format.
+
+    FP ADP records (as loaded from a Unity Catalog table or a volume CSV)
+    use a ``player_name`` column rather than the ``full_name`` / ``first_name``
+    / ``last_name`` / ``fp_player_id`` split required by
+    :func:`build_fp_yahoo_crosswalk`.  This helper performs that conversion so
+    callers do not need to replicate the transformation inline.
+
+    Parameters
+    ----------
+    fp_adp_records:
+        List of dicts with at least a ``player_name`` key, and optionally
+        ``team`` and ``position`` keys.  Additional keys are ignored.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Records in the ``fp_player`` contract shape:
+        ``fp_player_id``, ``full_name``, ``first_name``, ``last_name``,
+        ``position``, ``team``.
+
+    Examples
+    --------
+    >>> records = [{"player_name": "Justin Jefferson", "team": "MIN", "position": "WR"}]
+    >>> players = fp_adp_records_to_fp_players(records)
+    >>> players[0]["full_name"]
+    'Justin Jefferson'
+    >>> players[0]["fp_player_id"]
+    'justin-jefferson_min'
+    """
+    out: list[dict[str, Any]] = []
+    for row in fp_adp_records:
+        name = str(row.get("player_name") or "").strip()
+        if not name:
+            continue
+        first, last = _name_parts(name)
+        team = str(row.get("team") or "").strip()
+        position = str(row.get("position") or "").strip()
+        slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+        fp_player_id = f"{slug}_{team.lower()}" if team else slug
+        out.append(
+            {
+                "fp_player_id": fp_player_id,
+                "full_name": name,
+                "first_name": first,
+                "last_name": last,
+                "position": position,
+                "team": team,
+            }
+        )
+    return out
+
+
 def _adp_rank_map(adp_rows: list[dict[str, Any]]) -> dict[str, int]:
     out: dict[str, int] = {}
     for row in adp_rows:
@@ -79,20 +135,8 @@ def build_fp_yahoo_crosswalk(
                 )
                 continue
 
-            if (
-                fp_last
-                and yh_last
-                and fp_last == yh_last
-                and fp_pos
-                and yh_pos
-                and fp_pos == yh_pos
-                and fp_first[:3]
-                and yh_first[:3]
-                and fp_first[:3] == yh_first[:3]
-            ):
-                fuzzy_candidates.append(
-                    {**candidate, "match_method": "fuzzy", "method_priority": 2}
-                )
+            if fp_last and yh_last and fp_last == yh_last and fp_pos and yh_pos and fp_pos == yh_pos and fp_first[:3] and yh_first[:3] and fp_first[:3] == yh_first[:3]:
+                fuzzy_candidates.append({**candidate, "match_method": "fuzzy", "method_priority": 2})
 
     exact_fp_ids = {c["fp_player_id"] for c in exact_candidates}
     candidates = exact_candidates + [

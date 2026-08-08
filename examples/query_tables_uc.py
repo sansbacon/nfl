@@ -17,7 +17,9 @@ from pathlib import Path
 
 import polars as pl
 
-project_root = Path.cwd().parent if (Path.cwd().parent / "pyproject.toml").exists() else Path.cwd()
+from nfl.common.utils import find_project_root
+
+project_root = find_project_root()
 src_path = str(project_root / "src")
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
@@ -33,6 +35,7 @@ from nfl.yahoo_fantasy.queries import (
     weekly_team_points_resolved,
 )
 from nfl.yahoo_fantasy.presentation import format_table_for_display
+from nfl.common.storage import load_uc_table as _load_uc_table
 
 pl.Config.set_tbl_rows(50)
 pl.Config.set_fmt_str_lengths(100)
@@ -48,8 +51,7 @@ assert all((CATALOG, YH_SCHEMA)), f'ERROR: {CATALOG=} and {YH_SCHEMA=} must be s
 
 def load_uc_table(schema: str, table: str) -> pl.DataFrame:
     """Load a UC table as a Polars DataFrame."""
-    fq = f"{CATALOG}.{schema}.{table}"
-    return pl.from_pandas(spark.table(fq).toPandas())
+    return _load_uc_table(f"{CATALOG}.{schema}.{table}")
 
 def show_table(df: pl.DataFrame, drop_keys: bool = True):
     """Display a table with display formatting."""

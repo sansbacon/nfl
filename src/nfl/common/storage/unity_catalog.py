@@ -205,6 +205,41 @@ def _merge_into_table(
         spark.catalog.dropTempView(temp_view)
 
 
+def load_uc_table(
+    table_identifier: str,
+    *,
+    spark: Any | None = None,
+) -> pl.DataFrame:
+    """Load a Unity Catalog Delta table as a Polars DataFrame.
+
+    Reads the Spark DataFrame and converts it to Polars via Pandas.
+
+    Parameters
+    ----------
+    table_identifier:
+        Fully qualified table name, e.g. ``"nfl.yh.player"``.
+    spark:
+        An existing ``SparkSession`` to use.  If ``None`` the active session
+        is retrieved automatically.
+
+    Returns
+    -------
+    pl.DataFrame
+        Contents of the UC table as a Polars DataFrame.
+
+    Examples
+    --------
+    .. code-block:: python
+
+        from nfl.common.storage import load_uc_table
+
+        player_df = load_uc_table("nfl.yh.player")
+    """
+    active_spark = spark or _get_spark()
+    spark_df = active_spark.table(table_identifier)
+    return pl.from_pandas(spark_df.toPandas())
+
+
 def persist_to_uc_volume(
     frames: Mapping[str, pl.DataFrame],
     config: UCVolumeConfig | None = None,

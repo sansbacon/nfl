@@ -404,9 +404,7 @@ def persist_historical_auction_tables(
         if replace_existing:
             with contextlib.suppress(NoSuchTableError):
                 catalog.drop_table(table_identifier)
-            table = catalog.create_table(
-                identifier=table_identifier, schema=frame.to_arrow().schema
-            )
+            table = catalog.create_table(identifier=table_identifier, schema=frame.to_arrow().schema)
             if frame.height > 0:
                 table.append(frame.to_arrow())
             results.append(

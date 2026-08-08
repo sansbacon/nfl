@@ -27,7 +27,9 @@ from pathlib import Path
 
 import polars as pl
 
-project_root = Path.cwd().parent if (Path.cwd().parent / "pyproject.toml").exists() else Path.cwd()
+from nfl.common.utils import find_project_root
+
+project_root = find_project_root()
 src_path = str(project_root / "src")
 if src_path not in sys.path:
     sys.path.insert(0, src_path)

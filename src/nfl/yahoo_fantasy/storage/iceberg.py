@@ -224,7 +224,7 @@ def _ensure_table_exists(catalog: Any, table_identifier: str, frame: pl.DataFram
         return catalog.load_table(table_identifier)
     except _no_such_table_exc:
         namespace, _table_name = table_identifier.rsplit(".", 1)
-        with contextlib.suppress(_namespace_exists_exc):
+        with contextlib.suppress(NamespaceAlreadyExistsError):
             catalog.create_namespace(namespace)
         return catalog.create_table(identifier=table_identifier, schema=frame.to_arrow().schema)
 
