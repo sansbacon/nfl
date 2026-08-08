@@ -7,5 +7,15 @@ theme:
 nav:
   - Home: index.md
   - Zensical Guide: ZENSICAL_DOCUMENTATION.md
+  - API Reference:
+    - Yahoo Fantasy: api/yahoo_fantasy.md
+    - FantasyPros Fantasy: api/fantasypros_fantasy.md
+    - NFLverse Fantasy: api/nflverse_fantasy.md
+    - Entity Standardization: api/entity_standardization.md
+  - Practical Examples:
+    - Load Yahoo Data: examples/load_yahoo_data.md
+    - Load FantasyPros ADP: examples/load_fantasypros_adp.md
+    - Match Yahoo ↔ FantasyPros Players: examples/match_yahoo_fantasypros.md
+    - Query Unity Catalog Tables: examples/query_tables.md
   - Architecture Decision Records:
     - ADR-001 PyIceberg Catalog: adr/ADR-001-pyiceberg-catalog.md
