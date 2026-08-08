@@ -71,7 +71,9 @@ class YahooWarehouseClient:
         try:
             from pyiceberg.catalog import load_catalog
         except ModuleNotFoundError as exc:
-            raise WarehouseQueryError("pyiceberg is not installed in the active environment.") from exc
+            raise WarehouseQueryError(
+                "pyiceberg is not installed in the active environment."
+            ) from exc
 
         catalog = load_catalog(
             catalog_name,
@@ -130,7 +132,12 @@ class YahooWarehouseClient:
             # Relative metadata/manifest paths should resolve from project root.
             with _temporary_cwd(self.paths.project_root):
                 table = self._catalog.load_table(table_identifier)
-                return pl.from_arrow(table.scan().to_arrow())
+                frame = pl.from_arrow(table.scan().to_arrow())
+                if not isinstance(frame, pl.DataFrame):
+                    raise TypeError(
+                        f"Expected DataFrame when loading '{table_identifier}', got {type(frame).__name__}"
+                    )
+                return frame
         except Exception as exc:
             raise WarehouseQueryError(f"Could not load table '{table_identifier}': {exc}") from exc
 
@@ -140,7 +147,9 @@ class YahooWarehouseClient:
         except WarehouseQueryError:
             return None
 
-    def ensure_registered(self, namespaces: Iterable[str] = DEFAULT_NAMESPACES) -> RegistrationReport:
+    def ensure_registered(
+        self, namespaces: Iterable[str] = DEFAULT_NAMESPACES
+    ) -> RegistrationReport:
         normalized_rows = normalize_catalog_metadata_locations(
             catalog_db_path=self.paths.catalog_db_path,
             project_root=self.paths.project_root,
@@ -173,7 +182,9 @@ def find_project_root(start_path: str | Path | None = None) -> Path:
                 raise WarehouseQueryError("Invalid project root resolved to 'examples'.")
             return current
         current = current.parent
-    raise WarehouseQueryError("Cannot locate project root. Expected pyproject.toml in repository root.")
+    raise WarehouseQueryError(
+        "Cannot locate project root. Expected pyproject.toml in repository root."
+    )
 
 
 def _resolve_catalog_paths(
@@ -264,7 +275,9 @@ def normalize_catalog_metadata_locations(catalog_db_path: Path, project_root: Pa
         updates: list[tuple[str, str | None, int]] = []
         for rowid, metadata_location, previous_metadata_location in rows:
             new_meta = (
-                _to_canonical_metadata_path(metadata_location, project_root) if metadata_location else metadata_location
+                _to_canonical_metadata_path(metadata_location, project_root)
+                if metadata_location
+                else metadata_location
             )
             new_prev = (
                 _to_canonical_metadata_path(previous_metadata_location, project_root)
@@ -330,7 +343,9 @@ def register_tables_from_warehouse(
             if metadata_file is None:
                 continue
 
-            metadata_rel = _to_canonical_metadata_path(metadata_file.resolve().as_posix(), project_root)
+            metadata_rel = _to_canonical_metadata_path(
+                metadata_file.resolve().as_posix(), project_root
+            )
             try:
                 catalog.register_table(table_identifier, metadata_rel)
                 registered += 1

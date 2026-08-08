@@ -103,7 +103,9 @@ COMMON_CONTRACTS: dict[str, EntityContract] = {
 }
 
 
-def _build_contracts(raw_contracts: Mapping[str, Mapping[str, tuple[str, ...]]]) -> dict[str, EntityContract]:
+def _build_contracts(
+    raw_contracts: Mapping[str, Mapping[str, tuple[str, ...]]],
+) -> dict[str, EntityContract]:
     contracts: dict[str, EntityContract] = {}
     for name, cfg in raw_contracts.items():
         contracts[name] = EntityContract(
@@ -131,10 +133,14 @@ def get_contract(entity: str, sport: SportCode | None = None) -> EntityContract:
     raise KeyError(f"Unknown entity '{entity}'")
 
 
-def validate_record(record: Mapping[str, Any], contract: EntityContract, allow_extra_fields: bool = True) -> None:
+def validate_record(
+    record: Mapping[str, Any], contract: EntityContract, allow_extra_fields: bool = True
+) -> None:
     missing = [f for f in contract.required if f not in record]
     if missing:
-        raise ContractValidationError(f"{contract.name}: missing required fields: {', '.join(missing)}")
+        raise ContractValidationError(
+            f"{contract.name}: missing required fields: {', '.join(missing)}"
+        )
 
     null_required = [f for f in contract.required if record.get(f) is None]
     if null_required:
@@ -165,21 +171,31 @@ def validate_records(
     return count
 
 
-def validate_primary_key_uniqueness(records: Iterable[Mapping[str, Any]], contract: EntityContract) -> None:
+def validate_primary_key_uniqueness(
+    records: Iterable[Mapping[str, Any]], contract: EntityContract
+) -> None:
     seen: set[tuple[Any, ...]] = set()
     for idx, record in enumerate(records):
         key = tuple(record.get(field) for field in contract.primary_key)
         if None in key:
-            missing = [field for field, value in zip(contract.primary_key, key, strict=True) if value is None]
+            missing = [
+                field
+                for field, value in zip(contract.primary_key, key, strict=True)
+                if value is None
+            ]
             raise ContractValidationError(
                 f"{contract.name}: row {idx}: primary key field(s) None: {', '.join(missing)}"
             )
         if key in seen:
-            raise ContractValidationError(f"{contract.name}: row {idx}: duplicate primary key {key}")
+            raise ContractValidationError(
+                f"{contract.name}: row {idx}: duplicate primary key {key}"
+            )
         seen.add(key)
 
 
-def validate_polars_frame(frame: Any, contract: EntityContract, allow_extra_fields: bool = True) -> None:
+def validate_polars_frame(
+    frame: Any, contract: EntityContract, allow_extra_fields: bool = True
+) -> None:
     columns = set(getattr(frame, "columns", []))
     if not columns:
         raise ContractValidationError(f"{contract.name}: frame has no columns")
@@ -207,7 +223,9 @@ def validate_polars_frame(frame: Any, contract: EntityContract, allow_extra_fiel
             )
 
 
-def validate(records: Iterable[Mapping[str, Any]], entity: str, sport: SportCode | None = None) -> int:
+def validate(
+    records: Iterable[Mapping[str, Any]], entity: str, sport: SportCode | None = None
+) -> int:
     contract = get_contract(entity=entity, sport=sport)
     rows = list(records)
     count = validate_records(rows, contract)

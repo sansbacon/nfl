@@ -69,14 +69,18 @@ class SleeperClient:
         Returns a dict keyed by sleeper_player_id with raw player metadata.
         This is a large response (~10MB) containing ~12K players.
         """
-        resp = self.session.get(
-            SLEEPER_PLAYERS_URL, timeout=self.timeout_seconds
-        )
+        resp = self.session.get(SLEEPER_PLAYERS_URL, timeout=self.timeout_seconds)
         if resp.status_code != 200:
             raise SleeperApiError(
                 f"Sleeper players API returned {resp.status_code}: {resp.text[:200]}"
             )
-        return resp.json()
+        payload = resp.json()
+        if not isinstance(payload, dict) or not all(
+            isinstance(player_id, str) and isinstance(player_data, dict)
+            for player_id, player_data in payload.items()
+        ):
+            raise SleeperApiError("Sleeper players API returned an unexpected payload shape.")
+        return payload
 
     def fetch_adp(self, season: int) -> list[dict[str, Any]]:
         """Fetch ADP projections for a given season.
@@ -90,9 +94,7 @@ class SleeperClient:
         season : int
             NFL season year.
         """
-        position_params = "&".join(
-            f"position[]={p}" for p in FANTASY_POSITIONS
-        )
+        position_params = "&".join(f"position[]={p}" for p in FANTASY_POSITIONS)
         url = (
             f"{SLEEPER_PROJECTIONS_URL}/{season}"
             f"?season_type=regular&{position_params}&order_by=adp_half_ppr"
@@ -102,11 +104,12 @@ class SleeperClient:
             raise SleeperApiError(
                 f"Sleeper projections API returned {resp.status_code}: {resp.text[:200]}"
             )
-        return resp.json()
+        payload = resp.json()
+        if not isinstance(payload, list) or not all(isinstance(item, dict) for item in payload):
+            raise SleeperApiError("Sleeper projections API returned an unexpected payload shape.")
+        return payload
 
-    def fetch_players_with_adp(
-        self, season: int
-    ) -> list[SleeperPlayer]:
+    def fetch_players_with_adp(self, season: int) -> list[SleeperPlayer]:
         """Fetch players and ADP, returning merged SleeperPlayer objects.
 
         Convenience method that calls both endpoints and merges the results

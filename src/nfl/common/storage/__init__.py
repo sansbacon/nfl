@@ -4,7 +4,7 @@ Provides unified persistence to:
 - Unity Catalog Delta tables (via PySpark)
 - Unity Catalog Volumes (as Parquet/CSV/NDJSON files)
 - Local Polars files (Parquet/CSV/NDJSON)
-- PyIceberg tables (SQLite catalog, local dev only)
+- PyIceberg tables (SQLite catalog, local dev only) — requires ``nfl[iceberg]``
 """
 
 from nfl.common.storage.iceberg import (
@@ -16,6 +16,7 @@ from nfl.common.storage.iceberg import (
     persist_to_iceberg,
 )
 from nfl.common.storage.polars import persist_with_polars
+from nfl.common.storage.polars import persist_with_polars, write_parquet
 from nfl.common.storage.unity_catalog import (
     UCTableConfig,
     UCVolumeConfig,
@@ -47,3 +48,26 @@ __all__ = [
     # Polars
     "persist_with_polars",
 ]
+
+try:
+    from nfl.common.storage.iceberg import (
+        IcebergCatalogConfig,
+        IcebergNamespaceConfig,
+        IcebergWriteMode,
+        IcebergWriteResult,
+        IdempotencyStore,
+        persist_to_iceberg,
+    )
+
+    __all__ += [
+        # Iceberg (optional — install nfl[iceberg])
+        "IcebergCatalogConfig",
+        "IcebergNamespaceConfig",
+        "IcebergWriteMode",
+        "IcebergWriteResult",
+        "IdempotencyStore",
+        "persist_to_iceberg",
+    ]
+except ModuleNotFoundError:
+    # pyiceberg is not installed; iceberg symbols are unavailable.
+    pass

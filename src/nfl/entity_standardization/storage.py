@@ -86,21 +86,37 @@ def _frame_digest(table_identifier: str, mode: WriteMode, frame: pl.DataFrame) -
         "columns": frame.columns,
         "rows": frame.to_dicts(),
     }
-    return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode("utf-8")).hexdigest()
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, default=str).encode("utf-8")
+    ).hexdigest()
 
 
 def persist_to_iceberg(
     frames: Mapping[str, pl.DataFrame],
     namespace_config: StandardizationIcebergNamespaceConfig | None = None,
     default_mode: WriteMode = "upsert",
-    idempotency_store_path: str | Path = ".iceberg/std_write_log.json",
+    idempotency_store_path: str | Path | None = None,
     dry_run: bool = True,
 ) -> list[StandardizationIcebergWriteResult]:
+    import warnings
+
     ns = namespace_config or StandardizationIcebergNamespaceConfig()
-    store_path = Path(idempotency_store_path)
-    if store_path.exists():
-        entries = set(json.loads(store_path.read_text(encoding="utf-8")))
+
+    store_path: Path | None
+    if idempotency_store_path is not None:
+        warnings.warn(
+            "The .iceberg/write_log.json idempotency store is deprecated and will be "
+            "removed in a future release.  Pass idempotency_store_path=None to opt out.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        store_path = Path(idempotency_store_path)
+        if store_path.exists():
+            entries: set[str] = set(json.loads(store_path.read_text(encoding="utf-8")))
+        else:
+            entries = set()
     else:
+        store_path = None
         entries = set()
 
     results: list[StandardizationIcebergWriteResult] = []
@@ -108,7 +124,7 @@ def persist_to_iceberg(
         table_identifier = _table_identifier(entity, ns)
         write_frame = _dedupe_for_upsert(frame, entity) if default_mode == "upsert" else frame
         digest = _frame_digest(table_identifier, default_mode, write_frame)
-        if digest in entries:
+        if store_path is not None and digest in entries:
             results.append(
                 StandardizationIcebergWriteResult(
                     entity=entity,
@@ -125,7 +141,8 @@ def persist_to_iceberg(
             # Placeholder for catalog append implementation.
             pass
 
-        entries.add(digest)
+        if store_path is not None:
+            entries.add(digest)
         results.append(
             StandardizationIcebergWriteResult(
                 entity=entity,
@@ -137,8 +154,9 @@ def persist_to_iceberg(
             )
         )
 
-    store_path.parent.mkdir(parents=True, exist_ok=True)
-    store_path.write_text(json.dumps(sorted(entries), indent=2), encoding="utf-8")
+    if store_path is not None:
+        store_path.parent.mkdir(parents=True, exist_ok=True)
+        store_path.write_text(json.dumps(sorted(entries), indent=2), encoding="utf-8")
     return results
 
 

@@ -44,7 +44,9 @@ class TestPlayersToDimRows:
     def test_multiple_players(self):
         players = [
             _make_player(sleeper_id="4046", full_name="Patrick Mahomes"),
-            _make_player(sleeper_id="6794", full_name="Justin Jefferson", position="WR", team="MIN"),
+            _make_player(
+                sleeper_id="6794", full_name="Justin Jefferson", position="WR", team="MIN"
+            ),
         ]
         rows = players_to_dim_rows(players)
         assert len(rows) == 2, f"Expected 2 rows, got {len(rows)}"

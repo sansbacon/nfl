@@ -53,7 +53,7 @@ def test_run_pipeline_without_persistence() -> None:
         sport="nfl",
         api_client=_FakeClient(),
         yahoo_players=yahoo_players,
-        config=PipelineConfig(storage_target="none", effective_date=date(2026, 7, 18)),
+        config=PipelineConfig(storage_target="none", ingestion_date=date(2026, 7, 18)),
     )
 
     assert result.season == 2025
@@ -75,7 +75,7 @@ def test_run_pipeline_with_both_persistence_targets(tmp_path: Path) -> None:
         yahoo_players=[],
         config=PipelineConfig(
             storage_target="both",
-            effective_date=date(2026, 7, 18),
+            ingestion_date=date(2026, 7, 18),
             polars_output_dir=tmp_path / "polars",
             polars_file_format="parquet",
             iceberg_dry_run=True,
@@ -88,7 +88,8 @@ def test_run_pipeline_with_both_persistence_targets(tmp_path: Path) -> None:
     assert all(path.exists() for path in result.polars_outputs.values())
     assert result.iceberg_outputs
     assert any(
-        write_result.table_identifier.startswith("fpnfl.") or write_result.table_identifier.startswith("fpcommon.")
+        write_result.table_identifier.startswith("fpnfl.")
+        or write_result.table_identifier.startswith("fpcommon.")
         for write_result in result.iceberg_outputs
     )
 
@@ -142,7 +143,7 @@ def test_run_pipeline_with_standardization_enabled(monkeypatch) -> None:
         yahoo_players=[],
         config=PipelineConfig(
             storage_target="none",
-            effective_date=date(2026, 7, 18),
+            ingestion_date=date(2026, 7, 18),
             standardization_enabled=True,
         ),
     )

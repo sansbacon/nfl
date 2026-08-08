@@ -45,8 +45,6 @@ class IcebergNamespaceConfig(_BaseNamespaceConfig):
     common: str = "fpcommon"
 
 
-
-
 def resolve_table_identifier(
     frame_name: str,
     namespace_config: IcebergNamespaceConfig,
@@ -69,7 +67,8 @@ def resolve_table_identifier(
 
 def _resolve_primary_key(entity: str, sport: str | None) -> tuple[str, ...]:
     """Resolve primary key via FantasyPros validation contracts."""
-    contract = get_contract(entity=entity, sport=sport)
+    scoped_sport: Literal["nfl"] | None = "nfl" if sport == "nfl" else None
+    contract = get_contract(entity=entity, sport=scoped_sport)
     return contract.primary_key
 
 
@@ -78,7 +77,7 @@ def persist_to_iceberg(
     catalog_config: IcebergCatalogConfig | None = None,
     namespace_config: IcebergNamespaceConfig | None = None,
     default_mode: WriteMode = "upsert",
-    idempotency_store_path: str | Path = ".iceberg/fantasypros_write_log.json",
+    idempotency_store_path: str | Path | None = None,
     dry_run: bool = False,
 ) -> list[IcebergWriteResult]:
     """Write FantasyPros DataFrames to Iceberg tables."""

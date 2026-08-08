@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date
 from pathlib import Path
 from typing import Any, Literal
 
@@ -32,22 +31,24 @@ from nfl.fantasypros_fantasy.storage.unity_catalog import (
 from nfl.fantasypros_fantasy.transforms import transform
 from nfl.fantasypros_fantasy.validation import get_contract, validate_polars_frame
 
-StorageTarget = Literal["none", "polars", "iceberg", "both", "unity_catalog", "uc_volume"]
 SportCode = Literal["nfl"]
 
 
 @dataclass(frozen=True, slots=True)
-class PipelineConfig:
+class PipelineConfig(PipelineConfigBase):
+    """Configuration for the FantasyPros data pipeline.
+
+    Inherits common fields from :class:`~nfl.common.config.PipelineConfigBase`
+    and adds FantasyPros-specific options.
+    """
+
+    polars_output_dir: str | Path = "./output/fantasypros_polars"
     timeout_seconds: int = 30
     validate_contracts: bool = True
-    effective_date: date | None = None
-    storage_target: StorageTarget = "none"
-    polars_output_dir: str | Path = "./output/fantasypros_polars"
-    polars_file_format: str = "parquet"
     iceberg_catalog: IcebergCatalogConfig = field(default_factory=IcebergCatalogConfig)
     iceberg_namespaces: IcebergNamespaceConfig = field(default_factory=IcebergNamespaceConfig)
     iceberg_mode: WriteMode = "upsert"
-    iceberg_idempotency_store: str | Path = ".iceberg/fantasypros_write_log.json"
+    iceberg_idempotency_store: str | Path | None = None
     iceberg_dry_run: bool = True
     standardization_enabled: bool = False
     standardization_config: StandardizationConfig | None = None
@@ -160,7 +161,9 @@ def run_pipeline(
 
     standardization_result: StandardizationResult | None = None
     if cfg.standardization_enabled:
-        standardizer = EntityStandardizer(config=cfg.standardization_config or StandardizationConfig())
+        standardizer = EntityStandardizer(
+            config=cfg.standardization_config or StandardizationConfig()
+        )
         std_records = [
             {
                 "source_system": "fantasypros",
@@ -177,7 +180,13 @@ def run_pipeline(
             {
                 key: value
                 for key, value in standardization_result.tables.items()
-                if key in {"std_standardized_outputs", "std_match_queue", "std_rescued_records", "std_source_to_canonical_map"}
+                if key
+                in {
+                    "std_standardized_outputs",
+                    "std_match_queue",
+                    "std_rescued_records",
+                    "std_source_to_canonical_map",
+                }
             }
         )
 
@@ -185,7 +194,9 @@ def run_pipeline(
     iceberg_outputs: list[IcebergWriteResult] = []
 
     if cfg.storage_target in {"polars", "both"}:
-        polars_outputs = persist_with_polars(frames, output_dir=cfg.polars_output_dir, file_format=cfg.polars_file_format)
+        polars_outputs = persist_with_polars(
+            frames, output_dir=cfg.polars_output_dir, file_format=cfg.polars_file_format
+        )
 
     if cfg.storage_target in {"iceberg", "both"}:
         iceberg_outputs = persist_to_iceberg(

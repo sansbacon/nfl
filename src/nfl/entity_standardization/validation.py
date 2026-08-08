@@ -182,10 +182,14 @@ def get_contract(entity: str) -> EntityContract:
     return STANDARDIZATION_CONTRACTS[entity]
 
 
-def validate_record(record: Mapping[str, Any], contract: EntityContract, allow_extra_fields: bool = True) -> None:
+def validate_record(
+    record: Mapping[str, Any], contract: EntityContract, allow_extra_fields: bool = True
+) -> None:
     missing = [f for f in contract.required if f not in record]
     if missing:
-        raise ContractValidationError(f"{contract.name}: missing required fields: {', '.join(missing)}")
+        raise ContractValidationError(
+            f"{contract.name}: missing required fields: {', '.join(missing)}"
+        )
 
     null_required = [f for f in contract.required if record.get(f) is None]
     if null_required:
@@ -212,7 +216,9 @@ def validate(records: Iterable[Mapping[str, Any]], entity: str) -> int:
         if None in key:
             raise ContractValidationError(f"{contract.name}: row {idx}: primary key contains None")
         if key in seen:
-            raise ContractValidationError(f"{contract.name}: row {idx}: duplicate primary key {key}")
+            raise ContractValidationError(
+                f"{contract.name}: row {idx}: duplicate primary key {key}"
+            )
         seen.add(key)
         count += 1
 

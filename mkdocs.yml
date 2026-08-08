@@ -7,3 +7,5 @@ theme:
 nav:
   - Home: index.md
   - Zensical Guide: ZENSICAL_DOCUMENTATION.md
+  - Architecture Decision Records:
+    - ADR-001 PyIceberg Catalog: adr/ADR-001-pyiceberg-catalog.md

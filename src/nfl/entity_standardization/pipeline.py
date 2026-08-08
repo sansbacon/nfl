@@ -23,19 +23,25 @@ from nfl.entity_standardization.storage import (
 from nfl.entity_standardization.validation import validate
 
 
+def _coerce_float(value: object) -> float:
+    if isinstance(value, bool):
+        return float(value)
+    if isinstance(value, int | float | str):
+        return float(value)
+    raise TypeError(f"Expected numeric confidence value, got {type(value).__name__}.")
+
+
 @dataclass(frozen=True, slots=True)
 class StandardizationConfig:
     auto_accept_thresholds: dict[str, dict[str, float]] = field(
-        default_factory=lambda: {
-            "default": {"player": 0.97, "team": 0.995, "position": 1.0}
-        }
+        default_factory=lambda: {"default": {"player": 0.97, "team": 0.995, "position": 1.0}}
     )
     persist_tables: bool = False
     polars_output_dir: str | Path = "./output/standardization"
     polars_file_format: str = "parquet"
     iceberg_enabled: bool = False
     iceberg_dry_run: bool = True
-    iceberg_idempotency_store: str | Path = ".iceberg/std_write_log.json"
+    iceberg_idempotency_store: str | Path | None = None
     iceberg_namespaces: StandardizationIcebergNamespaceConfig = field(
         default_factory=StandardizationIcebergNamespaceConfig
     )
@@ -81,7 +87,9 @@ class EntityStandardizer:
         default_cfg = self.config.auto_accept_thresholds.get("default", {})
         return float(source_cfg.get(entity, default_cfg.get(entity, 1.0)))
 
-    def standardize_position(self, raw_position: str, source_system: str = "default") -> dict[str, Any]:
+    def standardize_position(
+        self, raw_position: str, source_system: str = "default"
+    ) -> dict[str, Any]:
         decision = match_position(raw_position, self.allowed_positions)
         threshold = self._threshold(source_system, "position")
         accepted = decision.confidence >= threshold
@@ -92,7 +100,9 @@ class EntityStandardizer:
             "needs_review": not accepted,
         }
 
-    def standardize_team_name(self, raw_team_name: str, source_system: str = "default") -> dict[str, Any]:
+    def standardize_team_name(
+        self, raw_team_name: str, source_system: str = "default"
+    ) -> dict[str, Any]:
         decision = match_team(raw_team_name, self.registry.teams)
         threshold = self._threshold(source_system, "team")
         accepted = decision.confidence >= threshold
@@ -128,7 +138,9 @@ class EntityStandardizer:
             candidates,
         )
 
-    def standardize_record(self, record: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any] | None, dict[str, Any] | None, dict[str, Any] | None]:
+    def standardize_record(
+        self, record: dict[str, Any]
+    ) -> tuple[dict[str, Any], dict[str, Any] | None, dict[str, Any] | None, dict[str, Any] | None]:
         source_system = str(record.get("source_system") or "").lower() or "default"
         source_entity_id = str(record.get("source_entity_id") or "")
         raw_player_name = str(record.get("raw_player_name") or "")
@@ -156,14 +168,19 @@ class EntityStandardizer:
                 "needs_review": False,
                 "rescued": False,
             }
-            return standardized, None, None, {
-                "source_system": source_system,
-                "source_entity_id": source_entity_id,
-                "canonical_player_id": standardized["canonical_player_id"],
-                "provenance": "manual_override",
-                "valid_from": None,
-                "valid_to": None,
-            }
+            return (
+                standardized,
+                None,
+                None,
+                {
+                    "source_system": source_system,
+                    "source_entity_id": source_entity_id,
+                    "canonical_player_id": standardized["canonical_player_id"],
+                    "provenance": "manual_override",
+                    "valid_from": None,
+                    "valid_to": None,
+                },
+            )
 
         team_result = self.standardize_team_name(raw_team_name, source_system)
         position_result = self.standardize_position(raw_position, source_system)
@@ -185,7 +202,11 @@ class EntityStandardizer:
                 source_system=source_system,
             )
 
-        needs_review = bool(team_result["needs_review"] or position_result["needs_review"] or player_result["needs_review"])
+        needs_review = bool(
+            team_result["needs_review"]
+            or position_result["needs_review"]
+            or player_result["needs_review"]
+        )
 
         standardized = {
             "source_system": source_system,
@@ -196,9 +217,9 @@ class EntityStandardizer:
             "standardized_player_name": raw_player_name,
             "standardized_team_name": team_result["canonical_team_id"] or raw_team_name,
             "standardized_position": position_result["canonical_position_code"] or raw_position,
-            "player_confidence": float(player_result["player_confidence"]),
-            "team_confidence": float(team_result["team_confidence"]),
-            "position_confidence": float(position_result["position_confidence"]),
+            "player_confidence": _coerce_float(player_result["player_confidence"]),
+            "team_confidence": _coerce_float(team_result["team_confidence"]),
+            "position_confidence": _coerce_float(position_result["position_confidence"]),
             "match_method_player": player_result["match_method_player"],
             "match_method_team": team_result["match_method_team"],
             "match_method_position": position_result["match_method_position"],

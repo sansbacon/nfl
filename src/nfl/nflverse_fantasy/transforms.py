@@ -29,7 +29,14 @@ DATASET_COERCIONS: dict[str, dict[str, tuple[str, ...]]] = {
     "pbp": {
         "int": ("season", "week", "qtr", "down", "yardline_100", "yards_gained", "drive"),
         "float": ("epa", "wp", "wpa", "air_yards", "yards_after_catch"),
-        "bool": ("shotgun", "no_huddle", "qb_dropback", "rush_attempt", "pass_attempt", "two_point_attempt"),
+        "bool": (
+            "shotgun",
+            "no_huddle",
+            "qb_dropback",
+            "rush_attempt",
+            "pass_attempt",
+            "two_point_attempt",
+        ),
         "date": ("game_date",),
         "datetime": (),
     },
@@ -84,7 +91,11 @@ DATASET_COERCIONS: dict[str, dict[str, tuple[str, ...]]] = {
     },
     "nextgen_stats": {
         "int": ("season", "week"),
-        "float": ("avg_time_to_throw", "avg_air_yards_to_sticks", "completion_percentage_above_expectation"),
+        "float": (
+            "avg_time_to_throw",
+            "avg_air_yards_to_sticks",
+            "completion_percentage_above_expectation",
+        ),
         "bool": (),
         "date": (),
         "datetime": (),
@@ -210,10 +221,14 @@ def _coerce_frame(entity: str, frame: pl.DataFrame) -> pl.DataFrame:
     exprs.extend(pl.col(c).cast(pl.Float64, strict=False).alias(c) for c in float_cols)
     exprs.extend(_coerce_boolean_expr(c) for c in bool_cols)
     exprs.extend(pl.col(c).str.strptime(pl.Date, strict=False).alias(c) for c in date_cols)
-    exprs.extend(pl.col(c).str.to_datetime(time_zone="UTC", strict=False).alias(c) for c in datetime_cols)
+    exprs.extend(
+        pl.col(c).str.to_datetime(time_zone="UTC", strict=False).alias(c) for c in datetime_cols
+    )
 
     if "_loaded_at" in frame.columns:
-        exprs.append(pl.col("_loaded_at").str.to_datetime(time_zone="UTC", strict=False).alias("_loaded_at"))
+        exprs.append(
+            pl.col("_loaded_at").str.to_datetime(time_zone="UTC", strict=False).alias("_loaded_at")
+        )
 
     if exprs:
         frame = frame.with_columns(exprs)

@@ -107,13 +107,13 @@ class EspnFantasyClient:
             "Accept": "application/json",
         }
         resp = self.session.get(
-            url, params={"view": "kona_player_info"}, headers=headers,
+            url,
+            params={"view": "kona_player_info"},
+            headers=headers,
             timeout=self.timeout_seconds,
         )
         if resp.status_code != 200:
-            raise EspnApiError(
-                f"ESPN API returned {resp.status_code}: {resp.text[:200]}"
-            )
+            raise EspnApiError(f"ESPN API returned {resp.status_code}: {resp.text[:200]}")
         data = resp.json()
         # Response is a list of dicts, each with a "players" key
         players_raw: list[dict[str, Any]] = []

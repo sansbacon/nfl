@@ -103,7 +103,9 @@ def build_player_weekly_points(roster_df: pl.DataFrame, stats_df: pl.DataFrame) 
             how="left",
         )
         .with_columns(
-            pl.coalesce([pl.col("roster_points"), pl.col("fantasy_points"), pl.lit(0.0)]).alias("player_points")
+            pl.coalesce([pl.col("roster_points"), pl.col("fantasy_points"), pl.lit(0.0)]).alias(
+                "player_points"
+            )
         )
     )
 
@@ -262,10 +264,16 @@ def league_average_by_position(avg_scoring_by_team_position: pl.DataFrame) -> pl
     )
 
 
-def player_points_health(stats_df: pl.DataFrame, roster_df: pl.DataFrame | None = None) -> dict[str, int]:
+def player_points_health(
+    stats_df: pl.DataFrame, roster_df: pl.DataFrame | None = None
+) -> dict[str, int]:
     """Return compact diagnostics for player-level points availability."""
-    non_zero_fantasy_points = int(stats_df.select((pl.col("fantasy_points").fill_null(0) != 0).sum()).item() or 0)
-    stats_payload_entries = int(stats_df.select(pl.col("stats").list.len().fill_null(0).sum()).item() or 0)
+    non_zero_fantasy_points = int(
+        stats_df.select((pl.col("fantasy_points").fill_null(0) != 0).sum()).item() or 0
+    )
+    stats_payload_entries = int(
+        stats_df.select(pl.col("stats").list.len().fill_null(0).sum()).item() or 0
+    )
 
     out = {
         "non_zero_fantasy_points": non_zero_fantasy_points,
@@ -273,7 +281,9 @@ def player_points_health(stats_df: pl.DataFrame, roster_df: pl.DataFrame | None 
     }
 
     if roster_df is not None and "points" in roster_df.columns:
-        out["non_zero_roster_points"] = int(roster_df.select((pl.col("points").fill_null(0) != 0).sum()).item() or 0)
+        out["non_zero_roster_points"] = int(
+            roster_df.select((pl.col("points").fill_null(0) != 0).sum()).item() or 0
+        )
 
     return out
 
@@ -303,7 +313,9 @@ def team_position_weekly_points(player_weekly_points: pl.DataFrame) -> pl.DataFr
                 pl.n_unique("player_key").alias("players_counted"),
             ]
         )
-        .sort(["season", "week", "team_key", "total_points"], descending=[False, False, False, True])
+        .sort(
+            ["season", "week", "team_key", "total_points"], descending=[False, False, False, True]
+        )
     )
 
 
@@ -335,13 +347,13 @@ def latest_roster_snapshot(
                 pl.col("fantasy_points").alias("stats_points"),
             ]
         )
-        my_roster = (
-            my_roster.join(
-                stats_for_week,
-                on=["league_key", "season", "week", "player_key"],
-                how="left",
-            ).with_columns(
-                pl.coalesce([pl.col("points"), pl.col("stats_points"), pl.lit(0.0)]).alias("slot_points")
+        my_roster = my_roster.join(
+            stats_for_week,
+            on=["league_key", "season", "week", "player_key"],
+            how="left",
+        ).with_columns(
+            pl.coalesce([pl.col("points"), pl.col("stats_points"), pl.lit(0.0)]).alias(
+                "slot_points"
             )
         )
 
@@ -383,7 +395,9 @@ def average_scoring_by_position_by_team(
     team_week_totals = None
     if weekly_points is not None:
         if "team_points" in weekly_points.columns:
-            team_week_totals = weekly_points.select(["league_key", "season", "week", "team_key", "team_points"])
+            team_week_totals = weekly_points.select(
+                ["league_key", "season", "week", "team_key", "team_points"]
+            )
         elif "points" in weekly_points.columns:
             team_week_totals = weekly_points.select(
                 ["league_key", "season", "week", "team_key", pl.col("points").alias("team_points")]
@@ -396,7 +410,9 @@ def average_scoring_by_position_by_team(
     )
 
     if team_week_totals is not None:
-        base = base.join(team_week_totals, on=["league_key", "season", "week", "team_key"], how="left").with_columns(
+        base = base.join(
+            team_week_totals, on=["league_key", "season", "week", "team_key"], how="left"
+        ).with_columns(
             pl.when(pl.col("team_points") > 0)
             .then((pl.col("position_points") / pl.col("team_points")) * 100.0)
             .otherwise(None)
@@ -439,9 +455,14 @@ def average_scoring_by_position_by_team(
     )
 
 
-def scoring_quality_by_week(stats_df: pl.DataFrame, roster_df: pl.DataFrame | None = None) -> pl.DataFrame:
+def scoring_quality_by_week(
+    stats_df: pl.DataFrame, roster_df: pl.DataFrame | None = None
+) -> pl.DataFrame:
     stats_with_flags = stats_df.with_columns(
-        pl.when(pl.col("stats").is_null()).then(False).otherwise(pl.col("stats").list.len() > 0).alias("has_stats_payload")
+        pl.when(pl.col("stats").is_null())
+        .then(False)
+        .otherwise(pl.col("stats").list.len() > 0)
+        .alias("has_stats_payload")
     )
 
     by_week = (
@@ -451,13 +472,17 @@ def scoring_quality_by_week(stats_df: pl.DataFrame, roster_df: pl.DataFrame | No
                 pl.len().alias("player_rows"),
                 pl.sum("has_stats_payload").alias("rows_with_stats_payload"),
                 pl.col("fantasy_points").is_not_null().sum().alias("rows_with_fantasy_points"),
-                (pl.col("fantasy_points").fill_null(0) != 0).sum().alias("rows_with_non_zero_fantasy_points"),
+                (pl.col("fantasy_points").fill_null(0) != 0)
+                .sum()
+                .alias("rows_with_non_zero_fantasy_points"),
             ]
         )
         .with_columns(
             [
                 (pl.col("rows_with_stats_payload") == 0).alias("missing_stats_payload_week"),
-                (pl.col("rows_with_non_zero_fantasy_points") == 0).alias("all_zero_fantasy_points_week"),
+                (pl.col("rows_with_non_zero_fantasy_points") == 0).alias(
+                    "all_zero_fantasy_points_week"
+                ),
             ]
         )
         .sort(["season", "week"])
@@ -468,7 +493,9 @@ def scoring_quality_by_week(stats_df: pl.DataFrame, roster_df: pl.DataFrame | No
             [
                 pl.len().alias("roster_rows"),
                 pl.col("points").is_not_null().sum().alias("roster_rows_with_points"),
-                (pl.col("points").fill_null(0) != 0).sum().alias("roster_rows_with_non_zero_points"),
+                (pl.col("points").fill_null(0) != 0)
+                .sum()
+                .alias("roster_rows_with_non_zero_points"),
             ]
         )
         by_week = by_week.join(roster_by_week, on=["season", "week"], how="left")
@@ -525,38 +552,37 @@ def unified_draft_price_analysis(
     if not include_unresolved_historical and "resolution_status" in hist.columns:
         hist = hist.filter(pl.col("resolution_status") == "resolved")
 
-    hist_rows = (
-        hist.with_columns(
-            [
-                pl.lit("historical_web_ui").alias("source_type"),
-                pl.lit(None, dtype=pl.Utf8).alias("league_key"),
-                pl.lit(None, dtype=pl.Utf8).alias("team_key"),
-                pl.col("yahoo_player_key").cast(pl.Utf8, strict=False).alias("player_key"),
-                pl.col("yahoo_player_id").cast(pl.Int64, strict=False).alias("player_id"),
-                pl.coalesce([pl.col("resolved_player_name"), pl.col("player_name_raw")]).alias("player_name"),
-                pl.coalesce([pl.col("resolved_position"), pl.col("position_raw")]).alias("position"),
-                pl.col("auction_price").cast(pl.Float64, strict=False).alias("draft_price"),
-                pl.lit(None, dtype=pl.Int64).alias("round_number"),
-            ]
-        )
-        .select(
-            [
-                "season",
-                "source_type",
-                "league_key",
-                "team_key",
-                "player_key",
-                "player_id",
-                "player_name",
-                "position",
-                "draft_price",
-                "pick_number",
-                "round_number",
-                "resolution_status",
-                "resolution_confidence",
-                "resolution_method",
-            ]
-        )
+    hist_rows = hist.with_columns(
+        [
+            pl.lit("historical_web_ui").alias("source_type"),
+            pl.lit(None, dtype=pl.Utf8).alias("league_key"),
+            pl.lit(None, dtype=pl.Utf8).alias("team_key"),
+            pl.col("yahoo_player_key").cast(pl.Utf8, strict=False).alias("player_key"),
+            pl.col("yahoo_player_id").cast(pl.Int64, strict=False).alias("player_id"),
+            pl.coalesce([pl.col("resolved_player_name"), pl.col("player_name_raw")]).alias(
+                "player_name"
+            ),
+            pl.coalesce([pl.col("resolved_position"), pl.col("position_raw")]).alias("position"),
+            pl.col("auction_price").cast(pl.Float64, strict=False).alias("draft_price"),
+            pl.lit(None, dtype=pl.Int64).alias("round_number"),
+        ]
+    ).select(
+        [
+            "season",
+            "source_type",
+            "league_key",
+            "team_key",
+            "player_key",
+            "player_id",
+            "player_name",
+            "position",
+            "draft_price",
+            "pick_number",
+            "round_number",
+            "resolution_status",
+            "resolution_confidence",
+            "resolution_method",
+        ]
     )
 
     return pl.concat([api_rows, hist_rows], how="diagonal_relaxed").sort(

@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date
 from pathlib import Path
-from typing import Literal
 
 import polars as pl
 
+from nfl.common.config import PipelineConfigBase, StorageTarget
 from nfl.common.storage import UCWriteResult, persist_with_polars
 from nfl.sleeper_fantasy.api import SleeperClient
 from nfl.sleeper_fantasy.storage.unity_catalog import (
@@ -19,21 +18,27 @@ from nfl.sleeper_fantasy.storage.unity_catalog import (
 )
 from nfl.sleeper_fantasy.transforms import players_to_adp_rows, players_to_dim_rows
 
-StorageTarget = Literal["none", "polars", "unity_catalog", "uc_volume"]
-
 
 @dataclass(frozen=True, slots=True)
-class PipelineConfig:
-    """Configuration for the Sleeper data pipeline."""
+class PipelineConfig(PipelineConfigBase):
+    """Configuration for the Sleeper data pipeline.
 
-    season: int = 2025
-    storage_target: StorageTarget = "none"
+    Inherits common fields from :class:`~nfl.common.config.PipelineConfigBase`
+    and adds Sleeper-specific options.
+
+    Parameters
+    ----------
+    uc_table_config : SleeperUCTableConfig
+        Unity Catalog table write configuration.
+    uc_volume_config : SleeperUCVolumeConfig
+        Unity Catalog volume write configuration.
+    timeout_seconds : int
+        HTTP request timeout for Sleeper API calls (default 60).
+    """
+
     polars_output_dir: str | Path = "./output/sleeper_polars"
-    polars_file_format: str = "parquet"
     uc_table_config: SleeperUCTableConfig = field(default_factory=SleeperUCTableConfig)
     uc_volume_config: SleeperUCVolumeConfig = field(default_factory=SleeperUCVolumeConfig)
-    uc_dry_run: bool = True
-    ingestion_date: date | None = None
     timeout_seconds: int = 60
 
 
@@ -75,7 +80,7 @@ def run_pipeline(
     players = client.fetch_players_with_adp(cfg.season)
 
     # --- Transform ---
-    effective_date = cfg.ingestion_date or date.today()
+    effective_date = cfg.effective_date
     dim_rows = players_to_dim_rows(players)
     adp_rows = players_to_adp_rows(players, season=cfg.season, ingestion_date=effective_date)
 
@@ -95,12 +100,12 @@ def run_pipeline(
 
     if cfg.storage_target == "unity_catalog":
         uc_outputs = persist_sleeper_to_uc_tables(
-            frames, config=cfg.uc_table_config, dry_run=cfg.uc_dry_run
+            frames, config=cfg.uc_table_config, dry_run=cfg.dry_run
         )
 
     if cfg.storage_target == "uc_volume":
         uc_outputs = persist_sleeper_to_uc_volume(
-            frames, config=cfg.uc_volume_config, dry_run=cfg.uc_dry_run
+            frames, config=cfg.uc_volume_config, dry_run=cfg.dry_run
         )
 
     return PipelineRunResult(

@@ -186,9 +186,7 @@ def _merge_into_table(
     temp_view = f"_uc_merge_source_{target_table.replace('.', '_')}"
     source_df.createOrReplaceTempView(temp_view)
 
-    merge_condition = " AND ".join(
-        f"target.`{key}` = source.`{key}`" for key in merge_keys
-    )
+    merge_condition = " AND ".join(f"target.`{key}` = source.`{key}`" for key in merge_keys)
 
     try:
         spark.sql(f"""

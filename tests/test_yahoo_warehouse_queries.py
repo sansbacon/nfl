@@ -127,7 +127,9 @@ def test_register_tables_from_warehouse_registers_latest_metadata(tmp_path: Path
     assert catalog.registered[0][1].endswith("00002-bbb.metadata.json")
 
 
-def test_normalize_catalog_metadata_locations_rewrites_relative_and_legacy_paths(tmp_path: Path) -> None:
+def test_normalize_catalog_metadata_locations_rewrites_relative_and_legacy_paths(
+    tmp_path: Path,
+) -> None:
     project_root = tmp_path / "repo"
     project_root.mkdir(parents=True)
     db_path = project_root / "iceberg_catalog.db"
@@ -201,7 +203,9 @@ def test_normalize_catalog_metadata_locations_rewrites_relative_and_legacy_paths
     assert previous_metadata_location == expected_prev_location
 
 
-def test_normalize_catalog_metadata_locations_rewrites_windows_legacy_rooted_drive_path(tmp_path: Path) -> None:
+def test_normalize_catalog_metadata_locations_rewrites_windows_legacy_rooted_drive_path(
+    tmp_path: Path,
+) -> None:
     project_root = tmp_path / "repo"
     project_root.mkdir(parents=True)
     db_path = project_root / "iceberg_catalog.db"
@@ -273,7 +277,9 @@ def test_normalize_catalog_metadata_locations_rewrites_windows_legacy_rooted_dri
     assert previous_metadata_location == _expected_catalog_location(expected_prev_location)
 
 
-def test_normalize_catalog_metadata_locations_updates_rows_with_null_namespace(tmp_path: Path) -> None:
+def test_normalize_catalog_metadata_locations_updates_rows_with_null_namespace(
+    tmp_path: Path,
+) -> None:
     project_root = tmp_path / "repo"
     project_root.mkdir(parents=True)
     db_path = project_root / "iceberg_catalog.db"
@@ -373,7 +379,9 @@ def test_weekly_points_uses_matchups_fallback_when_player_points_missing() -> No
         }
     )
 
-    weekly, source = weekly_team_points(stats_df=stats_df, roster_df=roster_df, matchups_df=matchups_df)
+    weekly, source = weekly_team_points(
+        stats_df=stats_df, roster_df=roster_df, matchups_df=matchups_df
+    )
 
     assert source == "matchups"
     assert weekly.select(pl.col("team_points")).item() == 101.7
@@ -412,7 +420,9 @@ def test_weekly_points_resolved_falls_back_when_player_stats_branch_is_all_zero(
         }
     )
 
-    weekly, source = weekly_team_points_resolved(stats_df=stats_df, roster_df=roster_df, matchups_df=matchups_df)
+    weekly, source = weekly_team_points_resolved(
+        stats_df=stats_df, roster_df=roster_df, matchups_df=matchups_df
+    )
 
     assert source == "matchups"
     assert weekly.columns == ["league_key", "season", "week", "team_key", "team_points"]
@@ -439,7 +449,9 @@ def test_enrich_weekly_team_points_adds_friendly_names_and_keeps_shape() -> None
         }
     )
 
-    out = enrich_weekly_team_points(weekly_points=weekly, league_df=league_df, team_df=team_df, include_keys=True)
+    out = enrich_weekly_team_points(
+        weekly_points=weekly, league_df=league_df, team_df=team_df, include_keys=True
+    )
 
     assert out.columns == [
         "season",
@@ -572,7 +584,9 @@ def test_standings_summary_includes_friendly_names_and_omits_ties() -> None:
         }
     )
 
-    result = standings_summary(standings_df=standings_df, league_df=league_df, team_df=team_df, include_keys=True)
+    result = standings_summary(
+        standings_df=standings_df, league_df=league_df, team_df=team_df, include_keys=True
+    )
 
     assert result.columns == [
         "league_key",

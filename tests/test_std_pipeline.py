@@ -32,7 +32,11 @@ def _registry() -> CanonicalRegistry:
             }
         ],
         positions=[
-            {"canonical_position_id": "RB", "canonical_position_code": "RB", "aliases": ["RB", "HB", "FB"]}
+            {
+                "canonical_position_id": "RB",
+                "canonical_position_code": "RB",
+                "aliases": ["RB", "HB", "FB"],
+            }
         ],
         source_to_canonical_map=[
             {

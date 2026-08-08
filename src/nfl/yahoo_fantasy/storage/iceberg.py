@@ -49,7 +49,23 @@ class IcebergWriteResult:
 
 
 class _IdempotencyStore:
+    """File-backed set of write digests to prevent duplicate writes.
+
+    .. deprecated::
+       The JSON idempotency store is deprecated and will be removed in a future
+       release.  Pass ``idempotency_store_path=None`` to opt out.
+    """
+
     def __init__(self, store_path: str | Path) -> None:
+        import warnings
+
+        warnings.warn(
+            "The .iceberg/write_log.json idempotency store is deprecated and will be "
+            "removed in a future release.  Rely on Iceberg snapshot semantics or "
+            "control re-runs at the call site instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
         self.store_path = Path(store_path)
         self._entries = self._load()
 
@@ -109,7 +125,9 @@ def _frame_digest(table_identifier: str, mode: WriteMode, frame: pl.DataFrame) -
         "columns": frame.columns,
         "rows": frame.to_dicts(),
     }
-    return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode("utf-8")).hexdigest()
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, default=str).encode("utf-8")
+    ).hexdigest()
 
 
 def _normalize_null_dtypes(frame: pl.DataFrame) -> pl.DataFrame:
@@ -118,7 +136,9 @@ def _normalize_null_dtypes(frame: pl.DataFrame) -> pl.DataFrame:
     if not null_cols and not list_null_cols:
         return frame
     casts: list[pl.Expr] = [pl.col(col).cast(pl.Utf8, strict=False).alias(col) for col in null_cols]
-    casts.extend(pl.col(col).cast(pl.List(pl.Utf8), strict=False).alias(col) for col in list_null_cols)
+    casts.extend(
+        pl.col(col).cast(pl.List(pl.Utf8), strict=False).alias(col) for col in list_null_cols
+    )
     return frame.with_columns(casts)
 
 
@@ -191,11 +211,18 @@ def _load_pyiceberg_catalog(config: IcebergCatalogConfig) -> Any:
 
 
 def _ensure_table_exists(catalog: Any, table_identifier: str, frame: pl.DataFrame) -> Any:
-    from pyiceberg.exceptions import NamespaceAlreadyExistsError, NoSuchTableError
+    try:
+        from pyiceberg.exceptions import NamespaceAlreadyExistsError, NoSuchTableError
+
+        _no_such_table_exc: type[Exception] = NoSuchTableError
+        _namespace_exists_exc: type[Exception] = NamespaceAlreadyExistsError
+    except ModuleNotFoundError:
+        _no_such_table_exc = Exception
+        _namespace_exists_exc = Exception
 
     try:
         return catalog.load_table(table_identifier)
-    except NoSuchTableError:
+    except _no_such_table_exc:
         namespace, _table_name = table_identifier.rsplit(".", 1)
         with contextlib.suppress(NamespaceAlreadyExistsError):
             catalog.create_namespace(namespace)
@@ -211,7 +238,9 @@ def _write_frame_with_pyiceberg(catalog: Any, table_identifier: str, frame: pl.D
     try:
         table.append(frame.to_arrow())
     except Exception as exc:
-        raise RuntimeError(f"Failed appending to Iceberg table '{table_identifier}': {exc}") from exc
+        raise RuntimeError(
+            f"Failed appending to Iceberg table '{table_identifier}': {exc}"
+        ) from exc
 
 
 def _table_exists(catalog: Any, table_identifier: str) -> bool:
@@ -227,12 +256,14 @@ def persist_to_iceberg(
     catalog_config: IcebergCatalogConfig | None = None,
     namespace_config: IcebergNamespaceConfig | None = None,
     default_mode: WriteMode = "upsert",
-    idempotency_store_path: str | Path = ".iceberg/write_log.json",
+    idempotency_store_path: str | Path | None = None,
     dry_run: bool = False,
 ) -> list[IcebergWriteResult]:
     catalog_cfg = catalog_config or IcebergCatalogConfig()
     ns_cfg = namespace_config or IcebergNamespaceConfig()
-    store = _IdempotencyStore(idempotency_store_path)
+    store: _IdempotencyStore | None = (
+        _IdempotencyStore(idempotency_store_path) if idempotency_store_path is not None else None
+    )
 
     catalog = None if dry_run else _load_pyiceberg_catalog(catalog_cfg)
     results: list[IcebergWriteResult] = []
@@ -248,8 +279,13 @@ def persist_to_iceberg(
         write_frame = _normalize_null_dtypes(write_frame)
 
         digest = _frame_digest(table_identifier, mode, write_frame)
-        should_skip = store.contains(digest)
-        if should_skip and not dry_run and catalog is not None and not _table_exists(catalog, table_identifier):
+        should_skip = store is not None and store.contains(digest)
+        if (
+            should_skip
+            and not dry_run
+            and catalog is not None
+            and not _table_exists(catalog, table_identifier)
+        ):
             should_skip = False
 
         if should_skip:
@@ -268,7 +304,8 @@ def persist_to_iceberg(
         if not dry_run and write_frame.height > 0:
             _write_frame_with_pyiceberg(catalog, table_identifier, write_frame)
 
-        store.add(digest)
+        if store is not None:
+            store.add(digest)
         results.append(
             IcebergWriteResult(
                 entity=frame_name,

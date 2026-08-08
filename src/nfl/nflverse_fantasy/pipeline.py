@@ -24,14 +24,36 @@ from nfl.nflverse_fantasy.transforms import transform
 
 
 @dataclass(frozen=True, slots=True)
-class PipelineConfig:
+class PipelineConfig(PipelineConfigBase):
+    """Configuration for the NFLverse data pipeline.
+
+    Inherits common fields from :class:`~nfl.common.config.PipelineConfigBase`
+    and adds NFLverse-specific options.
+
+    Parameters
+    ----------
+    seasons : list[int] | None
+        Seasons to load. If ``None``, defaults to the most recent available
+        season for each dataset.
+    enabled_entities : list[str] | None
+        Subset of entity names to load. If ``None``, all entities are loaded.
+    iceberg_namespaces : IcebergNamespaceConfig
+        Iceberg namespace configuration.
+    iceberg_idempotency_store : str | Path | None
+        Path to the idempotency store for Iceberg writes.
+    iceberg_dry_run : bool
+        If True, reports what would be written without executing Iceberg writes.
+    standardization_enabled : bool
+        Whether to run entity standardization after extraction.
+    standardization_config : StandardizationConfig | None
+        Standardization configuration. Uses defaults if ``None``.
+    """
+
+    polars_output_dir: str | Path = "./output/nflverse_polars"
     seasons: list[int] | None = None
     enabled_entities: list[str] | None = None
-    storage_target: str = "none"
-    polars_output_dir: str | Path = "./output/nflverse_polars"
-    polars_file_format: str = "parquet"
     iceberg_namespaces: IcebergNamespaceConfig = field(default_factory=IcebergNamespaceConfig)
-    iceberg_idempotency_store: str | Path = ".iceberg/nflverse_write_log.json"
+    iceberg_idempotency_store: str | Path | None = None
     iceberg_dry_run: bool = True
     standardization_enabled: bool = False
     standardization_config: StandardizationConfig | None = None
@@ -49,7 +71,9 @@ def _build_client() -> NflverseApiClient:
     return NflverseApiClient(validate_contracts=True)
 
 
-def _collect_entities(client: Any, seasons: list[int] | None, enabled_entities: set[str] | None) -> dict[str, list[dict[str, Any]]]:
+def _collect_entities(
+    client: Any, seasons: list[int] | None, enabled_entities: set[str] | None
+) -> dict[str, list[dict[str, Any]]]:
     getter_map = {
         "pbp": lambda: client.get_pbp(seasons=seasons),
         "player_stats": lambda: client.get_player_stats(seasons=seasons),
@@ -85,7 +109,13 @@ def _collect_entities(client: Any, seasons: list[int] | None, enabled_entities: 
 def _build_standardization_records(players: list[dict[str, Any]]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for row in players:
-        player_id = str(row.get("gsis_id") or row.get("player_id") or row.get("pfr_id") or row.get("_record_hash") or "")
+        player_id = str(
+            row.get("gsis_id")
+            or row.get("player_id")
+            or row.get("pfr_id")
+            or row.get("_record_hash")
+            or ""
+        )
         display_name = str(row.get("display_name") or row.get("player_name") or "").strip()
         if not display_name:
             first = str(row.get("first_name") or "").strip()
@@ -117,14 +147,17 @@ def run_pipeline(
 
     standardization_result: StandardizationResult | None = None
     if cfg.standardization_enabled and "players" in entities:
-        standardizer = EntityStandardizer(config=cfg.standardization_config or StandardizationConfig())
+        standardizer = EntityStandardizer(
+            config=cfg.standardization_config or StandardizationConfig()
+        )
         std_records = _build_standardization_records(entities["players"])
         standardization_result = standardizer.standardize_batch(std_records)
         frames.update(
             {
                 key: value
                 for key, value in standardization_result.tables.items()
-                if key in {
+                if key
+                in {
                     "std_standardized_outputs",
                     "std_match_queue",
                     "std_rescued_records",
@@ -137,7 +170,9 @@ def run_pipeline(
     iceberg_outputs: list[IcebergWriteResult] = []
 
     if cfg.storage_target in {"polars", "both"}:
-        polars_outputs = persist_with_polars(frames, output_dir=cfg.polars_output_dir, file_format=cfg.polars_file_format)
+        polars_outputs = persist_with_polars(
+            frames, output_dir=cfg.polars_output_dir, file_format=cfg.polars_file_format
+        )
 
     if cfg.storage_target in {"iceberg", "both"}:
         iceberg_outputs = persist_to_iceberg(

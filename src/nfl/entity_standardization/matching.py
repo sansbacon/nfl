@@ -43,18 +43,29 @@ def _prefix_match(a: str, b: str, prefix_len: int = 3) -> bool:
 def match_position(raw_position: str, allowed_positions: set[str]) -> MatchDecision:
     normalized = normalize_position(raw_position)
     if normalized in allowed_positions:
-        return MatchDecision(canonical_value=normalized, confidence=1.0, method="alias", evidence={"raw": raw_position})
-    return MatchDecision(canonical_value="", confidence=0.0, method="unresolved", evidence={"raw": raw_position})
+        return MatchDecision(
+            canonical_value=normalized,
+            confidence=1.0,
+            method="alias",
+            evidence={"raw": raw_position},
+        )
+    return MatchDecision(
+        canonical_value="", confidence=0.0, method="unresolved", evidence={"raw": raw_position}
+    )
 
 
 def match_team(raw_team: str, canonical_teams: list[dict[str, Any]]) -> MatchDecision:
     normalized = normalize_team_code(raw_team)
     if not normalized:
-        return MatchDecision(canonical_value="", confidence=0.0, method="unresolved", evidence={"raw": raw_team})
+        return MatchDecision(
+            canonical_value="", confidence=0.0, method="unresolved", evidence={"raw": raw_team}
+        )
 
     by_code = {str(row.get("canonical_team_id") or ""): row for row in canonical_teams}
     if normalized in by_code:
-        return MatchDecision(canonical_value=normalized, confidence=1.0, method="alias", evidence={"raw": raw_team})
+        return MatchDecision(
+            canonical_value=normalized, confidence=1.0, method="alias", evidence={"raw": raw_team}
+        )
 
     best_score = 0.0
     best_code = ""
@@ -66,8 +77,15 @@ def match_team(raw_team: str, canonical_teams: list[dict[str, Any]]) -> MatchDec
             best_code = code
 
     if best_score >= 0.9:
-        return MatchDecision(canonical_value=best_code, confidence=best_score, method="fuzzy", evidence={"raw": raw_team})
-    return MatchDecision(canonical_value="", confidence=best_score, method="unresolved", evidence={"raw": raw_team})
+        return MatchDecision(
+            canonical_value=best_code,
+            confidence=best_score,
+            method="fuzzy",
+            evidence={"raw": raw_team},
+        )
+    return MatchDecision(
+        canonical_value="", confidence=best_score, method="unresolved", evidence={"raw": raw_team}
+    )
 
 
 def match_player(
@@ -79,7 +97,12 @@ def match_player(
     normalized_name = normalize_player_name(raw_player_name)
     if not normalized_name:
         return (
-            MatchDecision(canonical_value="", confidence=0.0, method="unresolved", evidence={"raw": raw_player_name}),
+            MatchDecision(
+                canonical_value="",
+                confidence=0.0,
+                method="unresolved",
+                evidence={"raw": raw_player_name},
+            ),
             [],
         )
 
@@ -105,12 +128,12 @@ def match_player(
         display_name = str(player.get("display_name") or "")
         normalized_display = normalize_player_name(display_name)
         aliases = player.get("aliases") or []
-        alias_set = {normalized_display} | {
-            normalize_player_name(str(alias)) for alias in aliases
-        }
+        alias_set = {normalized_display} | {normalize_player_name(str(alias)) for alias in aliases}
 
         position_bonus = 0.0
-        if canonical_position_code and canonical_position_code == str(player.get("primary_position") or ""):
+        if canonical_position_code and canonical_position_code == str(
+            player.get("primary_position") or ""
+        ):
             position_bonus = 0.02
 
         if normalized_name in alias_set:
@@ -158,10 +181,19 @@ def match_player(
                 }
             )
 
-    ranked = sorted(exact_candidates + nickname_candidates + fuzzy_candidates, key=lambda r: r["score"], reverse=True)
+    ranked = sorted(
+        exact_candidates + nickname_candidates + fuzzy_candidates,
+        key=lambda r: r["score"],
+        reverse=True,
+    )
     if not ranked:
         return (
-            MatchDecision(canonical_value="", confidence=0.0, method="unresolved", evidence={"raw": raw_player_name}),
+            MatchDecision(
+                canonical_value="",
+                confidence=0.0,
+                method="unresolved",
+                evidence={"raw": raw_player_name},
+            ),
             [],
         )
 

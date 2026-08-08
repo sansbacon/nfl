@@ -73,7 +73,9 @@ def _build_vw_draft_results(frames: Mapping[str, pl.DataFrame]) -> pl.DataFrame:
         ]
     )
     leagues = frames["league"].select(["league_key", "season", pl.col("league_name")])
-    teams = frames["team"].select(["league_key", "team_key", "team_name", pl.col("owner_name").alias("team_owner")])
+    teams = frames["team"].select(
+        ["league_key", "team_key", "team_name", pl.col("owner_name").alias("team_owner")]
+    )
     players = frames["player"].select(
         [
             "player_key",
@@ -89,8 +91,16 @@ def _build_vw_draft_results(frames: Mapping[str, pl.DataFrame]) -> pl.DataFrame:
         .join(players, on=["player_key"], how="left")
         .with_columns(
             [
-                pl.struct(["round", "pick"]).rank(method="dense").over(["season", "player_position"]).cast(pl.Int64).alias("position_pick"),
-                pl.col("cost").rank(method="dense", descending=True).over(["season", "player_position"]).cast(pl.Int64).alias("position_cost"),
+                pl.struct(["round", "pick"])
+                .rank(method="dense")
+                .over(["season", "player_position"])
+                .cast(pl.Int64)
+                .alias("position_pick"),
+                pl.col("cost")
+                .rank(method="dense", descending=True)
+                .over(["season", "player_position"])
+                .cast(pl.Int64)
+                .alias("position_cost"),
             ]
         )
         .select(
@@ -174,9 +184,12 @@ def _build_v_player_fantasy_scoring(frames: Mapping[str, pl.DataFrame]) -> pl.Da
         .join(players, on="player_key", how="left")
         .with_columns(
             [
-                (pl.col("raw_value") * pl.col("points_per_unit")).cast(pl.Float64).alias("stat_points"),
+                (pl.col("raw_value") * pl.col("points_per_unit"))
+                .cast(pl.Float64)
+                .alias("stat_points"),
                 pl.when(
-                    pl.col("bonus_target").is_not_null() & (pl.col("raw_value") >= pl.col("bonus_target"))
+                    pl.col("bonus_target").is_not_null()
+                    & (pl.col("raw_value") >= pl.col("bonus_target"))
                 )
                 .then(pl.coalesce(pl.col("bonus_points"), pl.lit(0.0)))
                 .otherwise(pl.lit(0.0))
@@ -184,7 +197,11 @@ def _build_v_player_fantasy_scoring(frames: Mapping[str, pl.DataFrame]) -> pl.Da
                 .alias("bonus_points"),
             ]
         )
-        .with_columns((pl.col("stat_points") + pl.col("bonus_points")).cast(pl.Float64).alias("total_stat_points"))
+        .with_columns(
+            (pl.col("stat_points") + pl.col("bonus_points"))
+            .cast(pl.Float64)
+            .alias("total_stat_points")
+        )
         .select(
             [
                 "player_key",

@@ -3,6 +3,16 @@
 Provides the common machinery for writing Polars DataFrames to Iceberg tables
 via a local SQLite catalog. Source-specific modules supply their own namespace
 configs and contract resolvers, then delegate to persist_to_iceberg().
+
+.. note::
+   PyIceberg is an **optional** dependency.  Install ``nfl[iceberg]`` to use
+   this module.  Core extraction and normalization modules are fully functional
+   without it.
+
+.. warning::
+   The SQLite catalog backend is scoped to **local development and single-user
+   warehouses only**.  It does not support concurrent writes and is not suitable
+   for production multi-user environments.
 """
 
 from __future__ import annotations
@@ -72,9 +82,23 @@ class IcebergWriteResult:
 
 
 class IdempotencyStore:
-    """File-backed set of write digests to prevent duplicate writes."""
+    """File-backed set of write digests to prevent duplicate writes.
+
+    .. deprecated::
+       The JSON idempotency store (``write_log.json``) is a maintenance
+       liability and will be removed in a future release.  Prefer relying on
+       Iceberg's own snapshot semantics or letting callers control re-runs.
+       Pass ``idempotency_store_path=None`` to opt out.
+    """
 
     def __init__(self, store_path: str | Path) -> None:
+        warnings.warn(
+            "IdempotencyStore and the .iceberg/write_log.json file are deprecated "
+            "and will be removed in a future release.  Rely on Iceberg snapshot "
+            "semantics or control re-runs at the call site instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
         self.store_path = Path(store_path)
         self._entries = self._load()
 
@@ -93,9 +117,7 @@ class IdempotencyStore:
     def add(self, digest: str) -> None:
         self._entries.add(digest)
         self.store_path.parent.mkdir(parents=True, exist_ok=True)
-        self.store_path.write_text(
-            json.dumps(sorted(self._entries), indent=2), encoding="utf-8"
-        )
+        self.store_path.write_text(json.dumps(sorted(self._entries), indent=2), encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -127,17 +149,12 @@ def frame_digest(table_identifier: str, mode: IcebergWriteMode, frame: pl.DataFr
 def normalize_null_dtypes(frame: pl.DataFrame) -> pl.DataFrame:
     """Cast Null and List(Null) columns to Utf8 for Iceberg compatibility."""
     null_cols = [name for name, dtype in frame.schema.items() if dtype == pl.Null]
-    list_null_cols = [
-        name for name, dtype in frame.schema.items() if str(dtype) == "List(Null)"
-    ]
+    list_null_cols = [name for name, dtype in frame.schema.items() if str(dtype) == "List(Null)"]
     if not null_cols and not list_null_cols:
         return frame
-    casts: list[pl.Expr] = [
-        pl.col(col).cast(pl.Utf8, strict=False).alias(col) for col in null_cols
-    ]
+    casts: list[pl.Expr] = [pl.col(col).cast(pl.Utf8, strict=False).alias(col) for col in null_cols]
     casts.extend(
-        pl.col(col).cast(pl.List(pl.Utf8), strict=False).alias(col)
-        for col in list_null_cols
+        pl.col(col).cast(pl.List(pl.Utf8), strict=False).alias(col) for col in list_null_cols
     )
     return frame.with_columns(casts)
 
@@ -152,9 +169,7 @@ def load_pyiceberg_catalog(config: IcebergCatalogConfig) -> Any:
     try:
         from pyiceberg.catalog import load_catalog
     except ModuleNotFoundError as exc:
-        raise RuntimeError(
-            "pyiceberg is not installed in the active environment."
-        ) from exc
+        raise RuntimeError("pyiceberg is not installed in the active environment.") from exc
 
     return load_catalog(
         config.catalog_name,
@@ -164,11 +179,17 @@ def load_pyiceberg_catalog(config: IcebergCatalogConfig) -> Any:
     )
 
 
-def ensure_table_exists(
-    catalog: Any, table_identifier: str, frame: pl.DataFrame
-) -> Any:
+def ensure_table_exists(catalog: Any, table_identifier: str, frame: pl.DataFrame) -> Any:
     """Load an Iceberg table, creating it (and namespace) if needed."""
-    from pyiceberg.exceptions import NamespaceAlreadyExistsError, NoSuchTableError
+    try:
+        from pyiceberg.exceptions import NamespaceAlreadyExistsError, NoSuchTableError
+
+        _no_such_table_exc: type[Exception] = NoSuchTableError
+        _namespace_exists_exc: type[Exception] = NamespaceAlreadyExistsError
+    except ModuleNotFoundError:
+        # pyiceberg not installed — use generic Exception guards so mocked catalogs still work
+        _no_such_table_exc = Exception
+        _namespace_exists_exc = Exception
 
     try:
         return catalog.load_table(table_identifier)
@@ -177,9 +198,7 @@ def ensure_table_exists(
         with contextlib.suppress(NamespaceAlreadyExistsError):
             catalog.create_namespace(namespace)
         try:
-            return catalog.create_table(
-                identifier=table_identifier, schema=frame.to_arrow().schema
-            )
+            return catalog.create_table(identifier=table_identifier, schema=frame.to_arrow().schema)
         except Exception:
             return catalog.load_table(table_identifier)
 
@@ -198,9 +217,7 @@ def write_frame(catalog: Any, table_identifier: str, frame: pl.DataFrame) -> Non
     try:
         tbl = ensure_table_exists(catalog, table_identifier, frame)
     except Exception as exc:
-        raise RuntimeError(
-            f"Iceberg table '{table_identifier}' not found."
-        ) from exc
+        raise RuntimeError(f"Iceberg table '{table_identifier}' not found.") from exc
 
     try:
         tbl.append(frame.to_arrow())
@@ -234,7 +251,7 @@ def persist_to_iceberg(
     primary_key_resolver: PrimaryKeyResolver | None = None,
     frame_preprocessor: Callable[[str, pl.DataFrame], pl.DataFrame] | None = None,
     default_mode: IcebergWriteMode = "upsert",
-    idempotency_store_path: str | Path = ".iceberg/write_log.json",
+    idempotency_store_path: str | Path | None = None,
     sport_prefixes: tuple[str, ...] = ("nfl_", "nba_"),
     dry_run: bool = False,
 ) -> list[IcebergWriteResult]:
@@ -256,8 +273,13 @@ def persist_to_iceberg(
         transformations before write (e.g. stats serialization).
     default_mode : IcebergWriteMode
         Write mode: "append" or "upsert" (dedup then append).
-    idempotency_store_path : str | Path
-        Path to the JSON idempotency log.
+    idempotency_store_path : str | Path | None
+        Path to a JSON idempotency log.
+
+        .. deprecated::
+           Pass ``None`` (the default) to disable the JSON idempotency store.
+           The file-backed store is deprecated; rely on Iceberg snapshot
+           semantics or control re-runs at the call site instead.
     sport_prefixes : tuple[str, ...]
         Prefixes to parse from frame names to determine sport.
     dry_run : bool
@@ -269,7 +291,9 @@ def persist_to_iceberg(
     """
     cat_cfg = catalog_config or IcebergCatalogConfig()
     ns_cfg = namespace_config or IcebergNamespaceConfig()
-    store = IdempotencyStore(idempotency_store_path)
+    store: IdempotencyStore | None = (
+        IdempotencyStore(idempotency_store_path) if idempotency_store_path is not None else None
+    )
 
     catalog = None if dry_run else load_pyiceberg_catalog(cat_cfg)
     results: list[IcebergWriteResult] = []
@@ -296,9 +320,9 @@ def persist_to_iceberg(
         # Normalize null types for Arrow/Iceberg compatibility
         write_frame_data = normalize_null_dtypes(write_frame_data)
 
-        # Idempotency check
+        # Idempotency check (only when a store is configured)
         digest = frame_digest(table_identifier, mode, write_frame_data)
-        should_skip = store.contains(digest)
+        should_skip = store is not None and store.contains(digest)
         if (
             should_skip
             and not dry_run
@@ -324,7 +348,8 @@ def persist_to_iceberg(
         if not dry_run and write_frame_data.height > 0:
             write_frame(catalog, table_identifier, write_frame_data)
 
-        store.add(digest)
+        if store is not None:
+            store.add(digest)
         results.append(
             IcebergWriteResult(
                 entity=frame_name,

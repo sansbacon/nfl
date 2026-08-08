@@ -17,14 +17,14 @@ SCOPES = ["fspt-r"]
 logger = logging.getLogger(__name__)
 
 
-def load_token(token_path: Path) -> dict | None:
+def load_token(token_path: Path) -> dict[str, object] | None:
     if not token_path.exists():
         return None
     payload = json.loads(token_path.read_text(encoding="utf-8"))
     return payload if isinstance(payload, dict) else None
 
 
-def save_token(token_path: Path, token: dict) -> None:
+def save_token(token_path: Path, token: dict[str, object]) -> None:
     token_path.parent.mkdir(parents=True, exist_ok=True)
     token_path.write_text(json.dumps(token, indent=2), encoding="utf-8")
 

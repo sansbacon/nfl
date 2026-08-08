@@ -19,4 +19,3 @@ __all__ = [
     "sleeper_fantasy",
     "yahoo_fantasy",
 ]
-

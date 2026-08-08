@@ -130,23 +130,32 @@ def build_fp_yahoo_crosswalk(
                 "adp_rank": adp_rank.get(fp_id, 9999),
             }
             if fp_name and yh_name and fp_name == yh_name:
-                exact_candidates.append({**candidate, "match_method": "exact", "method_priority": 1})
+                exact_candidates.append(
+                    {**candidate, "match_method": "exact", "method_priority": 1}
+                )
                 continue
 
             if fp_last and yh_last and fp_last == yh_last and fp_pos and yh_pos and fp_pos == yh_pos and fp_first[:3] and yh_first[:3] and fp_first[:3] == yh_first[:3]:
                 fuzzy_candidates.append({**candidate, "match_method": "fuzzy", "method_priority": 2})
 
     exact_fp_ids = {c["fp_player_id"] for c in exact_candidates}
-    candidates = exact_candidates + [c for c in fuzzy_candidates if c["fp_player_id"] not in exact_fp_ids]
+    candidates = exact_candidates + [
+        c for c in fuzzy_candidates if c["fp_player_id"] not in exact_fp_ids
+    ]
 
     best_by_yahoo: dict[int, dict[str, Any]] = {}
-    for c in sorted(candidates, key=lambda x: (x["method_priority"], x["adp_rank"], x["fp_player_id"])):
+    for c in sorted(
+        candidates, key=lambda x: (x["method_priority"], x["adp_rank"], x["fp_player_id"])
+    ):
         yh_id = c["yahoo_player_id"]
         if yh_id not in best_by_yahoo:
             best_by_yahoo[yh_id] = c
 
     best_by_fp: dict[str, dict[str, Any]] = {}
-    for c in sorted(best_by_yahoo.values(), key=lambda x: (x["method_priority"], x["adp_rank"], x["yahoo_player_id"])):
+    for c in sorted(
+        best_by_yahoo.values(),
+        key=lambda x: (x["method_priority"], x["adp_rank"], x["yahoo_player_id"]),
+    ):
         fp_id = c["fp_player_id"]
         if fp_id not in best_by_fp:
             best_by_fp[fp_id] = c
@@ -163,4 +172,6 @@ def build_fp_yahoo_crosswalk(
 
     if output:
         validate(output, entity="fp_yahoo_player_map", sport="nfl")
-    return sorted(output, key=lambda r: (r["match_method"], r["fp_player_id"], r["yahoo_player_id"]))
+    return sorted(
+        output, key=lambda r: (r["match_method"], r["fp_player_id"], r["yahoo_player_id"])
+    )

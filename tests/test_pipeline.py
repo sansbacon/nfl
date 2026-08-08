@@ -159,7 +159,9 @@ class _FakeClient:
             }
         ]
 
-    def get_roster_entries(self, league_key: str, season: int, weeks: list[int], team_keys: list[str]) -> list[dict]:
+    def get_roster_entries(
+        self, league_key: str, season: int, weeks: list[int], team_keys: list[str]
+    ) -> list[dict]:
         _ = season
         return [
             {
@@ -174,7 +176,9 @@ class _FakeClient:
             }
         ]
 
-    def get_player_stats_weekly(self, league_key: str, season: int, roster_entries: list[dict]) -> list[dict]:
+    def get_player_stats_weekly(
+        self, league_key: str, season: int, roster_entries: list[dict]
+    ) -> list[dict]:
         _ = season
         return [
             {
@@ -189,7 +193,9 @@ class _FakeClient:
             }
         ]
 
-    def get_player_stats_weekly_all_players(self, league_key: str, season: int, weeks: list[int]) -> list[dict]:
+    def get_player_stats_weekly_all_players(
+        self, league_key: str, season: int, weeks: list[int]
+    ) -> list[dict]:
         _ = season
         return [
             {
@@ -380,10 +386,9 @@ def test_player_weekly_points_match_scoring_rule_rollup_for_2025() -> None:
         .sort(["league_key", "week", "player_key"])
     )
 
-    weekly_points = (
-        weekly_stats.select(["league_key", "week", "player_key", "fantasy_points"])
-        .sort(["league_key", "week", "player_key"])
-    )
+    weekly_points = weekly_stats.select(
+        ["league_key", "week", "player_key", "fantasy_points"]
+    ).sort(["league_key", "week", "player_key"])
 
     joined = weekly_rollup.join(
         weekly_points,
@@ -456,7 +461,9 @@ def test_run_pipeline_emits_diagnostics_when_enabled() -> None:
 
 
 class _ZeroScoringClient(_FakeClient):
-    def get_roster_entries(self, league_key: str, season: int, weeks: list[int], team_keys: list[str]) -> list[dict]:
+    def get_roster_entries(
+        self, league_key: str, season: int, weeks: list[int], team_keys: list[str]
+    ) -> list[dict]:
         _ = season
         return [
             {
@@ -471,7 +478,9 @@ class _ZeroScoringClient(_FakeClient):
             }
         ]
 
-    def get_player_stats_weekly(self, league_key: str, season: int, roster_entries: list[dict]) -> list[dict]:
+    def get_player_stats_weekly(
+        self, league_key: str, season: int, roster_entries: list[dict]
+    ) -> list[dict]:
         _ = season
         return [
             {
@@ -499,7 +508,9 @@ def test_run_pipeline_diagnostics_warns_for_zero_scoring() -> None:
     )
 
     assert result.diagnostics is not None
-    guard_stage = next(stage for stage in result.diagnostics.stages if stage.stage_name == "nfl_scoring_guard")
+    guard_stage = next(
+        stage for stage in result.diagnostics.stages if stage.stage_name == "nfl_scoring_guard"
+    )
     assert guard_stage.status == "warning"
     assert any("no non-null points" in warning for warning in guard_stage.warnings)
 

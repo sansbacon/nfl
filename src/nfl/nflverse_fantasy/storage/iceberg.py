@@ -42,8 +42,6 @@ class IcebergNamespaceConfig(_BaseNamespaceConfig):
         return self.common
 
 
-
-
 def resolve_table_identifier(
     frame_name: str,
     namespace_config: IcebergNamespaceConfig | None = None,
@@ -70,7 +68,7 @@ def persist_to_iceberg(
     frames: Mapping[str, pl.DataFrame],
     namespace_config: IcebergNamespaceConfig | None = None,
     default_mode: WriteMode = "upsert",
-    idempotency_store_path: str | Path = ".iceberg/nflverse_write_log.json",
+    idempotency_store_path: str | Path | None = None,
     dry_run: bool = True,
 ) -> list[IcebergWriteResult]:
     """Write NFLverse DataFrames to Iceberg tables."""
