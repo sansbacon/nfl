@@ -31,7 +31,7 @@ class PipelineConfig:
     polars_output_dir: str | Path = "./output/nflverse_polars"
     polars_file_format: str = "parquet"
     iceberg_namespaces: IcebergNamespaceConfig = field(default_factory=IcebergNamespaceConfig)
-    iceberg_idempotency_store: str | Path = ".iceberg/nflverse_write_log.json"
+    iceberg_idempotency_store: str | Path | None = None
     iceberg_dry_run: bool = True
     standardization_enabled: bool = False
     standardization_config: StandardizationConfig | None = None

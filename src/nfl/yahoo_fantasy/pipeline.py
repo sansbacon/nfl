@@ -68,7 +68,7 @@ class PipelineConfig:
     iceberg_catalog: IcebergCatalogConfig = field(default_factory=IcebergCatalogConfig)
     iceberg_namespaces: IcebergNamespaceConfig = field(default_factory=IcebergNamespaceConfig)
     iceberg_mode: WriteMode = "upsert"
-    iceberg_idempotency_store: str | Path = ".iceberg/write_log.json"
+    iceberg_idempotency_store: str | Path | None = None
     iceberg_dry_run: bool = True
     materialized_views_enabled: bool = False
     materialized_views: tuple[str, ...] = AVAILABLE_VIEWS

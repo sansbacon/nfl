@@ -41,7 +41,7 @@ class StandardizationConfig:
     polars_file_format: str = "parquet"
     iceberg_enabled: bool = False
     iceberg_dry_run: bool = True
-    iceberg_idempotency_store: str | Path = ".iceberg/std_write_log.json"
+    iceberg_idempotency_store: str | Path | None = None
     iceberg_namespaces: StandardizationIcebergNamespaceConfig = field(
         default_factory=StandardizationIcebergNamespaceConfig
     )

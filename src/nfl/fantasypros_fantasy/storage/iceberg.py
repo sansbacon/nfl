@@ -78,7 +78,7 @@ def persist_to_iceberg(
     catalog_config: IcebergCatalogConfig | None = None,
     namespace_config: IcebergNamespaceConfig | None = None,
     default_mode: WriteMode = "upsert",
-    idempotency_store_path: str | Path = ".iceberg/fantasypros_write_log.json",
+    idempotency_store_path: str | Path | None = None,
     dry_run: bool = False,
 ) -> list[IcebergWriteResult]:
     """Write FantasyPros DataFrames to Iceberg tables."""
