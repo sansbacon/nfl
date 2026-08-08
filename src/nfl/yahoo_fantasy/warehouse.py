@@ -133,7 +133,11 @@ class YahooWarehouseClient:
             with _temporary_cwd(self.paths.project_root):
                 table = self._catalog.load_table(table_identifier)
                 frame = pl.from_arrow(table.scan().to_arrow())
-                return frame if isinstance(frame, pl.DataFrame) else frame.to_frame()
+                if not isinstance(frame, pl.DataFrame):
+                    raise TypeError(
+                        f"Expected DataFrame when loading '{table_identifier}', got {type(frame).__name__}"
+                    )
+                return frame
         except Exception as exc:
             raise WarehouseQueryError(f"Could not load table '{table_identifier}': {exc}") from exc
 
