@@ -1,26 +1,76 @@
-# yahoo_fantasy
+# nfl
 
-Unified Yahoo Fantasy library for extraction, normalization, Polars transforms, and optional Iceberg persistence.
+Unified NFL fantasy football data library: extraction, normalization, and persistence across Yahoo, FantasyPros, ESPN, Sleeper, and NFLverse sources.
+
+## Overview
+
+`nfl` is a Python library for building fantasy football data pipelines. It provides a consistent interface for fetching data from multiple sources, normalizing player and team names across those sources, and persisting the results as Polars parquet files, Apache Iceberg tables, or Unity Catalog Delta tables.
+
+**Key capabilities:**
+
+- **Multi-source ingestion** – Yahoo Fantasy (OAuth), FantasyPros (scraping/API), ESPN (public API), Sleeper (public API), NFLverse (nflreadpy)
+- **Entity standardization** – fuzzy-match player names, team codes, and positions across sources; queue unresolved matches for manual review
+- **Flexible persistence** – write to local parquet files, a local Iceberg catalog (SQLite), or Databricks Unity Catalog
+- **Library-only** – no CLI or GUI; import and compose pipelines in Python scripts or notebooks
 
 ## Status
-- Milestones A-F complete
-- Library-only architecture (no CLI/GUI)
-- Python 3.12+
 
-## Zensical Documentation
-- Package guide: `docs/ZENSICAL_DOCUMENTATION.md`
+- Python 3.12+
+- Library-only architecture (no CLI/GUI)
+- All major data-source integrations implemented (Yahoo, FantasyPros, ESPN, Sleeper, NFLverse)
+- Entity standardization pipeline with review queue
+
+## Project Layout
+
+```
+src/nfl/
+├── common/                   # Shared utilities (crosswalk, matching, storage)
+│   ├── crosswalk.py          # load_canonical_crosswalk()
+│   ├── matching.py           # normalize_name()
+│   └── storage/
+│       ├── polars.py         # persist_with_polars()
+│       ├── unity_catalog.py  # UCTableConfig, persist_to_uc_tables()
+│       └── iceberg.py        # IcebergCatalogConfig, persist_to_iceberg()
+├── yahoo_fantasy/            # Yahoo Fantasy OAuth extraction and transforms
+├── fantasypros_fantasy/      # FantasyPros ADP/rankings scraping and transforms
+├── espn_fantasy/             # ESPN public API extraction and transforms
+├── sleeper_fantasy/          # Sleeper public API extraction and transforms
+├── nflverse_fantasy/         # NFLverse data ingestion (nflreadpy)
+└── entity_standardization/   # Cross-source entity resolution
+
+tests/                        # pytest test suite
+examples/                     # Example scripts and Jupyter notebooks
+scripts/                      # CLI helper scripts (load_data, rebuild_catalog)
+blueprints/                   # Architecture and design documents
+```
 
 ## Install
 
-```powershell
-C:/Users/EricTruett/miniconda3/envs/dbxconnect/python.exe -m pip install -e .
+```bash
+# Install in editable mode (recommended for development)
+pip install -e ".[dev]"
+
+# Install with Apache Iceberg support
+pip install -e ".[iceberg]"
 ```
 
-## Quickstart
+## Environment Variables
+
+Copy your credentials into a `.env` file or export them in your shell. The Yahoo integration is the only source that requires OAuth credentials.
+
+| Variable | Required for |
+|---|---|
+| `YAHOO_CLIENT_ID` | Yahoo Fantasy |
+| `YAHOO_CLIENT_SECRET` | Yahoo Fantasy |
+| `YAHOO_REDIRECT_URI` | Yahoo Fantasy |
+
+## Quickstart by Source
+
+### Yahoo Fantasy
 
 ```python
-from pathlib import Path
 import os
+from pathlib import Path
 
 from nfl.yahoo_fantasy import build_oauth_session, PipelineConfig, run_pipeline
 
@@ -29,7 +79,7 @@ oauth = build_oauth_session(
     client_secret=os.environ["YAHOO_CLIENT_SECRET"],
     redirect_uri=os.environ["YAHOO_REDIRECT_URI"],
     token_path=Path(".yahoo_token.json"),
-    auth_code=None,  # Provide value if first-time auth and no cached token exists
+    auth_code=None,  # Provide on first-time auth; omit once a cached token exists
     open_browser=False,
 )
 
@@ -48,57 +98,27 @@ print(result.frames.keys())
 print(result.polars_outputs)
 ```
 
-## Persistence Defaults
-- **Production**: Unity Catalog Delta tables (`nfl.*` catalog)
-- **Local dev**: Iceberg (SQLite catalog) + Polars parquet files
-- Iceberg namespaces:
-  - NFL: `yhnfl`
-  - NBA: `ynba`
+#### Warehouse Query Client
 
-## Warehouse Query Quickstart
-
-Use the query layer to discover and load existing Iceberg tables as Polars DataFrames.
+Use `YahooWarehouseClient` to discover and load existing Iceberg tables as Polars DataFrames:
 
 ```python
-from nfl.yahoo_fantasy import YahooWarehouseClient
+from nfl.yahoo_fantasy import YahooWarehouseClient, league_team_info, weekly_team_points
 
 client = YahooWarehouseClient.from_project_root()
-report = client.ensure_registered()
-print(report)
-
-print(client.list_namespaces())
-print(client.list_tables("yahoo_common"))
+client.ensure_registered()
 
 league_df = client.load_table("yahoo_common.league")
-team_df = client.maybe_load("yahoo_common.team")
-```
-
-You can also run reusable analytics helpers that mirror the notebook examples:
-
-```python
-from nfl.yahoo_fantasy import league_team_info, weekly_team_points
-
-league_team = league_team_info(league_df=league_df, team_df=team_df)
-
-stats_df = client.maybe_load("yhnfl.player_stats_weekly")
+team_df   = client.maybe_load("yahoo_common.team")
+stats_df  = client.maybe_load("yhnfl.player_stats_weekly")
 roster_df = client.maybe_load("yhnfl.roster_entries")
 matchups_df = client.maybe_load("yhnfl.matchups")
 
+league_team   = league_team_info(league_df=league_df, team_df=team_df)
 weekly_points, points_source = weekly_team_points(stats_df, roster_df, matchups_df)
-print(points_source)
-print(weekly_points)
 ```
 
-## Testing
-
-```powershell
-C:/Users/EricTruett/miniconda3/envs/dbxconnect/python.exe -m pytest -q
-```
-
-## Tracking
-Implementation plan and milestone log are in `YAHOO_INTEGRATION_BLUEPRINT.md`.
-
-## fantasypros_fantasy Quickstart
+### FantasyPros
 
 ```python
 from datetime import date
@@ -120,7 +140,7 @@ result = run_pipeline(
     yahoo_players=yahoo_players,
     config=PipelineConfig(
         storage_target="both",
-        effective_date=date(2026, 7, 18),
+        effective_date=date(2025, 8, 1),
         polars_output_dir="./output/fantasypros_polars",
         iceberg_dry_run=True,
     ),
@@ -130,11 +150,30 @@ print(result.frames.keys())
 print(result.polars_outputs)
 ```
 
-FantasyPros blueprint: `FANTASY_PROS_INTEGRATION_BLUEPRINT.md`
+### NFLverse
 
-FantasyPros notebook migration guide: `FANTASY_PROS_NOTEBOOK_MIGRATION.md`
+```python
+from nfl.nflverse_fantasy import PipelineConfig, run_pipeline
 
-## entity_standardization Quickstart
+result = run_pipeline(
+    config=PipelineConfig(
+        seasons=[2024],
+        enabled_entities=["players", "schedules", "player_stats", "pbp"],
+        storage_target="both",
+        polars_output_dir="./output/nflverse_polars",
+        iceberg_dry_run=True,
+        standardization_enabled=True,
+    )
+)
+
+print(result.frames.keys())
+print(result.polars_outputs)
+print(result.iceberg_outputs)
+```
+
+### Entity Standardization
+
+Resolve player names, team codes, and positions across sources. Unresolved matches are placed in a review queue.
 
 ```python
 from nfl.entity_standardization import EntityStandardizer, StandardizationConfig
@@ -160,13 +199,7 @@ records = [
 
 standardizer = EntityStandardizer(
     config=StandardizationConfig(
-        auto_accept_thresholds={
-            "default": {
-                "player": 0.97,
-                "team": 0.995,
-                "position": 1.0,
-            }
-        },
+        auto_accept_thresholds={"default": {"player": 0.97, "team": 0.995, "position": 1.0}},
         persist_tables=True,
         polars_output_dir="./output/standardization",
         iceberg_enabled=True,
@@ -176,49 +209,68 @@ standardizer = EntityStandardizer(
 
 result = standardizer.standardize_batch(records)
 
-# API outputs
 print(result.standardized_records)
-
-# Persisted table outputs (Polars + optional Iceberg dry run results)
 print(result.tables.keys())
 print(result.polars_outputs)
 print(result.iceberg_outputs)
 ```
 
-### Queue Workflow
-- `std_match_queue`: all review candidates with status and assignment fields.
-- `std_match_queue_open`: unresolved worklist (`new`, `in_review`).
-- `std_match_queue_history`: resolved items with audit trail.
-- `std_manual_overrides`: approved fixes applied in subsequent runs.
-- `std_rescued_records`: unresolved source payloads for replay after manual resolution.
+**Standardization rules:**
+- Positions are normalized to: `QB`, `RB`, `WR`, `TE`, `DST`, `K` (aliases `FB`/`HB` → `RB`).
+- Legacy team codes are mapped to current codes (for example, `San Diego` → `LAC`).
 
-### Position and Team Rules
-- Positions are standardized to: `QB`, `RB`, `WR`, `TE`, `DST`, `K`.
-- Position aliases map `FB` and `HB` to `RB`.
-- Legacy team aliases map to current team codes (for example, `San Diego` -> `LAC`).
+**Review queue tables:**
 
-Entity standardization blueprint: `ENTITY_STANDARDIZATION_BLUEPRINT.md`
+| Table | Description |
+|---|---|
+| `std_match_queue` | All review candidates with status and assignment fields |
+| `std_match_queue_open` | Unresolved worklist (`new`, `in_review`) |
+| `std_match_queue_history` | Resolved items with audit trail |
+| `std_manual_overrides` | Approved fixes applied in subsequent runs |
+| `std_rescued_records` | Unresolved source payloads queued for replay |
 
-## nflverse_fantasy Quickstart
+## Persistence
 
-```python
-from nfl.nflverse_fantasy import PipelineConfig, run_pipeline
+Each pipeline accepts a `storage_target` that controls where data is written:
 
-result = run_pipeline(
-    config=PipelineConfig(
-        seasons=[2024],
-        enabled_entities=["players", "schedules", "player_stats", "pbp"],
-        storage_target="both",
-        polars_output_dir="./output/nflverse_polars",
-        iceberg_dry_run=True,
-        standardization_enabled=True,
-    )
-)
+| `storage_target` | Where data is written |
+|---|---|
+| `"polars"` | Local parquet files (path set by `polars_output_dir`) |
+| `"iceberg"` | Local Iceberg catalog (SQLite) |
+| `"unity_catalog"` | Databricks Unity Catalog Delta tables (`nfl.*` catalog) |
+| `"both"` | Polars parquet **and** Iceberg |
 
-print(result.frames.keys())
-print(result.polars_outputs)
-print(result.iceberg_outputs)
+Iceberg namespaces for Yahoo data: `yhnfl` (NFL), `ynba` (NBA).
+
+Set `iceberg_dry_run=True` to validate the pipeline without writing to Iceberg.
+
+## Testing
+
+```bash
+# Run all unit tests
+pytest
+
+# Exclude slow or integration tests
+pytest -m "not integration"
+
+# Run with coverage report
+pytest --cov --cov-report=term-missing
 ```
 
-NFLverse blueprint: `blueprints/NFLVERSE_INGESTION_BLUEPRINT.md`
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, code style guidelines, and how to run the full dev toolchain (ruff, mypy, pre-commit).
+
+## Architecture
+
+Design documents and blueprints are in the `blueprints/` directory:
+
+- `blueprints/YAHOO_INTEGRATION_BLUEPRINT.md` – Yahoo Fantasy integration plan
+- `blueprints/FANTASY_PROS_INTEGRATION_BLUEPRINT.md` – FantasyPros integration plan
+- `blueprints/ENTITY_STANDARDIZATION_BLUEPRINT.md` – Entity standardization design
+- `blueprints/NFLVERSE_INGESTION_BLUEPRINT.md` – NFLverse ingestion design
+
+## License
+
+MIT
 
