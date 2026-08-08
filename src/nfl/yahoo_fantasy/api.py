@@ -10,8 +10,8 @@ import time
 from pathlib import Path
 from typing import Any
 
-from requests_oauthlib import OAuth2Session
 from requests.exceptions import JSONDecodeError as RequestsJSONDecodeError
+from requests_oauthlib import OAuth2Session
 
 from nfl.yahoo_fantasy.validation import validate
 
@@ -271,7 +271,9 @@ class YahooApiClient:
 
                 raw_game_id = pick_scalar(merged.get("game_id"))
                 raw_game_key = pick_scalar(merged.get("game_key"))
-                raw_game_code = pick_scalar(merged.get("code")) or pick_scalar(merged.get("game_code"))
+                raw_game_code = pick_scalar(merged.get("code")) or pick_scalar(
+                    merged.get("game_code")
+                )
                 raw_season = pick_scalar(merged.get("season"))
                 if raw_game_id in (None, "") and raw_game_key in (None, ""):
                     continue
@@ -297,7 +299,9 @@ class YahooApiClient:
                 else:
                     rows_by_id[game_id] = {
                         "game_id": game_id,
-                        "game_key": candidate["game_key"] or existing.get("game_key") or str(game_id),
+                        "game_key": candidate["game_key"]
+                        or existing.get("game_key")
+                        or str(game_id),
                         "game_code": candidate["game_code"] or existing.get("game_code") or "",
                         "season": candidate["season"] or int(existing.get("season") or 0),
                         "name": candidate["name"] or existing.get("name") or "",
@@ -332,7 +336,9 @@ class YahooApiClient:
                 else:
                     rows_by_id[game_id] = {
                         "game_id": game_id,
-                        "game_key": candidate["game_key"] or existing.get("game_key") or str(game_id),
+                        "game_key": candidate["game_key"]
+                        or existing.get("game_key")
+                        or str(game_id),
                         "game_code": candidate["game_code"] or existing.get("game_code") or "",
                         "season": candidate["season"] or int(existing.get("season") or 0),
                         "name": candidate["name"] or existing.get("name") or "",
@@ -357,7 +363,9 @@ class YahooApiClient:
                 search_suffix = f";search={search_term}"
 
         for _ in range(max_pages):
-            payload = self.get(f"/game/{game_id}/players;start={start};count={count}{search_suffix}")
+            payload = self.get(
+                f"/game/{game_id}/players;start={start};count={count}{search_suffix}"
+            )
             page_records = self._extract_players_from_payload(payload, game_id)
             if not page_records:
                 break
@@ -387,13 +395,9 @@ class YahooApiClient:
         search: str | None = None,
     ) -> list[dict[str, Any]]:
         games = self.discover_games(sport=sport)
-        matching_games = [
-            row for row in games if to_int(row.get("season"), 0) == int(season)
-        ]
+        matching_games = [row for row in games if to_int(row.get("season"), 0) == int(season)]
         if not matching_games:
-            raise ValueError(
-                f"No Yahoo game found for sport='{sport}' and season={season}."
-            )
+            raise ValueError(f"No Yahoo game found for sport='{sport}' and season={season}.")
 
         game = sorted(matching_games, key=lambda r: int(r.get("game_id") or 0))[-1]
         return self.get_players_by_game(game_id=int(game["game_id"]), search=search)
@@ -527,7 +531,11 @@ class YahooApiClient:
             if not isinstance(team_entry, dict):
                 continue
             team_array = team_entry.get("team", [])
-            metadata = team_array[0] if isinstance(team_array, list) and team_array and isinstance(team_array[0], list) else []
+            metadata = (
+                team_array[0]
+                if isinstance(team_array, list) and team_array and isinstance(team_array[0], list)
+                else []
+            )
             team_key = ""
             team_name = ""
             owner_name = ""
@@ -544,7 +552,9 @@ class YahooApiClient:
                 if "managers" in elem:
                     managers = elem.get("managers", [])
                     if isinstance(managers, list) and managers:
-                        manager = managers[0].get("manager", {}) if isinstance(managers[0], dict) else {}
+                        manager = (
+                            managers[0].get("manager", {}) if isinstance(managers[0], dict) else {}
+                        )
                         if isinstance(manager, dict):
                             owner_name = str(pick_scalar(manager.get("nickname")) or "")
             if not team_key:
@@ -566,7 +576,9 @@ class YahooApiClient:
 
     def get_draft_picks(self, league_key: str, season: int | None = None) -> list[dict[str, Any]]:
         payload = self.get(f"/league/{league_key}/draftresults;out=players")
-        season_value = season if season is not None else self.get_league_metadata(league_key)["season"]
+        season_value = (
+            season if season is not None else self.get_league_metadata(league_key)["season"]
+        )
         picks: list[dict[str, Any]] = []
         for item in iter_dicts(payload):
             if "round" not in item or "pick" not in item:
@@ -593,8 +605,12 @@ class YahooApiClient:
             validate(picks, entity="draft_pick")
         return picks
 
-    def get_stat_categories(self, league_key: str, game_id: int | None = None) -> list[dict[str, Any]]:
-        resolved_game_id = game_id if game_id is not None else self.get_league_metadata(league_key)["game_id"]
+    def get_stat_categories(
+        self, league_key: str, game_id: int | None = None
+    ) -> list[dict[str, Any]]:
+        resolved_game_id = (
+            game_id if game_id is not None else self.get_league_metadata(league_key)["game_id"]
+        )
         payload = self.get(f"/game/{resolved_game_id}/stat_categories")
 
         rows_by_id: dict[str, dict[str, Any]] = {}
@@ -616,9 +632,7 @@ class YahooApiClient:
                     stat_id = str(pick_scalar(part.get("stat_id")) or "").strip()
                 if not display_name:
                     display_name = str(
-                        pick_scalar(part.get("display_name"))
-                        or pick_scalar(part.get("abbr"))
-                        or ""
+                        pick_scalar(part.get("display_name")) or pick_scalar(part.get("abbr")) or ""
                     ).strip()
                 if not name:
                     name = str(pick_scalar(part.get("name")) or "").strip()
@@ -674,7 +688,9 @@ class YahooApiClient:
         return rows
 
     def get_scoring_rules(self, league_key: str, season: int | None = None) -> list[dict[str, Any]]:
-        season_value = season if season is not None else self.get_league_metadata(league_key)["season"]
+        season_value = (
+            season if season is not None else self.get_league_metadata(league_key)["season"]
+        )
         payload = self.get(f"/league/{league_key}/settings")
 
         rows_by_id: dict[str, dict[str, Any]] = {}
@@ -705,7 +721,9 @@ class YahooApiClient:
                 if points_per_unit == 0.0 and ppu_raw not in (None, ""):
                     points_per_unit = to_float(ppu_raw, 0.0)
 
-                target_raw = pick_scalar(part.get("bonus_target")) or pick_scalar(part.get("target"))
+                target_raw = pick_scalar(part.get("bonus_target")) or pick_scalar(
+                    part.get("target")
+                )
                 if bonus_target is None and target_raw not in (None, ""):
                     bonus_target = to_float(target_raw, 0.0)
 
@@ -741,8 +759,12 @@ class YahooApiClient:
             )
             points_per_unit = to_float(ppu_raw, 0.0)
 
-            bonus_target_raw = pick_scalar(item.get("bonus_target")) or pick_scalar(item.get("target"))
-            bonus_points_raw = pick_scalar(item.get("bonus_points")) or pick_scalar(item.get("bonus"))
+            bonus_target_raw = pick_scalar(item.get("bonus_target")) or pick_scalar(
+                item.get("target")
+            )
+            bonus_points_raw = pick_scalar(item.get("bonus_points")) or pick_scalar(
+                item.get("bonus")
+            )
 
             existing = rows_by_id.get(stat_id)
             if existing is not None:
@@ -759,8 +781,12 @@ class YahooApiClient:
                 "season": season_value,
                 "stat_id": stat_id,
                 "points_per_unit": points_per_unit,
-                "bonus_target": to_float(bonus_target_raw, 0.0) if bonus_target_raw not in (None, "") else None,
-                "bonus_points": to_float(bonus_points_raw, 0.0) if bonus_points_raw not in (None, "") else None,
+                "bonus_target": to_float(bonus_target_raw, 0.0)
+                if bonus_target_raw not in (None, "")
+                else None,
+                "bonus_points": to_float(bonus_points_raw, 0.0)
+                if bonus_points_raw not in (None, "")
+                else None,
             }
 
         rows = sorted(rows_by_id.values(), key=lambda r: r["stat_id"])
@@ -770,7 +796,9 @@ class YahooApiClient:
 
     def get_transactions(self, league_key: str, season: int | None = None) -> list[dict[str, Any]]:
         payload = self.get(f"/league/{league_key}/transactions")
-        season_value = season if season is not None else self.get_league_metadata(league_key)["season"]
+        season_value = (
+            season if season is not None else self.get_league_metadata(league_key)["season"]
+        )
         rows: list[dict[str, Any]] = []
         leagues = payload.get("fantasy_content", {}).get("league", [])
         if len(leagues) < 2 or not isinstance(leagues[1], dict):
@@ -848,7 +876,9 @@ class YahooApiClient:
         payload = self.get(f"/league/{league_key}/standings")
         teams = self._extract_standing_teams(payload)
         if not teams:
-            teams = self._extract_standing_teams(self.get(f"/league/{league_key}/teams;out=standings"))
+            teams = self._extract_standing_teams(
+                self.get(f"/league/{league_key}/teams;out=standings")
+            )
 
         game_code = (sport or league_meta.get("game_code") or "").lower()
         season = league_meta["season"]
@@ -873,7 +903,13 @@ class YahooApiClient:
                 payload = self.get(f"/league/{league_key}/scoreboard;week={week}")
             except Exception:
                 continue
-            for left, right, matchup_week, is_playoff, is_consolation in self._extract_weekly_matchup_pairs(payload):
+            for (
+                left,
+                right,
+                matchup_week,
+                is_playoff,
+                is_consolation,
+            ) in self._extract_weekly_matchup_pairs(payload):
                 rows.append(
                     {
                         "league_key": league_key,
@@ -934,7 +970,9 @@ class YahooApiClient:
                 if payload is None:
                     continue
 
-                team_rows = self._extract_team_roster_entries(payload, league_key, season, week, team_key)
+                team_rows = self._extract_team_roster_entries(
+                    payload, league_key, season, week, team_key
+                )
 
                 # Cached payloads can be stale and omit scoring details.
                 # If we do not see points/stats, retry roster requests uncached.
@@ -1097,9 +1135,7 @@ class YahooApiClient:
             return True
         if candidate_has_stats and not current_has_stats:
             return True
-        if candidate_points > current_points:
-            return True
-        return False
+        return candidate_points > current_points
 
     def _extract_weekly_player_stats_from_league_payload(
         self,
@@ -1139,7 +1175,9 @@ class YahooApiClient:
             if player_key in rows_by_key:
                 continue
 
-            has_scoring_keys = any(k in item for k in ("player_points", "player_stats", "status", "bye_weeks"))
+            has_scoring_keys = any(
+                k in item for k in ("player_points", "player_stats", "status", "bye_weeks")
+            )
             if not has_scoring_keys:
                 continue
 
@@ -1154,7 +1192,11 @@ class YahooApiClient:
                 if week_raw not in (None, ""):
                     bye_week = to_int(week_raw, 0)
 
-            stats = self._extract_player_stat_lines(item.get("player_stats")) if "player_stats" in item else []
+            stats = (
+                self._extract_player_stat_lines(item.get("player_stats"))
+                if "player_stats" in item
+                else []
+            )
             rows_by_key[player_key] = {
                 "league_key": league_key,
                 "season": season,
@@ -1198,7 +1240,9 @@ class YahooApiClient:
                                 bye_week = to_int(bye_val, 0)
             elif isinstance(elem, dict):
                 if "player_points" in elem:
-                    fantasy_points = self._extract_points_from_player_points(elem.get("player_points"))
+                    fantasy_points = self._extract_points_from_player_points(
+                        elem.get("player_points")
+                    )
                 if "player_stats" in elem:
                     stats = self._extract_player_stat_lines(elem.get("player_stats"))
 
@@ -1231,7 +1275,11 @@ class YahooApiClient:
             return []
         container = leagues[1]
         teams_dict: Any = None
-        if "standings" in container and isinstance(container["standings"], list) and container["standings"]:
+        if (
+            "standings" in container
+            and isinstance(container["standings"], list)
+            and container["standings"]
+        ):
             s0 = container["standings"][0]
             if isinstance(s0, dict):
                 teams_dict = s0.get("teams", {})
@@ -1261,7 +1309,9 @@ class YahooApiClient:
                 if "managers" in elem:
                     managers = elem.get("managers", [])
                     if isinstance(managers, list) and managers:
-                        manager = managers[0].get("manager", {}) if isinstance(managers[0], dict) else {}
+                        manager = (
+                            managers[0].get("manager", {}) if isinstance(managers[0], dict) else {}
+                        )
                         if isinstance(manager, dict):
                             owner_name = str(pick_scalar(manager.get("nickname")) or "")
             ts = {}
@@ -1274,10 +1324,20 @@ class YahooApiClient:
                 if "team_points" in elem and isinstance(elem["team_points"], dict):
                     tp = elem["team_points"]
             if team_key:
-                out.append({"team_key": team_key, "team_name": team_name, "owner_name": owner_name, "team_standings": ts, "team_points": tp})
+                out.append(
+                    {
+                        "team_key": team_key,
+                        "team_name": team_name,
+                        "owner_name": owner_name,
+                        "team_standings": ts,
+                        "team_points": tp,
+                    }
+                )
         return out
 
-    def _normalize_nfl_standings(self, league_key: str, season: int, teams: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _normalize_nfl_standings(
+        self, league_key: str, season: int, teams: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
         for team in teams:
             ts = team.get("team_standings", {})
@@ -1297,7 +1357,9 @@ class YahooApiClient:
             )
         return rows
 
-    def _normalize_nba_standings(self, league_key: str, season: int, scoring_type: str, teams: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _normalize_nba_standings(
+        self, league_key: str, season: int, scoring_type: str, teams: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
         for team in teams:
             ts = team.get("team_standings", {})
@@ -1319,7 +1381,9 @@ class YahooApiClient:
             return ranked
         return rows
 
-    def _extract_players_from_payload(self, payload: dict[str, Any], game_id: int) -> list[dict[str, Any]]:
+    def _extract_players_from_payload(
+        self, payload: dict[str, Any], game_id: int
+    ) -> list[dict[str, Any]]:
         rows_by_key: dict[str, dict[str, Any]] = {}
 
         def _collect_from_players_dict(players_dict: Any) -> None:
@@ -1426,7 +1490,9 @@ class YahooApiClient:
                 if "teams" in elem and isinstance(elem["teams"], dict):
                     teams_dict = elem["teams"]
                 if teams_dict is None:
-                    numeric_children = [v for k, v in elem.items() if str(k).isdigit() and isinstance(v, dict)]
+                    numeric_children = [
+                        v for k, v in elem.items() if str(k).isdigit() and isinstance(v, dict)
+                    ]
                     for child in numeric_children:
                         if "teams" in child and isinstance(child["teams"], dict):
                             teams_dict = child["teams"]
@@ -1595,6 +1661,8 @@ class YahooApiClient:
         return [dedup[key] for key in sorted(dedup.keys())]
 
 
-def fetch_league_payload(oauth_session: OAuth2Session, league_key: str, timeout_seconds: int = 30) -> dict[str, Any]:
+def fetch_league_payload(
+    oauth_session: OAuth2Session, league_key: str, timeout_seconds: int = 30
+) -> dict[str, Any]:
     client = YahooApiClient(oauth_session=oauth_session, timeout_seconds=timeout_seconds)
     return client.get(f"/league/{league_key}/settings")

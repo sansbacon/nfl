@@ -5,12 +5,12 @@ from nfl.common.crosswalk import load_canonical_crosswalk
 from nfl.common.matching import normalize_name
 
 __all__ = [
-    "config",
-    "crosswalk",
-    "matching",
-    "storage",
     "PipelineConfigBase",
     "StorageTarget",
+    "config",
+    "crosswalk",
     "load_canonical_crosswalk",
+    "matching",
     "normalize_name",
+    "storage",
 ]

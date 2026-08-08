@@ -18,19 +18,19 @@ from nfl.espn_fantasy.transforms import (
 )
 
 __all__ = [
-    "api",
-    "constants",
-    "transforms",
-    "EspnApiError",
-    "EspnFantasyClient",
-    "EspnPlayer",
     "ALL_FANTASY_SLOT_IDS",
     "POSITION_MAP",
     "STAT_MAP",
     "TEAM_MAP",
+    "EspnApiError",
+    "EspnFantasyClient",
+    "EspnPlayer",
+    "api",
+    "constants",
     "players_to_ranks_rows",
     "players_to_season_projection_rows",
     "players_to_weekly_projection_rows",
+    "transforms",
 ]
 
 __version__ = "0.1.0"

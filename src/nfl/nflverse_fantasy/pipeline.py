@@ -8,17 +8,18 @@ from typing import Any
 
 import polars as pl
 
-from nfl.entity_standardization.pipeline import EntityStandardizer, StandardizationConfig, StandardizationResult
-from nfl.nflverse_fantasy.api import NflverseApiClient
-from nfl.nflverse_fantasy.storage.iceberg import IcebergNamespaceConfig, IcebergWriteResult, persist_to_iceberg
-from nfl.nflverse_fantasy.storage.polars import persist_with_polars
-from nfl.nflverse_fantasy.storage.unity_catalog import (
-    NflverseUCTableConfig,
-    NflverseUCVolumeConfig,
-    persist_nflverse_to_uc_tables,
-    persist_nflverse_to_uc_volume,
+from nfl.entity_standardization.pipeline import (
+    EntityStandardizer,
+    StandardizationConfig,
+    StandardizationResult,
 )
-from nfl.common.storage import UCWriteResult
+from nfl.nflverse_fantasy.api import NflverseApiClient
+from nfl.nflverse_fantasy.storage.iceberg import (
+    IcebergNamespaceConfig,
+    IcebergWriteResult,
+    persist_to_iceberg,
+)
+from nfl.nflverse_fantasy.storage.polars import persist_with_polars
 from nfl.nflverse_fantasy.transforms import transform
 
 
@@ -48,7 +49,9 @@ def _build_client() -> NflverseApiClient:
     return NflverseApiClient(validate_contracts=True)
 
 
-def _collect_entities(client: Any, seasons: list[int] | None, enabled_entities: set[str] | None) -> dict[str, list[dict[str, Any]]]:
+def _collect_entities(
+    client: Any, seasons: list[int] | None, enabled_entities: set[str] | None
+) -> dict[str, list[dict[str, Any]]]:
     getter_map = {
         "pbp": lambda: client.get_pbp(seasons=seasons),
         "player_stats": lambda: client.get_player_stats(seasons=seasons),
@@ -84,7 +87,13 @@ def _collect_entities(client: Any, seasons: list[int] | None, enabled_entities: 
 def _build_standardization_records(players: list[dict[str, Any]]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for row in players:
-        player_id = str(row.get("gsis_id") or row.get("player_id") or row.get("pfr_id") or row.get("_record_hash") or "")
+        player_id = str(
+            row.get("gsis_id")
+            or row.get("player_id")
+            or row.get("pfr_id")
+            or row.get("_record_hash")
+            or ""
+        )
         display_name = str(row.get("display_name") or row.get("player_name") or "").strip()
         if not display_name:
             first = str(row.get("first_name") or "").strip()
@@ -116,14 +125,17 @@ def run_pipeline(
 
     standardization_result: StandardizationResult | None = None
     if cfg.standardization_enabled and "players" in entities:
-        standardizer = EntityStandardizer(config=cfg.standardization_config or StandardizationConfig())
+        standardizer = EntityStandardizer(
+            config=cfg.standardization_config or StandardizationConfig()
+        )
         std_records = _build_standardization_records(entities["players"])
         standardization_result = standardizer.standardize_batch(std_records)
         frames.update(
             {
                 key: value
                 for key, value in standardization_result.tables.items()
-                if key in {
+                if key
+                in {
                     "std_standardized_outputs",
                     "std_match_queue",
                     "std_rescued_records",
@@ -136,7 +148,9 @@ def run_pipeline(
     iceberg_outputs: list[IcebergWriteResult] = []
 
     if cfg.storage_target in {"polars", "both"}:
-        polars_outputs = persist_with_polars(frames, output_dir=cfg.polars_output_dir, file_format=cfg.polars_file_format)
+        polars_outputs = persist_with_polars(
+            frames, output_dir=cfg.polars_output_dir, file_format=cfg.polars_file_format
+        )
 
     if cfg.storage_target in {"iceberg", "both"}:
         iceberg_outputs = persist_to_iceberg(

@@ -6,20 +6,18 @@ routing, contract resolution, and stats-list serialization.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, Mapping
+from typing import Any, Literal
 
 import polars as pl
 
 from nfl.common.storage.iceberg import (
-    IcebergCatalogConfig as _BaseCatalogConfig,
-    IcebergNamespaceConfig as _BaseNamespaceConfig,
-    IcebergWriteResult,
     IcebergWriteMode as WriteMode,
-    persist_to_iceberg as _persist,
 )
 from nfl.yahoo_fantasy.validation import get_contract
 
@@ -111,7 +109,9 @@ def _frame_digest(table_identifier: str, mode: WriteMode, frame: pl.DataFrame) -
         "columns": frame.columns,
         "rows": frame.to_dicts(),
     }
-    return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode("utf-8")).hexdigest()
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, default=str).encode("utf-8")
+    ).hexdigest()
 
 
 def _normalize_null_dtypes(frame: pl.DataFrame) -> pl.DataFrame:
@@ -120,7 +120,9 @@ def _normalize_null_dtypes(frame: pl.DataFrame) -> pl.DataFrame:
     if not null_cols and not list_null_cols:
         return frame
     casts: list[pl.Expr] = [pl.col(col).cast(pl.Utf8, strict=False).alias(col) for col in null_cols]
-    casts.extend(pl.col(col).cast(pl.List(pl.Utf8), strict=False).alias(col) for col in list_null_cols)
+    casts.extend(
+        pl.col(col).cast(pl.List(pl.Utf8), strict=False).alias(col) for col in list_null_cols
+    )
     return frame.with_columns(casts)
 
 
@@ -199,10 +201,8 @@ def _ensure_table_exists(catalog: Any, table_identifier: str, frame: pl.DataFram
         return catalog.load_table(table_identifier)
     except NoSuchTableError:
         namespace, _table_name = table_identifier.rsplit(".", 1)
-        try:
+        with contextlib.suppress(NamespaceAlreadyExistsError):
             catalog.create_namespace(namespace)
-        except NamespaceAlreadyExistsError:
-            pass
         return catalog.create_table(identifier=table_identifier, schema=frame.to_arrow().schema)
 
 
@@ -215,7 +215,9 @@ def _write_frame_with_pyiceberg(catalog: Any, table_identifier: str, frame: pl.D
     try:
         table.append(frame.to_arrow())
     except Exception as exc:
-        raise RuntimeError(f"Failed appending to Iceberg table '{table_identifier}': {exc}") from exc
+        raise RuntimeError(
+            f"Failed appending to Iceberg table '{table_identifier}': {exc}"
+        ) from exc
 
 
 def _table_exists(catalog: Any, table_identifier: str) -> bool:
@@ -253,7 +255,12 @@ def persist_to_iceberg(
 
         digest = _frame_digest(table_identifier, mode, write_frame)
         should_skip = store.contains(digest)
-        if should_skip and not dry_run and catalog is not None and not _table_exists(catalog, table_identifier):
+        if (
+            should_skip
+            and not dry_run
+            and catalog is not None
+            and not _table_exists(catalog, table_identifier)
+        ):
             should_skip = False
 
         if should_skip:

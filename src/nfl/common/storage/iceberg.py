@@ -7,11 +7,13 @@ configs and contract resolvers, then delegate to persist_to_iceberg().
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Literal, Mapping, Protocol
+from typing import Any, Literal, Protocol
 
 import polars as pl
 
@@ -91,9 +93,7 @@ class IdempotencyStore:
     def add(self, digest: str) -> None:
         self._entries.add(digest)
         self.store_path.parent.mkdir(parents=True, exist_ok=True)
-        self.store_path.write_text(
-            json.dumps(sorted(self._entries), indent=2), encoding="utf-8"
-        )
+        self.store_path.write_text(json.dumps(sorted(self._entries), indent=2), encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -125,17 +125,12 @@ def frame_digest(table_identifier: str, mode: IcebergWriteMode, frame: pl.DataFr
 def normalize_null_dtypes(frame: pl.DataFrame) -> pl.DataFrame:
     """Cast Null and List(Null) columns to Utf8 for Iceberg compatibility."""
     null_cols = [name for name, dtype in frame.schema.items() if dtype == pl.Null]
-    list_null_cols = [
-        name for name, dtype in frame.schema.items() if str(dtype) == "List(Null)"
-    ]
+    list_null_cols = [name for name, dtype in frame.schema.items() if str(dtype) == "List(Null)"]
     if not null_cols and not list_null_cols:
         return frame
-    casts: list[pl.Expr] = [
-        pl.col(col).cast(pl.Utf8, strict=False).alias(col) for col in null_cols
-    ]
+    casts: list[pl.Expr] = [pl.col(col).cast(pl.Utf8, strict=False).alias(col) for col in null_cols]
     casts.extend(
-        pl.col(col).cast(pl.List(pl.Utf8), strict=False).alias(col)
-        for col in list_null_cols
+        pl.col(col).cast(pl.List(pl.Utf8), strict=False).alias(col) for col in list_null_cols
     )
     return frame.with_columns(casts)
 
@@ -150,9 +145,7 @@ def load_pyiceberg_catalog(config: IcebergCatalogConfig) -> Any:
     try:
         from pyiceberg.catalog import load_catalog
     except ModuleNotFoundError as exc:
-        raise RuntimeError(
-            "pyiceberg is not installed in the active environment."
-        ) from exc
+        raise RuntimeError("pyiceberg is not installed in the active environment.") from exc
 
     return load_catalog(
         config.catalog_name,
@@ -162,9 +155,7 @@ def load_pyiceberg_catalog(config: IcebergCatalogConfig) -> Any:
     )
 
 
-def ensure_table_exists(
-    catalog: Any, table_identifier: str, frame: pl.DataFrame
-) -> Any:
+def ensure_table_exists(catalog: Any, table_identifier: str, frame: pl.DataFrame) -> Any:
     """Load an Iceberg table, creating it (and namespace) if needed."""
     from pyiceberg.exceptions import NamespaceAlreadyExistsError, NoSuchTableError
 
@@ -172,14 +163,10 @@ def ensure_table_exists(
         return catalog.load_table(table_identifier)
     except (NoSuchTableError, Exception):
         namespace, _table_name = table_identifier.rsplit(".", 1)
-        try:
+        with contextlib.suppress(NamespaceAlreadyExistsError, Exception):
             catalog.create_namespace(namespace)
-        except (NamespaceAlreadyExistsError, Exception):
-            pass
         try:
-            return catalog.create_table(
-                identifier=table_identifier, schema=frame.to_arrow().schema
-            )
+            return catalog.create_table(identifier=table_identifier, schema=frame.to_arrow().schema)
         except Exception:
             return catalog.load_table(table_identifier)
 
@@ -198,9 +185,7 @@ def write_frame(catalog: Any, table_identifier: str, frame: pl.DataFrame) -> Non
     try:
         tbl = ensure_table_exists(catalog, table_identifier, frame)
     except Exception as exc:
-        raise RuntimeError(
-            f"Iceberg table '{table_identifier}' not found."
-        ) from exc
+        raise RuntimeError(f"Iceberg table '{table_identifier}' not found.") from exc
 
     try:
         tbl.append(frame.to_arrow())

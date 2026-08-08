@@ -6,11 +6,10 @@ Sleeper's public endpoints.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 import requests
-
 
 SLEEPER_PLAYERS_URL = "https://api.sleeper.app/v1/players/nfl"
 SLEEPER_PROJECTIONS_URL = "https://api.sleeper.com/projections/nfl"
@@ -70,9 +69,7 @@ class SleeperClient:
         Returns a dict keyed by sleeper_player_id with raw player metadata.
         This is a large response (~10MB) containing ~12K players.
         """
-        resp = self.session.get(
-            SLEEPER_PLAYERS_URL, timeout=self.timeout_seconds
-        )
+        resp = self.session.get(SLEEPER_PLAYERS_URL, timeout=self.timeout_seconds)
         if resp.status_code != 200:
             raise SleeperApiError(
                 f"Sleeper players API returned {resp.status_code}: {resp.text[:200]}"
@@ -91,9 +88,7 @@ class SleeperClient:
         season : int
             NFL season year.
         """
-        position_params = "&".join(
-            f"position[]={p}" for p in FANTASY_POSITIONS
-        )
+        position_params = "&".join(f"position[]={p}" for p in FANTASY_POSITIONS)
         url = (
             f"{SLEEPER_PROJECTIONS_URL}/{season}"
             f"?season_type=regular&{position_params}&order_by=adp_half_ppr"
@@ -105,9 +100,7 @@ class SleeperClient:
             )
         return resp.json()
 
-    def fetch_players_with_adp(
-        self, season: int
-    ) -> list[SleeperPlayer]:
+    def fetch_players_with_adp(self, season: int) -> list[SleeperPlayer]:
         """Fetch players and ADP, returning merged SleeperPlayer objects.
 
         Convenience method that calls both endpoints and merges the results

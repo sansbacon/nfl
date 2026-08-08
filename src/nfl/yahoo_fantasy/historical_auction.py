@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from difflib import SequenceMatcher
+import contextlib
 import hashlib
 import json
+from dataclasses import dataclass
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
@@ -117,9 +118,15 @@ def load_historical_auction_values(csv_path: str | Path) -> pl.DataFrame:
         )
         .with_columns(
             [
-                pl.col("team_raw").map_elements(normalize_team_code, return_dtype=pl.Utf8).alias("team_normalized"),
-                pl.col("player_name_raw").map_elements(normalize_player_name, return_dtype=pl.Utf8).alias("player_name_normalized"),
-                pl.col("position_raw").map_elements(normalize_position, return_dtype=pl.Utf8).alias("position_normalized"),
+                pl.col("team_raw")
+                .map_elements(normalize_team_code, return_dtype=pl.Utf8)
+                .alias("team_normalized"),
+                pl.col("player_name_raw")
+                .map_elements(normalize_player_name, return_dtype=pl.Utf8)
+                .alias("player_name_normalized"),
+                pl.col("position_raw")
+                .map_elements(normalize_position, return_dtype=pl.Utf8)
+                .alias("position_normalized"),
             ]
         )
     )
@@ -147,16 +154,23 @@ def resolve_historical_players(
         else ["player_key", "player_id", "full_name", "display_position"]
     ).with_columns(
         [
-            pl.col("full_name").map_elements(normalize_player_name, return_dtype=pl.Utf8).alias("full_name_normalized"),
-            pl.col("display_position").map_elements(normalize_position, return_dtype=pl.Utf8).alias("display_position_normalized"),
+            pl.col("full_name")
+            .map_elements(normalize_player_name, return_dtype=pl.Utf8)
+            .alias("full_name_normalized"),
+            pl.col("display_position")
+            .map_elements(normalize_position, return_dtype=pl.Utf8)
+            .alias("display_position_normalized"),
             (
-                pl.col("editorial_team_abbr").map_elements(normalize_team_code, return_dtype=pl.Utf8)
+                pl.col("editorial_team_abbr").map_elements(
+                    normalize_team_code, return_dtype=pl.Utf8
+                )
                 if "editorial_team_abbr" in yahoo_player_df.columns
                 else pl.lit("")
             ).alias("team_normalized"),
-            pl.col("full_name").map_elements(normalize_player_name, return_dtype=pl.Utf8).map_elements(
-                _compact_name_key, return_dtype=pl.Utf8
-            ).alias("full_name_compact"),
+            pl.col("full_name")
+            .map_elements(normalize_player_name, return_dtype=pl.Utf8)
+            .map_elements(_compact_name_key, return_dtype=pl.Utf8)
+            .alias("full_name_compact"),
         ]
     )
 
@@ -248,7 +262,9 @@ def resolve_historical_players(
                 and raw_pos
                 and str(player.get("display_position_normalized") or "") == raw_pos
                 and _name_parts(str(player.get("full_name_normalized") or ""))[1] == raw_last
-                and _prefix_match(raw_first, _name_parts(str(player.get("full_name_normalized") or ""))[0])
+                and _prefix_match(
+                    raw_first, _name_parts(str(player.get("full_name_normalized") or ""))[0]
+                )
                 and len(last_name_name_keys_by_position.get((raw_last, raw_pos), set())) == 1
             ]
             if nickname_matches:
@@ -293,9 +309,13 @@ def resolve_historical_players(
             "position_normalized": raw_pos,
             "team_normalized": raw_team,
             "yahoo_player_key": str(best.get("player_key") or "") if best is not None else "",
-            "yahoo_player_id": int(best.get("player_id") or 0) if best is not None and best.get("player_id") is not None else None,
+            "yahoo_player_id": int(best.get("player_id") or 0)
+            if best is not None and best.get("player_id") is not None
+            else None,
             "resolved_player_name": str(best.get("full_name") or "") if best is not None else "",
-            "resolved_position": str(best.get("display_position") or "") if best is not None else "",
+            "resolved_position": str(best.get("display_position") or "")
+            if best is not None
+            else "",
             "resolution_status": status,
             "resolution_confidence": round(float(best_score), 4),
             "resolution_method": method,
@@ -312,9 +332,15 @@ def resolve_historical_players(
                     "team_raw": str(row.get("team_raw") or ""),
                     "resolution_status": status,
                     "resolution_confidence": round(float(best_score), 4),
-                    "candidate_player_key": str(best.get("player_key") or "") if best is not None else "",
-                    "candidate_player_name": str(best.get("full_name") or "") if best is not None else "",
-                    "candidate_position": str(best.get("display_position") or "") if best is not None else "",
+                    "candidate_player_key": str(best.get("player_key") or "")
+                    if best is not None
+                    else "",
+                    "candidate_player_name": str(best.get("full_name") or "")
+                    if best is not None
+                    else "",
+                    "candidate_position": str(best.get("display_position") or "")
+                    if best is not None
+                    else "",
                 }
             )
 
@@ -335,9 +361,18 @@ def persist_historical_auction_tables(
     """Persist historical auction tables to an independent Iceberg namespace."""
     if dry_run:
         return [
-            HistoricalAuctionPersistResult(table_identifier=f"{namespace}.historical_auction_values_raw", rows_written=import_result.raw.height),
-            HistoricalAuctionPersistResult(table_identifier=f"{namespace}.historical_auction_values_resolved", rows_written=import_result.resolved.height),
-            HistoricalAuctionPersistResult(table_identifier=f"{namespace}.historical_auction_values_match_queue", rows_written=import_result.match_queue.height),
+            HistoricalAuctionPersistResult(
+                table_identifier=f"{namespace}.historical_auction_values_raw",
+                rows_written=import_result.raw.height,
+            ),
+            HistoricalAuctionPersistResult(
+                table_identifier=f"{namespace}.historical_auction_values_resolved",
+                rows_written=import_result.resolved.height,
+            ),
+            HistoricalAuctionPersistResult(
+                table_identifier=f"{namespace}.historical_auction_values_match_queue",
+                rows_written=import_result.match_queue.height,
+            ),
         ]
 
     cfg = catalog_config or IcebergCatalogConfig()
@@ -355,10 +390,8 @@ def persist_historical_auction_tables(
         warehouse=cfg.warehouse,
     )
 
-    try:
+    with contextlib.suppress(NamespaceAlreadyExistsError):
         catalog.create_namespace(namespace)
-    except NamespaceAlreadyExistsError:
-        pass
 
     targets: list[tuple[str, pl.DataFrame]] = [
         (f"{namespace}.historical_auction_values_raw", import_result.raw),
@@ -369,26 +402,38 @@ def persist_historical_auction_tables(
     results: list[HistoricalAuctionPersistResult] = []
     for table_identifier, frame in targets:
         if replace_existing:
-            try:
+            with contextlib.suppress(NoSuchTableError):
                 catalog.drop_table(table_identifier)
-            except NoSuchTableError:
-                pass
-            table = catalog.create_table(identifier=table_identifier, schema=frame.to_arrow().schema)
+            table = catalog.create_table(
+                identifier=table_identifier, schema=frame.to_arrow().schema
+            )
             if frame.height > 0:
                 table.append(frame.to_arrow())
-            results.append(HistoricalAuctionPersistResult(table_identifier=table_identifier, rows_written=frame.height))
+            results.append(
+                HistoricalAuctionPersistResult(
+                    table_identifier=table_identifier, rows_written=frame.height
+                )
+            )
             continue
 
         if frame.height == 0:
-            results.append(HistoricalAuctionPersistResult(table_identifier=table_identifier, rows_written=0))
+            results.append(
+                HistoricalAuctionPersistResult(table_identifier=table_identifier, rows_written=0)
+            )
             continue
 
         try:
             table = catalog.load_table(table_identifier)
         except NoSuchTableError:
-            table = catalog.create_table(identifier=table_identifier, schema=frame.to_arrow().schema)
+            table = catalog.create_table(
+                identifier=table_identifier, schema=frame.to_arrow().schema
+            )
 
         table.append(frame.to_arrow())
-        results.append(HistoricalAuctionPersistResult(table_identifier=table_identifier, rows_written=frame.height))
+        results.append(
+            HistoricalAuctionPersistResult(
+                table_identifier=table_identifier, rows_written=frame.height
+            )
+        )
 
     return results

@@ -61,7 +61,9 @@ class TestSleeperPipeline:
         )
 
         assert result.season == 2025, f"Expected season=2025, got {result.season}"
-        assert "dim_sl_players" in result.frames, f"Missing dim_sl_players in {result.frames.keys()}"
+        assert "dim_sl_players" in result.frames, (
+            f"Missing dim_sl_players in {result.frames.keys()}"
+        )
         assert "fact_sl_adp" in result.frames, f"Missing fact_sl_adp in {result.frames.keys()}"
         assert result.player_count == 2, f"Expected 2 players, got {result.player_count}"
         assert result.adp_count == 2, f"Expected 2 ADP rows, got {result.adp_count}"
@@ -92,9 +94,7 @@ class TestSleeperPipeline:
         """Pipeline handles empty API response gracefully."""
         mock_client_cls.return_value.fetch_players_with_adp.return_value = []
 
-        result = run_pipeline(
-            config=PipelineConfig(season=2025, storage_target="none")
-        )
+        result = run_pipeline(config=PipelineConfig(season=2025, storage_target="none"))
 
         assert result.player_count == 0, f"Expected 0 players, got {result.player_count}"
         assert result.adp_count == 0, f"Expected 0 ADP rows, got {result.adp_count}"

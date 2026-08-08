@@ -53,9 +53,9 @@ def match_sleeper_to_crosswalk(
     normalize_name_udf = F.udf(normalize_name, T.StringType())
 
     # Method 1: Normalized name + position
-    sl_norm = sl_players.withColumn(
-        "merge_name", normalize_name_udf(F.col("full_name"))
-    ).filter(F.col("merge_name") != "")
+    sl_norm = sl_players.withColumn("merge_name", normalize_name_udf(F.col("full_name"))).filter(
+        F.col("merge_name") != ""
+    )
 
     name_match = (
         sl_norm.alias("s")
@@ -74,33 +74,29 @@ def match_sleeper_to_crosswalk(
 
     # Method 2: Name-only fallback (last + first 3 chars) for remaining
     matched_ids = name_match.select("sleeper_id")
-    unmatched = sl_norm.join(matched_ids, sl_norm.sleeper_player_id == matched_ids.sleeper_id, "left_anti")
-
-    # Build first_name / last_name normalized components for fuzzy
-    unmatched_parts = unmatched.withColumn(
-        "norm_last", normalize_name_udf(F.col("last_name"))
-    ).withColumn(
-        "norm_first_prefix", F.substring(normalize_name_udf(F.col("first_name")), 1, 3)
-    ).filter(
-        (F.col("norm_last") != "") & (F.col("norm_first_prefix") != "")
+    unmatched = sl_norm.join(
+        matched_ids, sl_norm.sleeper_player_id == matched_ids.sleeper_id, "left_anti"
     )
 
-    crosswalk_parts = crosswalk.withColumn(
-        "cw_last", normalize_name_udf(F.col("name"))
-    ).filter(F.col("cw_last") != "")
+    # Build first_name / last_name normalized components for fuzzy
+    unmatched_parts = (
+        unmatched.withColumn("norm_last", normalize_name_udf(F.col("last_name")))
+        .withColumn("norm_first_prefix", F.substring(normalize_name_udf(F.col("first_name")), 1, 3))
+        .filter((F.col("norm_last") != "") & (F.col("norm_first_prefix") != ""))
+    )
 
     # For crosswalk: extract last name portion (everything after first space)
     # merge_name is already "firstname lastname" normalized
-    crosswalk_split = crosswalk.withColumn(
-        "name_parts", F.split(F.col("merge_name"), " ")
-    ).withColumn(
-        "cw_first_prefix", F.substring(F.col("name_parts")[0], 1, 3)
-    ).withColumn(
-        "cw_last",
-        F.when(F.size("name_parts") > 1, F.col("name_parts")[F.size("name_parts") - 1])
-        .otherwise(F.col("name_parts")[0]),
-    ).filter(
-        (F.col("cw_last") != "") & (F.col("cw_first_prefix") != "")
+    crosswalk_split = (
+        crosswalk.withColumn("name_parts", F.split(F.col("merge_name"), " "))
+        .withColumn("cw_first_prefix", F.substring(F.col("name_parts")[0], 1, 3))
+        .withColumn(
+            "cw_last",
+            F.when(
+                F.size("name_parts") > 1, F.col("name_parts")[F.size("name_parts") - 1]
+            ).otherwise(F.col("name_parts")[0]),
+        )
+        .filter((F.col("cw_last") != "") & (F.col("cw_first_prefix") != ""))
     )
 
     fuzzy_match = (
@@ -124,11 +120,7 @@ def match_sleeper_to_crosswalk(
     w = Window.partitionBy("sleeper_id").orderBy(
         F.when(F.col("match_method") == "name_position", 1).otherwise(2)
     )
-    deduped = (
-        all_matches.withColumn("rn", F.row_number().over(w))
-        .filter("rn = 1")
-        .drop("rn")
-    )
+    deduped = all_matches.withColumn("rn", F.row_number().over(w)).filter("rn = 1").drop("rn")
 
     # Persist to sl_player_map
     map_table = f"{sl_prefix}.sl_player_map"
@@ -155,7 +147,6 @@ def match_sleeper_to_crosswalk(
     fuzzy_count = fuzzy_match.count()
     total_sl = sl_players.count()
     print(
-        f"  \u2713 sl_player_map: {total} matched "
-        f"(name_position={name_count}, fuzzy={fuzzy_count})"
+        f"  \u2713 sl_player_map: {total} matched (name_position={name_count}, fuzzy={fuzzy_count})"
     )
     print(f"  \u26a0 {total_sl - total} Sleeper players unmatched")

@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
-from nfl.entity_standardization.normalize import ALLOWED_POSITIONS, normalize_player_name, normalize_position, normalize_team_code
+from nfl.entity_standardization.normalize import (
+    ALLOWED_POSITIONS,
+    normalize_player_name,
+    normalize_position,
+    normalize_team_code,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,7 +81,7 @@ class CanonicalRegistryLoader:
         players_raw = _to_dicts(nflreadpy.load_players())
         ff_ids_raw = _to_dicts(nflreadpy.load_ff_playerids())
         schedules_raw = _to_dicts(nflreadpy.load_schedules())
-        source_version = datetime.now(timezone.utc).isoformat()
+        source_version = datetime.now(UTC).isoformat()
 
         players: list[dict[str, Any]] = []
         player_by_id: dict[str, dict[str, Any]] = {}
@@ -147,12 +152,8 @@ class CanonicalRegistryLoader:
             record.setdefault("cross_source_ids", {})
 
         team_codes = {
-            normalize_team_code(str(row.get("home_team") or ""))
-            for row in schedules_raw
-        } | {
-            normalize_team_code(str(row.get("away_team") or ""))
-            for row in schedules_raw
-        }
+            normalize_team_code(str(row.get("home_team") or "")) for row in schedules_raw
+        } | {normalize_team_code(str(row.get("away_team") or "")) for row in schedules_raw}
         team_codes = {code for code in team_codes if code}
 
         teams = [

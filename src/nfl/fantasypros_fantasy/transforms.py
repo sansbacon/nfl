@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 import polars as pl
 
@@ -105,8 +106,12 @@ def transform_nfl(
 ) -> TransformResult:
     return TransformResult(
         frames={
-            "fp_adp_snapshot": transform_entity(adp_snapshots or [], entity="fp_adp_snapshot", sport="nfl"),
-            "fp_yahoo_player_map": transform_entity(yahoo_player_map or [], entity="fp_yahoo_player_map", sport="nfl"),
+            "fp_adp_snapshot": transform_entity(
+                adp_snapshots or [], entity="fp_adp_snapshot", sport="nfl"
+            ),
+            "fp_yahoo_player_map": transform_entity(
+                yahoo_player_map or [], entity="fp_yahoo_player_map", sport="nfl"
+            ),
         }
     )
 

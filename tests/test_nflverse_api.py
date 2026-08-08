@@ -18,7 +18,9 @@ class _FakeTable:
 def test_api_wraps_mandatory_nflreadpy_loaders(monkeypatch) -> None:
     fake_nflreadpy = types.SimpleNamespace(
         load_pbp=lambda **kwargs: _FakeTable([{"play_id": 1, "season": 2024, **kwargs}]),
-        load_player_stats=lambda **kwargs: _FakeTable([{"player_id": "p1", "season": 2024, **kwargs}]),
+        load_player_stats=lambda **kwargs: _FakeTable(
+            [{"player_id": "p1", "season": 2024, **kwargs}]
+        ),
         load_team_stats=lambda **kwargs: _FakeTable([{"team": "LAC", "season": 2024, **kwargs}]),
         load_schedules=lambda **kwargs: _FakeTable([{"game_id": "g1", "season": 2024, **kwargs}]),
         load_players=lambda: _FakeTable([{"gsis_id": "GSIS_1", "display_name": "Austin Ekeler"}]),

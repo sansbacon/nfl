@@ -7,9 +7,10 @@ Provides write utilities for persisting Polars DataFrames to:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal, Mapping
+from typing import Any, Literal
 
 import polars as pl
 
@@ -185,9 +186,7 @@ def _merge_into_table(
     temp_view = f"_uc_merge_source_{target_table.replace('.', '_')}"
     source_df.createOrReplaceTempView(temp_view)
 
-    merge_condition = " AND ".join(
-        f"target.`{key}` = source.`{key}`" for key in merge_keys
-    )
+    merge_condition = " AND ".join(f"target.`{key}` = source.`{key}`" for key in merge_keys)
 
     try:
         spark.sql(f"""

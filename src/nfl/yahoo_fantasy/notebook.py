@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Callable, Protocol
+from collections.abc import Callable
+from typing import Protocol
 
 import polars as pl
 
 
 class _TableLoaderClient(Protocol):
-    def load_table(self, table_identifier: str) -> pl.DataFrame:
-        ...
+    def load_table(self, table_identifier: str) -> pl.DataFrame: ...
 
-    def maybe_load(self, table_identifier: str) -> pl.DataFrame | None:
-        ...
+    def maybe_load(self, table_identifier: str) -> pl.DataFrame | None: ...
 
 
 def configure_polars_display(rows: int = 50, cols: int = 20, str_length: int = 100) -> None:

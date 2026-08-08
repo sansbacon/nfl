@@ -88,7 +88,8 @@ def test_run_pipeline_with_both_persistence_targets(tmp_path: Path) -> None:
     assert all(path.exists() for path in result.polars_outputs.values())
     assert result.iceberg_outputs
     assert any(
-        write_result.table_identifier.startswith("fpnfl.") or write_result.table_identifier.startswith("fpcommon.")
+        write_result.table_identifier.startswith("fpnfl.")
+        or write_result.table_identifier.startswith("fpcommon.")
         for write_result in result.iceberg_outputs
     )
 

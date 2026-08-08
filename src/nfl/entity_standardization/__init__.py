@@ -8,6 +8,11 @@ from nfl.entity_standardization.pipeline import (
 )
 
 __all__ = [
+    "CanonicalRegistry",
+    "CanonicalRegistryLoader",
+    "EntityStandardizer",
+    "StandardizationConfig",
+    "StandardizationResult",
     "canonical",
     "matching",
     "normalize",
@@ -15,9 +20,4 @@ __all__ = [
     "pipeline",
     "storage",
     "validation",
-    "CanonicalRegistry",
-    "CanonicalRegistryLoader",
-    "EntityStandardizer",
-    "StandardizationConfig",
-    "StandardizationResult",
 ]
