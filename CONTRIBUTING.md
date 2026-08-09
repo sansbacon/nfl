@@ -106,12 +106,38 @@ The canonical crosswalk is `nfl.common.dim_ff_player_ids` (loaded from `nflreadp
 * `tests/test_<source>_pipeline.py` — integration with `@patch` on the API client
 * Mark Spark/external-API tests with `@pytest.mark.integration`
 
-### 7. Create a notebook
+### 7. Manual Upload Sources (Subscription / No-API)
+
+For sources that have no public API (e.g. ETR, Fantasy Life), use a Volume-based
+incoming/processed pattern instead of live scraping:
+
+```
+/Volumes/nfl/<source>/<source>_volume/incoming/<feed_name>/   -- drop new exports here
+/Volumes/nfl/<source>/<source>_volume/processed/<feed_name>/  -- archived after successful load
+```
+
+**Loader notebook conventions:**
+
+* Expose the incoming/processed paths as **widgets** (`SOURCE_PATH`, `ARCHIVE_PATH`) —
+  never hardcode a path so the drop location can be changed without editing code.
+* Move a file to `processed/` **only after** a successful MERGE, so re-running the notebook
+  never double-loads a file.
+* Widget validation pattern (same as other notebooks):
+  ```python
+  assert all((CATALOG, SCHEMA, SEASON, SOURCE_PATH, ARCHIVE_PATH)), \
+      f'ERROR: {CATALOG=} {SCHEMA=} {SEASON=} {SOURCE_PATH=} {ARCHIVE_PATH=} must be set'
+  ```
+* Use `dbutils.fs.mv()` (not `cp` + `rm`) for atomic archive operations.
+* If the source publishes multiple feed types (e.g. ETR has `ranks/` today and
+  `projections/` in the future), give each its own subfolder under `incoming/` and
+  `processed/` rather than mixing file types in one directory.
+
+### 8. Create a notebook
 
 * `examples/load_<source>_data_uc` — widget parameterized (CATALOG, SCHEMA, SEASON)
 * Follow the pattern: fetch → transform → create schema/tables → MERGE → create view → gap check
 
-### 8. Update exports
+### 9. Update exports
 
 * Add to `src/nfl/<source>_fantasy/__init__.py`
 * Add submodule to `src/nfl/__init__.py` → `__all__`
