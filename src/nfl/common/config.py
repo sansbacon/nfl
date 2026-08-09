@@ -13,7 +13,10 @@ from pathlib import Path
 from typing import Literal
 
 # "unity_catalog" and "uc_volume" require the nfl-databricks package.
-StorageTarget = Literal["none", "polars", "unity_catalog", "uc_volume", "iceberg", "both"]
+# "duckdb" requires pip install nfl[duckdb].
+StorageTarget = Literal[
+    "none", "polars", "duckdb", "unity_catalog", "uc_volume", "iceberg", "both"
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,6 +46,7 @@ class PipelineConfigBase:
     storage_target: StorageTarget = "none"
     polars_output_dir: str | Path = "./output"
     polars_file_format: str = "parquet"
+    duckdb_path: str | Path = "./output/nfl.duckdb"
     dry_run: bool = True
     ingestion_date: date | None = None
 

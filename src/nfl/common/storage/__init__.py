@@ -2,6 +2,7 @@
 
 Provides unified persistence to:
 - Local Polars files (Parquet/CSV/NDJSON)
+- DuckDB tables (embedded analytical DB) — requires ``nfl[duckdb]``
 - PyIceberg tables (SQLite catalog, local dev only) — requires ``nfl[iceberg]``
 
 For Unity Catalog Delta tables and Volumes, install ``nfl-databricks``.
@@ -33,4 +34,30 @@ try:
     ]
 except ModuleNotFoundError:
     # pyiceberg is not installed; iceberg symbols are unavailable.
+    pass
+
+try:
+    from nfl.common.storage.duckdb import (
+        DuckDBConfig,
+        DuckDBWriteResult,
+        compute_record_hash,
+        get_connection,
+        load_duckdb_table,
+        merge_scd2,
+        persist_to_duckdb,
+        query_duckdb,
+    )
+
+    __all__ += [
+        "DuckDBConfig",
+        "DuckDBWriteResult",
+        "compute_record_hash",
+        "get_connection",
+        "load_duckdb_table",
+        "merge_scd2",
+        "persist_to_duckdb",
+        "query_duckdb",
+    ]
+except ImportError:
+    # duckdb is not installed; duckdb symbols are unavailable.
     pass

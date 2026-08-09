@@ -25,6 +25,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+duckdb = [
+    "duckdb>=1.0.0",
+]
 iceberg = [
     "pyiceberg>=0.7.1",
 ]
