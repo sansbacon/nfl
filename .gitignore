@@ -1,5 +1,8 @@
 # credentials
 .secrets/
+.vscode/
+.iceberg/
+.pyiceberg/
 
 # local Iceberg warehouse and catalog
 warehouse/

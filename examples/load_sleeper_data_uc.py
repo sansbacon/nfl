@@ -1,4 +1,11 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "5"
+# dependencies = [
+#   "polars",
+# ]
+# ///
 # DBTITLE 1,Load Sleeper ADP → UC
 # MAGIC %md
 # MAGIC # Load Sleeper ADP → Unity Catalog
@@ -20,6 +27,10 @@
 # MAGIC **Prerequisites:**
 # MAGIC - `nfl.common.dim_ff_player_ids` must exist (run crosswalk load first)
 # MAGIC - Internet access for Sleeper API calls
+
+# COMMAND ----------
+
+# MAGIC %pip install polars
 
 # COMMAND ----------
 
@@ -149,13 +160,8 @@ print(f"  \u2713 {sl_prefix}.dim_sl_players: {dim_count:,} players")
 # DBTITLE 1,Persist fact_sl_adp (SCD2)
 # Step 4: SCD2 merge ADP data
 adp_rows = players_to_adp_rows(sl_players, SEASON)
-adp_df = spark.createDataFrame(adp_rows)
-
-# Cast to match target schema
 target_schema = spark.table(f"{sl_prefix}.fact_sl_adp").schema
-adp_df = adp_df.select(
-    [F.col(field.name).cast(field.dataType).alias(field.name) for field in target_schema]
-)
+adp_df = spark.createDataFrame(adp_rows, schema=target_schema)
 adp_df.createOrReplaceTempView("_sl_adp_incoming")
 
 tracked_cols = ["adp_half_ppr", "adp_ppr", "adp_std", "adp_2qb", "adp_dynasty"]
