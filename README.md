@@ -244,6 +244,18 @@ Iceberg namespaces for Yahoo data: `yhnfl` (NFL), `ynba` (NBA).
 
 Set `iceberg_dry_run=True` to validate the pipeline without writing to Iceberg.
 
+## Dashboards
+
+| Dashboard | Description |
+|-----------|-------------|
+| `yh_auction_myleague` | Yahoo auction values analysis for personal leagues. Published Lakeview dashboard reading from `nfl.yh.auction_values_myleague`. |
+
+## Lakeflow Connector
+
+The `nflverse_connector/` directory contains a Lakeflow Connect community connector
+that ingests nflverse data (player stats, schedules, rosters, snap counts, etc.)
+directly into Unity Catalog. See `nflverse_connector/README.md` for deployment.
+
 ## Testing
 
 ```bash
