@@ -250,11 +250,17 @@ Set `iceberg_dry_run=True` to validate the pipeline without writing to Iceberg.
 |-----------|-------------|
 | `yh_auction_myleague` | Yahoo auction values analysis for personal leagues. Published Lakeview dashboard reading from `nfl.yh.auction_values_myleague`. |
 
-## Lakeflow Connector
+## Databricks Integration
 
-The `nflverse_connector/` directory contains a Lakeflow Connect community connector
-that ingests nflverse data (player stats, schedules, rosters, snap counts, etc.)
-directly into Unity Catalog. See `nflverse_connector/README.md` for deployment.
+For Unity Catalog storage and Lakeflow Connect support, install the companion package:
+
+```bash
+pip install nfl-databricks
+# Or via the optional extra:
+pip install nfl[databricks]
+```
+
+See the [nfl-databricks](https://github.com/your-org/nfl-databricks) repo for details.
 
 ## Testing
 

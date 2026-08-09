@@ -12,6 +12,7 @@ from datetime import date
 from pathlib import Path
 from typing import Literal
 
+# "unity_catalog" and "uc_volume" require the nfl-databricks package.
 StorageTarget = Literal["none", "polars", "unity_catalog", "uc_volume", "iceberg", "both"]
 
 
