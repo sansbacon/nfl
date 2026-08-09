@@ -28,6 +28,9 @@ dependencies = [
 iceberg = [
     "pyiceberg>=0.7.1",
 ]
+databricks = [
+    "nfl-databricks>=0.1.0",
+]
 dev = [
     "mypy>=1.11.0",
     "pre-commit>=3.8.0",

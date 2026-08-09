@@ -9,7 +9,6 @@ from typing import Any, Literal
 import polars as pl
 
 from nfl.common.config import PipelineConfigBase
-from nfl.common.storage import UCWriteResult
 from nfl.entity_standardization.pipeline import (
     EntityStandardizer,
     StandardizationConfig,
@@ -25,10 +24,6 @@ from nfl.fantasypros_fantasy.storage.iceberg import (
     persist_to_iceberg,
 )
 from nfl.fantasypros_fantasy.storage.polars import persist_with_polars
-from nfl.fantasypros_fantasy.storage.unity_catalog import (
-    FantasyProsUCTableConfig,
-    FantasyProsUCVolumeConfig,
-)
 from nfl.fantasypros_fantasy.transforms import transform
 from nfl.fantasypros_fantasy.validation import get_contract, validate_polars_frame
 
@@ -53,8 +48,6 @@ class PipelineConfig(PipelineConfigBase):
     iceberg_dry_run: bool = True
     standardization_enabled: bool = False
     standardization_config: StandardizationConfig | None = None
-    uc_table_config: FantasyProsUCTableConfig = field(default_factory=FantasyProsUCTableConfig)
-    uc_volume_config: FantasyProsUCVolumeConfig = field(default_factory=FantasyProsUCVolumeConfig)
     uc_dry_run: bool = True
 
 
@@ -65,7 +58,7 @@ class PipelineRunResult:
     frames: dict[str, pl.DataFrame]
     polars_outputs: dict[str, Path]
     iceberg_outputs: list[IcebergWriteResult]
-    uc_outputs: list[UCWriteResult] = field(default_factory=list)
+    uc_outputs: list = field(default_factory=list)
     standardization_result: StandardizationResult | None = None
 
 

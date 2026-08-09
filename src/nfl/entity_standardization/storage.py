@@ -7,21 +7,10 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import polars as pl
 
-from nfl.common.storage import (
-    UCTableConfig,
-    UCVolumeConfig,
-    UCWriteResult,
-    VolumeFileFormat,
-    persist_to_uc_tables,
-    persist_to_uc_volume,
-)
-from nfl.common.storage import (
-    WriteMode as UCWriteMode,
-)
 from nfl.entity_standardization.validation import get_contract
 
 WriteMode = Literal["append", "upsert"]
@@ -160,66 +149,54 @@ def persist_to_iceberg(
     return results
 
 
-@dataclass(frozen=True, slots=True)
-class StandardizationUCTableConfig:
-    """UC table configuration for entity standardization."""
-
-    catalog: str = "nfl"
-    schema: str = "std"
-    write_mode: UCWriteMode = "overwrite"
-    merge_keys: tuple[str, ...] = ()
-    table_prefix: str = "std_"
-    table_properties: dict[str, str] = field(default_factory=dict)
-
-
-@dataclass(frozen=True, slots=True)
-class StandardizationUCVolumeConfig:
-    """UC volume configuration for entity standardization."""
-
-    catalog: str = "nfl"
-    schema: str = "std"
-    volume: str = "std_volume"
-    file_format: VolumeFileFormat = "parquet"
-    subdirectory: str = "standardization_output"
-
-    @property
-    def base_path(self) -> str:
-        parts = f"/Volumes/{self.catalog}/{self.schema}/{self.volume}"
-        if self.subdirectory:
-            parts = f"{parts}/{self.subdirectory.strip('/')}"
-        return parts
-
-
 def persist_to_uc_tables_std(
     frames: Mapping[str, pl.DataFrame],
-    config: StandardizationUCTableConfig | None = None,
+    config: Any = None,
     dry_run: bool = False,
-) -> list[UCWriteResult]:
-    """Write standardization DataFrames as UC Delta tables."""
-    cfg = config or StandardizationUCTableConfig()
+) -> list:
+    """Write standardization DataFrames as UC Delta tables.
+
+    Requires the ``nfl-databricks`` package.
+    """
+    try:
+        from nfl_databricks.storage import UCTableConfig, persist_to_uc_tables
+    except ImportError as exc:
+        raise ImportError(
+            "Unity Catalog storage requires the nfl-databricks package. "
+            "Install it with: pip install nfl-databricks"
+        ) from exc
+
     table_config = UCTableConfig(
-        catalog=cfg.catalog,
-        schema=cfg.schema,
-        write_mode=cfg.write_mode,
-        merge_keys=cfg.merge_keys,
-        table_prefix=cfg.table_prefix,
-        table_properties=cfg.table_properties,
+        catalog="nfl",
+        schema="std",
+        write_mode="overwrite",
+        table_prefix="std_",
     )
     return persist_to_uc_tables(frames, config=table_config, dry_run=dry_run)
 
 
 def persist_to_uc_volume_std(
     frames: Mapping[str, pl.DataFrame],
-    config: StandardizationUCVolumeConfig | None = None,
+    config: Any = None,
     dry_run: bool = False,
-) -> list[UCWriteResult]:
-    """Write standardization DataFrames as files to a UC Volume."""
-    cfg = config or StandardizationUCVolumeConfig()
+) -> list:
+    """Write standardization DataFrames as files to a UC Volume.
+
+    Requires the ``nfl-databricks`` package.
+    """
+    try:
+        from nfl_databricks.storage import UCVolumeConfig, persist_to_uc_volume
+    except ImportError as exc:
+        raise ImportError(
+            "Unity Catalog storage requires the nfl-databricks package. "
+            "Install it with: pip install nfl-databricks"
+        ) from exc
+
     volume_config = UCVolumeConfig(
-        catalog=cfg.catalog,
-        schema=cfg.schema,
-        volume=cfg.volume,
-        file_format=cfg.file_format,
-        subdirectory=cfg.subdirectory,
+        catalog="nfl",
+        schema="std",
+        volume="std_volume",
+        file_format="parquet",
+        subdirectory="standardization_output",
     )
     return persist_to_uc_volume(frames, config=volume_config, dry_run=dry_run)

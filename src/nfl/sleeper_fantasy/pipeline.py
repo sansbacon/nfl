@@ -8,14 +8,8 @@ from pathlib import Path
 import polars as pl
 
 from nfl.common.config import PipelineConfigBase
-from nfl.common.storage import UCWriteResult, persist_with_polars
+from nfl.common.storage import persist_with_polars
 from nfl.sleeper_fantasy.api import SleeperClient
-from nfl.sleeper_fantasy.storage.unity_catalog import (
-    SleeperUCTableConfig,
-    SleeperUCVolumeConfig,
-    persist_sleeper_to_uc_tables,
-    persist_sleeper_to_uc_volume,
-)
 from nfl.sleeper_fantasy.transforms import players_to_adp_rows, players_to_dim_rows
 
 
@@ -28,17 +22,11 @@ class PipelineConfig(PipelineConfigBase):
 
     Parameters
     ----------
-    uc_table_config : SleeperUCTableConfig
-        Unity Catalog table write configuration.
-    uc_volume_config : SleeperUCVolumeConfig
-        Unity Catalog volume write configuration.
     timeout_seconds : int
         HTTP request timeout for Sleeper API calls (default 60).
     """
 
     polars_output_dir: str | Path = "./output/sleeper_polars"
-    uc_table_config: SleeperUCTableConfig = field(default_factory=SleeperUCTableConfig)
-    uc_volume_config: SleeperUCVolumeConfig = field(default_factory=SleeperUCVolumeConfig)
     timeout_seconds: int = 60
 
 
@@ -49,7 +37,7 @@ class PipelineRunResult:
     season: int
     frames: dict[str, pl.DataFrame]
     polars_outputs: dict[str, Path]
-    uc_outputs: list[UCWriteResult]
+    uc_outputs: list
     player_count: int
     adp_count: int
 
@@ -91,22 +79,26 @@ def run_pipeline(
 
     # --- Load ---
     polars_outputs: dict[str, Path] = {}
-    uc_outputs: list[UCWriteResult] = []
+    uc_outputs: list = []
 
     if cfg.storage_target in ("polars",):
         polars_outputs = persist_with_polars(
             frames, output_dir=cfg.polars_output_dir, file_format=cfg.polars_file_format
         )
 
-    if cfg.storage_target == "unity_catalog":
-        uc_outputs = persist_sleeper_to_uc_tables(
-            frames, config=cfg.uc_table_config, dry_run=cfg.dry_run
-        )
+    if cfg.storage_target in ("unity_catalog", "uc_volume"):
+        try:
+            from nfl_databricks.storage import persist_to_uc_tables, persist_to_uc_volume
+        except ImportError as exc:
+            raise ImportError(
+                "Unity Catalog storage requires the nfl-databricks package. "
+                "Install it with: pip install nfl-databricks"
+            ) from exc
 
-    if cfg.storage_target == "uc_volume":
-        uc_outputs = persist_sleeper_to_uc_volume(
-            frames, config=cfg.uc_volume_config, dry_run=cfg.dry_run
-        )
+        if cfg.storage_target == "unity_catalog":
+            uc_outputs = persist_to_uc_tables(frames, dry_run=cfg.dry_run)
+        else:
+            uc_outputs = persist_to_uc_volume(frames, dry_run=cfg.dry_run)
 
     return PipelineRunResult(
         season=cfg.season,

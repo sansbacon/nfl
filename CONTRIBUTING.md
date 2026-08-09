@@ -31,9 +31,8 @@ src/nfl/
 ├── common/              # Shared utilities (crosswalk, matching, storage)
 │   ├── crosswalk.py     # load_canonical_crosswalk()
 │   ├── matching.py      # normalize_name()
-│   └── storage/         # Canonical persistence layer
+│   └── storage/         # Platform-agnostic persistence
 │       ├── polars.py    # persist_with_polars()
-│       ├── unity_catalog.py  # UCTableConfig, persist_to_uc_tables()
 │       └── iceberg.py   # IcebergCatalogConfig, persist_to_iceberg()
 ├── yahoo_fantasy/       # Yahoo Fantasy (full module)
 ├── fantasypros_fantasy/ # FantasyPros
@@ -47,6 +46,12 @@ examples/                # Databricks notebooks (load, match, query)
 scripts/                 # CLI tools (load_data, rebuild_catalog)
 blueprints/              # Architecture & design docs
 ```
+
+> **Databricks / Unity Catalog support** lives in the separate
+> [`nfl-databricks`](../nfl-databricks/) package (`pip install nfl[databricks]`).
+> That package provides `UCTableConfig`, `persist_to_uc_tables()`, and the
+> Lakeflow Connect community connector. Do **not** add PySpark or
+> Databricks-specific code to this repo.
 
 ## Adding a New Source
 
@@ -63,7 +68,8 @@ src/nfl/<source>_fantasy/
 ├── pipeline.py      # PipelineConfig, run_pipeline()
 └── storage/
     ├── __init__.py
-    └── unity_catalog.py  # Thin config wrapper → delegates to common
+    ├── polars.py    # Local file persistence
+    └── iceberg.py   # PyIceberg persistence (optional)
 ```
 
 ### 2. Implement the module
@@ -73,7 +79,7 @@ src/nfl/<source>_fantasy/
 | `api.py` | Dataclass models, HTTP client, error types |
 | `transforms.py` | Pure functions: `players_to_dim_rows()`, `*_to_fact_rows()` |
 | `matching.py` | Use `nfl.common.matching.normalize_name` + `dim_ff_player_ids` crosswalk join |
-| `storage/unity_catalog.py` | `SourceUCTableConfig` → delegates to `nfl.common.storage.persist_to_uc_tables()` |
+| `storage/polars.py` | Thin wrapper → delegates to `nfl.common.storage.persist_with_polars()` |
 | `pipeline.py` | `PipelineConfig` (season, storage_target, dry_run) + `run_pipeline()` |
 
 ### 3. Table naming conventions
