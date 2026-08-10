@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nfl"
-version = "0.2.0"
+version = "1.0.0"
 description = "Unified NFL fantasy football data library: extraction, normalization, and persistence across Yahoo, FantasyPros, ESPN, Sleeper, and NFLverse sources."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -28,8 +28,17 @@ dependencies = [
 duckdb = [
     "duckdb>=1.0.0",
 ]
-iceberg = [
-    "pyiceberg>=0.7.1",
+ibis = [
+    "ibis-framework[duckdb]>=9.0.0",
+]
+ibis-polars = [
+    "ibis-framework[polars]>=9.0.0",
+]
+ibis-pyspark = [
+    "ibis-framework[pyspark]>=9.0.0",
+]
+ibis-all = [
+    "ibis-framework[duckdb,polars,pyspark,datafusion]>=9.0.0",
 ]
 databricks = [
     "nfl-databricks>=0.1.0",
@@ -65,8 +74,6 @@ markers = [
     "slow: marks tests that take >10s",
 ]
 filterwarnings = [
-    "ignore::DeprecationWarning:pyiceberg.*",
-    "ignore::DeprecationWarning:nfl.common.storage.iceberg.*",
 ]
 
 [tool.coverage.run]

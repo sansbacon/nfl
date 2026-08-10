@@ -17,7 +17,6 @@ from nfl.entity_standardization.normalize import (
     normalize_position,
     normalize_team_code,
 )
-from nfl.yahoo_fantasy.storage.iceberg import IcebergCatalogConfig
 
 
 @dataclass(frozen=True, slots=True)

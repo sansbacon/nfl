@@ -1,63 +1,28 @@
 """Shared storage adapters for all NFL fantasy data sources.
 
-Provides unified persistence to:
-- Local Polars files (Parquet/CSV/NDJSON)
-- DuckDB tables (embedded analytical DB) — requires ``nfl[duckdb]``
-- PyIceberg tables (SQLite catalog, local dev only) — requires ``nfl[iceberg]``
+Primary API (Ibis-based):
+- ``persist_tables()`` — write Ibis table expressions to any backend
+- ``persist_from_polars()`` — bridge: Polars frames → Ibis → backend
+- ``compute_record_hash()`` — SCD2 record hashing via Ibis
+- ``merge_scd2()`` — backend-dispatched SCD2 merge
 
 For Unity Catalog Delta tables and Volumes, install ``nfl-databricks``.
 """
 
-from nfl.common.storage.polars import persist_with_polars
+from nfl.common.storage.ibis_writer import (
+    WriteResult,
+    persist_from_polars,
+    persist_tables,
+)
+from nfl.common.storage.scd2 import (
+    compute_record_hash,
+    merge_scd2,
+)
 
 __all__ = [
-    "persist_with_polars",
+    "WriteResult",
+    "persist_tables",
+    "persist_from_polars",
+    "compute_record_hash",
+    "merge_scd2",
 ]
-
-try:
-    from nfl.common.storage.iceberg import (
-        IcebergCatalogConfig,
-        IcebergNamespaceConfig,
-        IcebergWriteMode,
-        IcebergWriteResult,
-        IdempotencyStore,
-        persist_to_iceberg,
-    )
-
-    __all__ += [
-        "IcebergCatalogConfig",
-        "IcebergNamespaceConfig",
-        "IcebergWriteMode",
-        "IcebergWriteResult",
-        "IdempotencyStore",
-        "persist_to_iceberg",
-    ]
-except ModuleNotFoundError:
-    # pyiceberg is not installed; iceberg symbols are unavailable.
-    pass
-
-try:
-    from nfl.common.storage.duckdb import (
-        DuckDBConfig,
-        DuckDBWriteResult,
-        compute_record_hash,
-        get_connection,
-        load_duckdb_table,
-        merge_scd2,
-        persist_to_duckdb,
-        query_duckdb,
-    )
-
-    __all__ += [
-        "DuckDBConfig",
-        "DuckDBWriteResult",
-        "compute_record_hash",
-        "get_connection",
-        "load_duckdb_table",
-        "merge_scd2",
-        "persist_to_duckdb",
-        "query_duckdb",
-    ]
-except ImportError:
-    # duckdb is not installed; duckdb symbols are unavailable.
-    pass

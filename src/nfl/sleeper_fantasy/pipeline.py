@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from pathlib import Path
+from dataclasses import dataclass
 
-import polars as pl
+import ibis
 
+from nfl.common.backend import get_backend
 from nfl.common.config import PipelineConfigBase
-from nfl.common.storage import persist_with_polars
+from nfl.common.storage import persist_tables
+from nfl.sleeper_fantasy.transforms_ibis import players_to_adp_table, players_to_dim_table
 from nfl.sleeper_fantasy.api import SleeperClient
-from nfl.sleeper_fantasy.transforms import players_to_adp_rows, players_to_dim_rows
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,7 +26,6 @@ class PipelineConfig(PipelineConfigBase):
         HTTP request timeout for Sleeper API calls (default 60).
     """
 
-    polars_output_dir: str | Path = "./output/sleeper_polars"
     timeout_seconds: int = 60
 
 
@@ -35,9 +34,8 @@ class PipelineRunResult:
     """Result of a Sleeper pipeline run."""
 
     season: int
-    frames: dict[str, pl.DataFrame]
-    polars_outputs: dict[str, Path]
-    uc_outputs: list
+    tables: dict[str, ibis.Table]
+    write_results: list
     player_count: int
     adp_count: int
 
@@ -48,8 +46,7 @@ def run_pipeline(
     """Run the Sleeper data pipeline.
 
     Fetches ADP and player data from Sleeper's public API,
-    transforms into dim/fact tables, and optionally persists
-    to local Polars files or Unity Catalog.
+    transforms into Ibis tables, and persists to the configured backend.
 
     Parameters
     ----------
@@ -59,9 +56,10 @@ def run_pipeline(
     Returns
     -------
     PipelineRunResult
-        Frames, file outputs, and UC write results.
+        Tables, write results, and row counts.
     """
     cfg = config or PipelineConfig()
+    backend = get_backend(cfg)
 
     # --- Extract ---
     client = SleeperClient(timeout_seconds=cfg.timeout_seconds)
@@ -69,42 +67,21 @@ def run_pipeline(
 
     # --- Transform ---
     effective_date = cfg.effective_date
-    dim_rows = players_to_dim_rows(players)
-    adp_rows = players_to_adp_rows(players, season=cfg.season, ingestion_date=effective_date)
+    dim_table = players_to_dim_table(players)
+    adp_table = players_to_adp_table(players, season=cfg.season, ingestion_date=effective_date)
 
-    frames: dict[str, pl.DataFrame] = {
-        "dim_sl_players": pl.DataFrame(dim_rows) if dim_rows else pl.DataFrame(),
-        "fact_sl_adp": pl.DataFrame(adp_rows) if adp_rows else pl.DataFrame(),
+    tables: dict[str, ibis.Table] = {
+        "dim_sl_players": dim_table,
+        "fact_sl_adp": adp_table,
     }
 
     # --- Load ---
-    polars_outputs: dict[str, Path] = {}
-    uc_outputs: list = []
-
-    if cfg.storage_target in ("polars",):
-        polars_outputs = persist_with_polars(
-            frames, output_dir=cfg.polars_output_dir, file_format=cfg.polars_file_format
-        )
-
-    if cfg.storage_target in ("unity_catalog", "uc_volume"):
-        try:
-            from nfl_databricks.storage import persist_to_uc_tables, persist_to_uc_volume
-        except ImportError as exc:
-            raise ImportError(
-                "Unity Catalog storage requires the nfl-databricks package. "
-                "Install it with: pip install nfl-databricks"
-            ) from exc
-
-        if cfg.storage_target == "unity_catalog":
-            uc_outputs = persist_to_uc_tables(frames, dry_run=cfg.dry_run)
-        else:
-            uc_outputs = persist_to_uc_volume(frames, dry_run=cfg.dry_run)
+    write_results = persist_tables(tables, backend, dry_run=cfg.dry_run)
 
     return PipelineRunResult(
         season=cfg.season,
-        frames=frames,
-        polars_outputs=polars_outputs,
-        uc_outputs=uc_outputs,
-        player_count=len(dim_rows),
-        adp_count=len(adp_rows),
+        tables=tables,
+        write_results=write_results,
+        player_count=int(dim_table.count().execute()),
+        adp_count=int(adp_table.count().execute()),
     )

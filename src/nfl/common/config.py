@@ -12,11 +12,8 @@ from datetime import date
 from pathlib import Path
 from typing import Literal
 
-# "unity_catalog" and "uc_volume" require the nfl-databricks package.
-# "duckdb" requires pip install nfl[duckdb].
-StorageTarget = Literal[
-    "none", "polars", "duckdb", "unity_catalog", "uc_volume", "iceberg", "both"
-]
+# Ibis backend type — the primary mechanism for selecting execution engine.
+BackendType = Literal["duckdb", "polars", "pyspark", "datafusion"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,12 +27,14 @@ class PipelineConfigBase:
     ----------
     season : int
         NFL season year to process.
-    storage_target : StorageTarget
-        Where to persist output frames.
-    polars_output_dir : str | Path
-        Directory for local Polars file output.
-    polars_file_format : str
-        File format for Polars output ('parquet' or 'csv').
+    backend : BackendType
+        Ibis backend for transforms and persistence.
+    duckdb_path : str | Path
+        Path to the DuckDB database file (used when backend="duckdb").
+    pyspark_catalog : str
+        Unity Catalog name (used when backend="pyspark").
+    pyspark_schema : str
+        Schema name (used when backend="pyspark").
     dry_run : bool
         If True, reports what would be written without executing writes.
     ingestion_date : date | None
@@ -43,10 +42,10 @@ class PipelineConfigBase:
     """
 
     season: int = 2025
-    storage_target: StorageTarget = "none"
-    polars_output_dir: str | Path = "./output"
-    polars_file_format: str = "parquet"
+    backend: BackendType = "duckdb"
     duckdb_path: str | Path = "./output/nfl.duckdb"
+    pyspark_catalog: str = "nfl"
+    pyspark_schema: str = "default"
     dry_run: bool = True
     ingestion_date: date | None = None
 
