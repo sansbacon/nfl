@@ -564,10 +564,10 @@ Phases 2, 3, and 5 can run in parallel after Phase 1 is complete.
 
 ### Remaining Work (Post-1.0.0)
 
-- [ ] CI: Add `nfl[ibis]` to test matrix
-- [ ] Formal pytest suite for all `transforms_ibis.py` modules
+- [x] CI: Add `nfl[ibis]` to test matrix (`ci.yml` → `--extra ibis`, `ibis-framework[duckdb]` in dev deps)
+- [x] Formal pytest suite: `test_ibis_common.py` (9 tests) + `test_ibis_transforms.py` (7 tests) — 16 total, all passing
+- [x] Port `yahoo_fantasy/historical_auction.py` — storage import already cleaned; parses OK
 - [ ] Rewrite pipeline orchestrators on Ibis (currently deprecation stubs)
-- [ ] Port `yahoo_fantasy/historical_auction.py` to Ibis (still references removed storage)
 
 ---
 

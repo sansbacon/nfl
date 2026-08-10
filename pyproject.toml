@@ -44,6 +44,7 @@ databricks = [
     "nfl-databricks>=0.1.0",
 ]
 dev = [
+    "ibis-framework[duckdb]>=9.0.0",
     "mypy>=1.11.0",
     "pre-commit>=3.8.0",
     "pytest>=8.3.0",
@@ -72,6 +73,7 @@ addopts = [
 markers = [
     "integration: marks tests requiring external APIs or Spark (deselect with '-m not integration')",
     "slow: marks tests that take >10s",
+    "ibis: marks tests requiring ibis-framework[duckdb] (deselect with '-m not ibis')",
 ]
 filterwarnings = [
 ]

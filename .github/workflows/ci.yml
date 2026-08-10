@@ -37,8 +37,8 @@ jobs:
       - name: Set up Python
         run: uv python install 3.12
 
-      - name: Install package with dev dependencies
-        run: uv sync --extra dev
+      - name: Install package with dev and ibis dependencies
+        run: uv sync --extra dev --extra ibis
 
       - name: Run tests
         run: uv run pytest -m "not integration" --cov --cov-report=term-missing
