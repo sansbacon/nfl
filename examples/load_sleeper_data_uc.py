@@ -128,6 +128,7 @@ spark.sql(f"""
         ingestion_date DATE NOT NULL COMMENT 'SCD2: date this record became current',
         end_date DATE COMMENT 'SCD2: date this record was superseded (NULL if current)',
         is_current BOOLEAN NOT NULL COMMENT 'SCD2: true if this is the active record',
+        last_refreshed_date DATE COMMENT 'Date this record was last verified by a load run',
         CONSTRAINT pk_fact_sl_adp PRIMARY KEY (season, sleeper_player_id, ingestion_date)
     )
     COMMENT 'Sleeper ADP fact table (SCD2 historized from projections API)'
@@ -161,7 +162,11 @@ print(f"  \u2713 {sl_prefix}.dim_sl_players: {dim_count:,} players")
 # Step 4: SCD2 merge ADP data
 adp_rows = players_to_adp_rows(sl_players, SEASON)
 target_schema = spark.table(f"{sl_prefix}.fact_sl_adp").schema
-adp_df = spark.createDataFrame(adp_rows, schema=target_schema)
+# Exclude last_refreshed_date — not produced by players_to_adp_rows; added below
+from pyspark.sql.types import StructType
+create_schema = StructType([f for f in target_schema if f.name != 'last_refreshed_date'])
+adp_df = spark.createDataFrame(adp_rows, schema=create_schema)
+adp_df = adp_df.withColumn("last_refreshed_date", F.col("ingestion_date"))
 adp_df.createOrReplaceTempView("_sl_adp_incoming")
 
 tracked_cols = ["adp_half_ppr", "adp_ppr", "adp_std", "adp_2qb", "adp_dynasty"]
@@ -169,7 +174,7 @@ change_clause = " OR ".join(
     [f"COALESCE(target.{c}, -1) != COALESCE(source.{c}, -1)" for c in tracked_cols]
 )
 
-# Step 4a: expire changed rows + insert new keys
+# Step 4a: expire changed rows, refresh unchanged rows, insert new keys
 spark.sql(f"""
     MERGE INTO {sl_prefix}.fact_sl_adp AS target
     USING _sl_adp_incoming AS source
@@ -179,6 +184,8 @@ spark.sql(f"""
     WHEN MATCHED AND ({change_clause}) THEN UPDATE SET
         target.end_date = source.ingestion_date,
         target.is_current = false
+    WHEN MATCHED THEN UPDATE SET
+        target.last_refreshed_date = source.last_refreshed_date
     WHEN NOT MATCHED THEN INSERT *
 """)
 
@@ -217,7 +224,7 @@ spark.sql(f"""
     AS
     SELECT a.season, a.sleeper_player_id, p.full_name, p.position, p.team,
            a.adp_half_ppr, a.adp_ppr, a.adp_std, a.adp_2qb, a.adp_dynasty,
-           a.ingestion_date
+           a.ingestion_date, a.last_refreshed_date
     FROM {sl_prefix}.fact_sl_adp a
     INNER JOIN {sl_prefix}.dim_sl_players p
         ON a.sleeper_player_id = p.sleeper_player_id
