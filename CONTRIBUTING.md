@@ -39,6 +39,8 @@ src/nfl/
 ├── nflverse_fantasy/    # NFLverse
 ├── sleeper_fantasy/     # Sleeper (public API)
 ├── espn_fantasy/        # ESPN
+├── fantasylife_fantasy/  # Fantasy Life (CSV/HTML)
+├── fantasypoints_fantasy/ # Fantasy Points (CSV, redraft PPR)
 └── entity_standardization/  # Cross-source entity resolution
 
 tests/                   # pytest test suite
@@ -114,7 +116,7 @@ The canonical crosswalk is `nfl.common.dim_ff_player_ids` (loaded from `nflreadp
 
 ### 7. Manual Upload Sources (Subscription / No-API)
 
-For sources that have no public API (e.g. ETR, Fantasy Life), use a Volume-based
+For sources that have no public API (e.g. ETR, Fantasy Life, Fantasy Points), use a Volume-based
 incoming/processed pattern instead of live scraping:
 
 ```
@@ -164,6 +166,41 @@ incoming/processed pattern instead of live scraping:
 * **Imports**: isort via ruff (first-party = `nfl`)
 * **Docstrings**: NumPy style for public functions
 * No `black` — ruff-format is the single formatter
+
+## Known Issues / Workarounds
+
+### Yahoo Fantasy OAuth app authorization broken (found 2026-08-13)
+
+The registered Yahoo Developer app (`dbxconnect`, credentials in `.secrets/credentials.json`) returns
+`403 "This application is not authorized to perform this action"` on **every** `fantasysports.yahooapis.com`
+endpoint (games discovery, league metadata, player pool), even with:
+
+* A freshly refreshed OAuth token (ruled out expiry)
+* A brand-new full re-consent flow after fixing a `redirect_uri` mismatch (ruled out stale scope)
+* "Fantasy Sports" Read permission confirmed enabled on the app
+
+This points to an app-verification/platform-level restriction on Yahoo's side, not fixable via
+credentials or token changes. Needs escalation with Yahoo directly or recreating the app.
+
+**Workaround — public draft analysis endpoint (no OAuth needed):** The public
+`https://football.fantasysports.yahoo.com/f1/draftanalysis` page renders its table client-side by calling
+Yahoo's **public read-only** API host directly, which requires **no OAuth token**:
+
+```
+https://pub-api-ro.fantasysports.yahoo.com/fantasy/v2/league/{game_id}.l.public;out=settings/players;position=ALL;start=0;count=2000;sort=average_pick;search=;out=auction_values,ranks;ranks=o-rank;out=expert_ranks;expert_ranks.rank_type=projected_season_remaining/draft_analysis;cut_types=diamond;slices=last7days?format=json_f
+```
+
+* `{game_id}.l.public` is a pseudo public-league query — no league/user context needed.
+* `count=2000` returns the **entire** season player pool in one call (no pagination) — confirmed ~1183
+  NFL players for game_id 470 (2026 season).
+* Each player's `draft_analysis` block has both `average_pick`/`average_round`/`percent_drafted` (ADP) and
+  `average_cost` (salary cap $), plus `preseason_*` variants — one call gets both ADP and auction data.
+* Numeric fields use `"-"` as a null placeholder for undrafted players — clean with
+  `try_cast(nullif(col, '-') as decimal(...))` before casting.
+* Implemented in `examples/load_yahoo_adp_public_uc` — writes into the existing `nfl.yh.fact_yahoo_adp`
+  table (PK: `player_key`, `game_id`, `snapshot_date`).
+* This workaround only covers ADP/salary-cap draft analysis, not the full player pool, league data, or
+  weekly stats — those still require the broken OAuth-based `yahoo_fantasy.api.YahooApiClient`.
 
 ## Commit Messages
 
