@@ -87,11 +87,6 @@ print(f"Season: {SEASON}")
 client = SleeperClient()
 sl_players = client.fetch_players_with_adp(SEASON)
 
-print(f"Players with ADP data: {len(sl_players):,}")
-print(f"Top 5 by half-PPR ADP:")
-for p in sl_players[:5]:
-    print(f"  {p.adp_half_ppr:5.1f}  {p.full_name} ({p.position}, {p.team})")
-
 # COMMAND ----------
 
 # DBTITLE 1,Create Schema & Tables
@@ -263,3 +258,7 @@ if gap_count == 0:
 else:
     print(f"  \u26a0 Crosswalk: {gap_count} player(s) with ADP < 150 NOT in dim_ff_player_ids:")
     gaps_df.show(gap_count, truncate=False)
+
+# COMMAND ----------
+
+dbutils.notebook.exit()

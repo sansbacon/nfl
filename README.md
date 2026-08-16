@@ -8,7 +8,7 @@ Unified NFL fantasy football data library: extraction, normalization, and persis
 
 **Key capabilities:**
 
-- **Multi-source ingestion** – Yahoo Fantasy (OAuth), FantasyPros (scraping/API), ESPN (public API), Sleeper (public API), NFLverse (nflreadpy)
+- **Multi-source ingestion** – Yahoo Fantasy (OAuth), FantasyPros (scraping/API), ESPN (public API), Sleeper (public API), NFLverse (nflreadpy), Fantasy Life (CSV/HTML), Fantasy Points (CSV)
 - **Entity standardization** – fuzzy-match player names, team codes, and positions across sources; queue unresolved matches for manual review
 - **Flexible persistence** – write to local parquet files, a local Iceberg catalog (SQLite), or Databricks Unity Catalog
 - **Library-only** – no CLI or GUI; import and compose pipelines in Python scripts or notebooks
@@ -36,6 +36,8 @@ src/nfl/
 ├── espn_fantasy/             # ESPN public API extraction and transforms
 ├── sleeper_fantasy/          # Sleeper public API extraction and transforms
 ├── nflverse_fantasy/         # NFLverse data ingestion (nflreadpy)
+├── fantasylife_fantasy/      # Fantasy Life CSV rankings + HTML player IDs
+├── fantasypoints_fantasy/    # Fantasy Points redraft PPR rankings (CSV)
 └── entity_standardization/   # Cross-source entity resolution
 
 tests/                        # pytest test suite
